@@ -869,7 +869,7 @@ Lemma sysAppMfstThenGetAppAndMfst : forall (a:idApp) (c:Cmp) (s:System) (sValid:
 Proof.
     intros.
     unfold getManifestAndAppFromCmp.
-    remember (fun pair : idApp * exc Manifest idApp => match snd pair with | Value mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) | Error _ => false end) as theFun.
+    remember (fun pair : idApp * exc Manifest idApp => match snd pair with | Value _ mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) | Error _ _ => false end) as theFun.
     remember (map (fun a0 : idApp => (a0, map_apply idApp_eq (manifest (environment s)) a0)) (apps (state s)) ++ map (fun sysapp0 : SysImgApp => (idSI sysapp0, Value idApp (manifestSI sysapp0))) (systemImage (environment s))) as theList.
     remember (defaultApp, Value idApp defaultManifest) as theDfltPair.
     remember (hd theDfltPair (filter theFun theList)) as theHead.
@@ -969,7 +969,7 @@ Proof.
     unfold getManifestAndAppFromCmp.
     assert (In a (apps (state s))).
     apply (ifManifestThenInApps s sValid a m);auto.
-    remember (fun pair : idApp * exc Manifest idApp => match snd pair with | Value mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) | Error _ => false end) as theFun.
+    remember (fun pair : idApp * exc Manifest idApp => match snd pair with | Value _ mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) | Error _ _ => false end) as theFun.
     remember (map (fun a0 : idApp => (a0, map_apply idApp_eq (manifest (environment s)) a0)) (apps (state s)) ++ map (fun sysapp0 : SysImgApp => (idSI sysapp0, Value idApp (manifestSI sysapp0))) (systemImage (environment s))) as theList.
     remember (defaultApp, Value idApp defaultManifest) as theDfltPair.
     remember (hd theDfltPair (filter theFun theList)) as theHead.
@@ -2959,7 +2959,7 @@ Proof.
     destruct H0.
     destruct H0.
     destruct_conj H0.
-    assert (existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value (Read as pt') => eq_PType pt' pt | Value (Write as pt') => eq_PType pt' pt | Value Both => true | Error _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s)))))=true).
+    assert (existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value _ (Read as pt') => eq_PType pt' pt | Value _ (Write as pt') => eq_PType pt' pt | Value _ Both => true | Error _ _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s)))))=true).
     rewrite existsb_exists.
     exists x0.
     split.
@@ -2989,7 +2989,7 @@ Proof.
     destruct pt; auto.
     rewrite H3.
     auto.
-    elim (classic((existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value (Read as pt') => eq_PType pt' pt | Value (Write as pt') => eq_PType pt' pt | Value Both => true | Error _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s)))))=true)));intros.
+    elim (classic((existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value _ (Read as pt') => eq_PType pt' pt | Value _ (Write as pt') => eq_PType pt' pt | Value _ Both => true | Error _ _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s)))))=true)));intros.
     rewrite H2.
     auto.
     rewrite not_true_iff_false in H2.
@@ -3010,7 +3010,7 @@ Proof.
     destruct H0.
     exists x.
     split;auto.
-    case_eq (existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value (Read as pt') => eq_PType pt' pt | Value (Write as pt') => eq_PType pt' pt | Value Both => true | Error _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s))))));intros;rewrite H1 in H.
+    case_eq (existsb (fun icmp : iCmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Value _ (Read as pt') => eq_PType pt' pt | Value _ (Write as pt') => eq_PType pt' pt | Value _ Both => true | Error _ _ => false end) (map (fun pair : iCmp * idApp => fst pair) (filter (fun pair : iCmp * idApp => if idApp_eq (getAppFromCmp c s) (snd pair) then true else false) (map (fun pair : item iCmp Cmp => (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s))))));intros;rewrite H1 in H.
     left.
     rewrite existsb_exists in H1.
     destruct H1.

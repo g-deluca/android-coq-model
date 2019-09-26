@@ -5,18 +5,6 @@ import qualified Prelude
 __ :: any
 __ = Prelude.error "Logical or arity value used"
 
-eq_rect :: a1 -> a2 -> a1 -> a2
-eq_rect x f y =
-  f
-
-eq_rec :: a1 -> a2 -> a1 -> a2
-eq_rec x f y =
-  eq_rect x f y
-
-eq_rec_r :: a1 -> a2 -> a1 -> a2
-eq_rec_r x h y =
-  eq_rec x h y
-
 bool_rect :: a1 -> a1 -> Prelude.Bool -> a1
 bool_rect f f0 b =
   case b of {
@@ -53,12 +41,12 @@ prod_rec =
 fst :: ((,) a1 a2) -> a1
 fst p =
   case p of {
-   (,) x y -> x}
+   (,) x _ -> x}
 
 snd :: ((,) a1 a2) -> a2
 snd p =
   case p of {
-   (,) x y -> y}
+   (,) _ y -> y}
 
 list_rect :: a2 -> (a1 -> (([]) a1) -> a2 -> a2) -> (([]) a1) -> a2
 list_rect f f0 l =
@@ -90,7 +78,7 @@ hd :: a1 -> (([]) a1) -> a1
 hd default0 l =
   case l of {
    ([]) -> default0;
-   (:) x l0 -> x}
+   (:) x _ -> x}
 
 remove :: (a1 -> a1 -> Prelude.Bool) -> a1 -> (([]) a1) -> ([]) a1
 remove eq_dec x l =
@@ -135,30 +123,21 @@ data Exc v e =
 is_ValueBool :: (Exc a1 a2) -> Prelude.Bool
 is_ValueBool e =
   case e of {
-   Value v -> Prelude.True;
-   Error e0 -> Prelude.False}
+   Value _ -> Prelude.True;
+   Error _ -> Prelude.False}
 
 data Item0 index info =
    Item index info
 
-item_rect :: (a1 -> a2 -> a3) -> (Item0 a1 a2) -> a3
-item_rect f i =
-  case i of {
-   Item x x0 -> f x x0}
-
-item_rec :: (a1 -> a2 -> a3) -> (Item0 a1 a2) -> a3
-item_rec =
-  item_rect
-
 item_index :: (Item0 a1 a2) -> a1
 item_index i =
   case i of {
-   Item item_index0 item_info0 -> item_index0}
+   Item item_index0 _ -> item_index0}
 
 item_info :: (Item0 a1 a2) -> a2
 item_info i =
   case i of {
-   Item item_index0 item_info0 -> item_info0}
+   Item _ item_info0 -> item_info0}
 
 type Mapping index info = ([]) (Item0 index info)
 
@@ -231,31 +210,20 @@ permLevel_rec =
 data Perm0 =
    Perm IdPerm (Prelude.Maybe IdGrp) PermLevel
 
-perm_rect :: (IdPerm -> (Prelude.Maybe IdGrp) -> PermLevel -> a1) -> Perm0 ->
-             a1
-perm_rect f p =
-  case p of {
-   Perm x x0 x1 -> f x x0 x1}
-
-perm_rec :: (IdPerm -> (Prelude.Maybe IdGrp) -> PermLevel -> a1) -> Perm0 ->
-            a1
-perm_rec =
-  perm_rect
-
 idP :: Perm0 -> IdPerm
 idP p =
   case p of {
-   Perm idP0 maybeGrp0 pl0 -> idP0}
+   Perm idP0 _ _ -> idP0}
 
 maybeGrp :: Perm0 -> Prelude.Maybe IdGrp
 maybeGrp p =
   case p of {
-   Perm idP0 maybeGrp0 pl0 -> maybeGrp0}
+   Perm _ maybeGrp0 _ -> maybeGrp0}
 
 pl :: Perm0 -> PermLevel
 pl p =
   case p of {
-   Perm idP0 maybeGrp0 pl0 -> pl0}
+   Perm _ _ pl0 -> pl0}
 
 type IdCmp = Prelude.Int
 
@@ -296,31 +264,20 @@ dataType_rec =
 data Data =
    Dt (Prelude.Maybe Uri) (Prelude.Maybe MimeType) DataType
 
-data_rect :: ((Prelude.Maybe Uri) -> (Prelude.Maybe MimeType) -> DataType ->
-             a1) -> Data -> a1
-data_rect f d =
-  case d of {
-   Dt x x0 x1 -> f x x0 x1}
-
-data_rec :: ((Prelude.Maybe Uri) -> (Prelude.Maybe MimeType) -> DataType ->
-            a1) -> Data -> a1
-data_rec =
-  data_rect
-
 path :: Data -> Prelude.Maybe Uri
 path d =
   case d of {
-   Dt path0 mime0 type1 -> path0}
+   Dt path0 _ _ -> path0}
 
 mime :: Data -> Prelude.Maybe MimeType
 mime d =
   case d of {
-   Dt path0 mime0 type1 -> mime0}
+   Dt _ mime0 _ -> mime0}
 
 type0 :: Data -> DataType
 type0 d =
   case d of {
-   Dt path0 mime0 type1 -> type1}
+   Dt _ _ type1 -> type1}
 
 type Category = Prelude.Int
 
@@ -346,203 +303,137 @@ intentAction_rec =
 data IntentFilter =
    IFilter (([]) IntentAction) (([]) Data) (([]) Category)
 
-intentFilter_rect :: ((([]) IntentAction) -> (([]) Data) -> (([]) Category)
-                     -> a1) -> IntentFilter -> a1
-intentFilter_rect f i =
-  case i of {
-   IFilter x x0 x1 -> f x x0 x1}
-
-intentFilter_rec :: ((([]) IntentAction) -> (([]) Data) -> (([]) Category) ->
-                    a1) -> IntentFilter -> a1
-intentFilter_rec =
-  intentFilter_rect
-
 actFilter :: IntentFilter -> ([]) IntentAction
 actFilter i =
   case i of {
-   IFilter actFilter0 dataFilter0 catFilter0 -> actFilter0}
+   IFilter actFilter0 _ _ -> actFilter0}
 
 dataFilter :: IntentFilter -> ([]) Data
 dataFilter i =
   case i of {
-   IFilter actFilter0 dataFilter0 catFilter0 -> dataFilter0}
+   IFilter _ dataFilter0 _ -> dataFilter0}
 
 catFilter :: IntentFilter -> ([]) Category
 catFilter i =
   case i of {
-   IFilter actFilter0 dataFilter0 catFilter0 -> catFilter0}
+   IFilter _ _ catFilter0 -> catFilter0}
 
 data Activity0 =
    Activity IdCmp (Prelude.Maybe Prelude.Bool) (Prelude.Maybe Perm0) 
  (([]) IntentFilter)
 
-activity_rect :: (IdCmp -> (Prelude.Maybe Prelude.Bool) -> (Prelude.Maybe
-                 Perm0) -> (([]) IntentFilter) -> a1) -> Activity0 -> a1
-activity_rect f a =
-  case a of {
-   Activity x x0 x1 x2 -> f x x0 x1 x2}
-
-activity_rec :: (IdCmp -> (Prelude.Maybe Prelude.Bool) -> (Prelude.Maybe
-                Perm0) -> (([]) IntentFilter) -> a1) -> Activity0 -> a1
-activity_rec =
-  activity_rect
-
 idA :: Activity0 -> IdCmp
 idA a =
   case a of {
-   Activity idA0 expA0 cmpEA0 intFilterA0 -> idA0}
+   Activity idA0 _ _ _ -> idA0}
 
 expA :: Activity0 -> Prelude.Maybe Prelude.Bool
 expA a =
   case a of {
-   Activity idA0 expA0 cmpEA0 intFilterA0 -> expA0}
+   Activity _ expA0 _ _ -> expA0}
 
 cmpEA :: Activity0 -> Prelude.Maybe Perm0
 cmpEA a =
   case a of {
-   Activity idA0 expA0 cmpEA0 intFilterA0 -> cmpEA0}
+   Activity _ _ cmpEA0 _ -> cmpEA0}
 
 intFilterA :: Activity0 -> ([]) IntentFilter
 intFilterA a =
   case a of {
-   Activity idA0 expA0 cmpEA0 intFilterA0 -> intFilterA0}
+   Activity _ _ _ intFilterA0 -> intFilterA0}
 
 data Service0 =
    Service IdCmp (Prelude.Maybe Prelude.Bool) (Prelude.Maybe Perm0) (([])
                                                                     IntentFilter)
 
-service_rect :: (IdCmp -> (Prelude.Maybe Prelude.Bool) -> (Prelude.Maybe
-                Perm0) -> (([]) IntentFilter) -> a1) -> Service0 -> a1
-service_rect f s =
-  case s of {
-   Service x x0 x1 x2 -> f x x0 x1 x2}
-
-service_rec :: (IdCmp -> (Prelude.Maybe Prelude.Bool) -> (Prelude.Maybe
-               Perm0) -> (([]) IntentFilter) -> a1) -> Service0 -> a1
-service_rec =
-  service_rect
-
 idS :: Service0 -> IdCmp
 idS s =
   case s of {
-   Service idS0 expS0 cmpES0 intFilterS0 -> idS0}
+   Service idS0 _ _ _ -> idS0}
 
 expS :: Service0 -> Prelude.Maybe Prelude.Bool
 expS s =
   case s of {
-   Service idS0 expS0 cmpES0 intFilterS0 -> expS0}
+   Service _ expS0 _ _ -> expS0}
 
 cmpES :: Service0 -> Prelude.Maybe Perm0
 cmpES s =
   case s of {
-   Service idS0 expS0 cmpES0 intFilterS0 -> cmpES0}
+   Service _ _ cmpES0 _ -> cmpES0}
 
 intFilterS :: Service0 -> ([]) IntentFilter
 intFilterS s =
   case s of {
-   Service idS0 expS0 cmpES0 intFilterS0 -> intFilterS0}
+   Service _ _ _ intFilterS0 -> intFilterS0}
 
 data BroadReceiver =
    Broadreceiver IdCmp (Prelude.Maybe Prelude.Bool) (Prelude.Maybe Perm0) 
  (([]) IntentFilter)
 
-broadReceiver_rect :: (IdCmp -> (Prelude.Maybe Prelude.Bool) ->
-                      (Prelude.Maybe Perm0) -> (([]) IntentFilter) -> a1) ->
-                      BroadReceiver -> a1
-broadReceiver_rect f b =
-  case b of {
-   Broadreceiver x x0 x1 x2 -> f x x0 x1 x2}
-
-broadReceiver_rec :: (IdCmp -> (Prelude.Maybe Prelude.Bool) -> (Prelude.Maybe
-                     Perm0) -> (([]) IntentFilter) -> a1) -> BroadReceiver ->
-                     a1
-broadReceiver_rec =
-  broadReceiver_rect
-
 idB :: BroadReceiver -> IdCmp
 idB b =
   case b of {
-   Broadreceiver idB0 expB0 cmpEB0 intFilterB0 -> idB0}
+   Broadreceiver idB0 _ _ _ -> idB0}
 
 expB :: BroadReceiver -> Prelude.Maybe Prelude.Bool
 expB b =
   case b of {
-   Broadreceiver idB0 expB0 cmpEB0 intFilterB0 -> expB0}
+   Broadreceiver _ expB0 _ _ -> expB0}
 
 cmpEB :: BroadReceiver -> Prelude.Maybe Perm0
 cmpEB b =
   case b of {
-   Broadreceiver idB0 expB0 cmpEB0 intFilterB0 -> cmpEB0}
+   Broadreceiver _ _ cmpEB0 _ -> cmpEB0}
 
 intFilterB :: BroadReceiver -> ([]) IntentFilter
 intFilterB b =
   case b of {
-   Broadreceiver idB0 expB0 cmpEB0 intFilterB0 -> intFilterB0}
+   Broadreceiver _ _ _ intFilterB0 -> intFilterB0}
 
 data CProvider =
    Cprovider IdCmp (Mapping Uri Res) (Prelude.Maybe Prelude.Bool) (Prelude.Maybe
                                                                   Perm0) 
  (Prelude.Maybe Perm0) (Prelude.Maybe Perm0) Prelude.Bool (([]) Uri)
 
-cProvider_rect :: (IdCmp -> (Mapping Uri Res) -> (Prelude.Maybe Prelude.Bool)
-                  -> (Prelude.Maybe Perm0) -> (Prelude.Maybe Perm0) ->
-                  (Prelude.Maybe Perm0) -> Prelude.Bool -> (([]) Uri) -> a1)
-                  -> CProvider -> a1
-cProvider_rect f c =
-  case c of {
-   Cprovider x x0 x1 x2 x3 x4 x5 x6 -> f x x0 x1 x2 x3 x4 x5 x6}
-
-cProvider_rec :: (IdCmp -> (Mapping Uri Res) -> (Prelude.Maybe Prelude.Bool)
-                 -> (Prelude.Maybe Perm0) -> (Prelude.Maybe Perm0) ->
-                 (Prelude.Maybe Perm0) -> Prelude.Bool -> (([]) Uri) -> a1)
-                 -> CProvider -> a1
-cProvider_rec =
-  cProvider_rect
-
 idC :: CProvider -> IdCmp
 idC c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 -> idC0}
+   Cprovider idC0 _ _ _ _ _ _ _ -> idC0}
 
 map_res :: CProvider -> Mapping Uri Res
 map_res c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
-    map_res0}
+   Cprovider _ map_res0 _ _ _ _ _ _ -> map_res0}
 
 expC :: CProvider -> Prelude.Maybe Prelude.Bool
 expC c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 -> expC0}
+   Cprovider _ _ expC0 _ _ _ _ _ -> expC0}
 
 cmpEC :: CProvider -> Prelude.Maybe Perm0
 cmpEC c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
-    cmpEC0}
+   Cprovider _ _ _ cmpEC0 _ _ _ _ -> cmpEC0}
 
 readE :: CProvider -> Prelude.Maybe Perm0
 readE c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
-    readE0}
+   Cprovider _ _ _ _ readE0 _ _ _ -> readE0}
 
 writeE :: CProvider -> Prelude.Maybe Perm0
 writeE c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
-    writeE0}
+   Cprovider _ _ _ _ _ writeE0 _ _ -> writeE0}
 
 grantU :: CProvider -> Prelude.Bool
 grantU c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
-    grantU0}
+   Cprovider _ _ _ _ _ _ grantU0 _ -> grantU0}
 
 uriP :: CProvider -> ([]) Uri
 uriP c =
   case c of {
-   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 -> uriP0}
+   Cprovider _ _ _ _ _ _ _ uriP0 -> uriP0}
 
 data Cmp =
    CmpAct Activity0
@@ -586,32 +477,32 @@ data Manifest =
 cmp :: Manifest -> ([]) Cmp
 cmp m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> cmp0}
+   Mf cmp0 _ _ _ _ _ -> cmp0}
 
 minSdk :: Manifest -> Prelude.Maybe Nat
 minSdk m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> minSdk0}
+   Mf _ minSdk0 _ _ _ _ -> minSdk0}
 
 targetSdk :: Manifest -> Prelude.Maybe Nat
 targetSdk m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> targetSdk0}
+   Mf _ _ targetSdk0 _ _ _ -> targetSdk0}
 
 use :: Manifest -> ([]) IdPerm
 use m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> use0}
+   Mf _ _ _ use0 _ _ -> use0}
 
 usrP :: Manifest -> ([]) Perm0
 usrP m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> usrP0}
+   Mf _ _ _ _ usrP0 _ -> usrP0}
 
 appE :: Manifest -> Prelude.Maybe Perm0
 appE m =
   case m of {
-   Mf cmp0 minSdk0 targetSdk0 use0 usrP0 appE0 -> appE0}
+   Mf _ _ _ _ _ appE0 -> appE0}
 
 data SysImgApp =
    Siapp IdApp Cert Manifest (([]) Perm0) (([]) Res)
@@ -619,22 +510,22 @@ data SysImgApp =
 idSI :: SysImgApp -> IdApp
 idSI s =
   case s of {
-   Siapp idSI0 certSI0 manifestSI0 defPermsSI0 appResSI -> idSI0}
+   Siapp idSI0 _ _ _ _ -> idSI0}
 
 certSI :: SysImgApp -> Cert
 certSI s =
   case s of {
-   Siapp idSI0 certSI0 manifestSI0 defPermsSI0 appResSI -> certSI0}
+   Siapp _ certSI0 _ _ _ -> certSI0}
 
 manifestSI :: SysImgApp -> Manifest
 manifestSI s =
   case s of {
-   Siapp idSI0 certSI0 manifestSI0 defPermsSI0 appResSI -> manifestSI0}
+   Siapp _ _ manifestSI0 _ _ -> manifestSI0}
 
 defPermsSI :: SysImgApp -> ([]) Perm0
 defPermsSI s =
   case s of {
-   Siapp idSI0 certSI0 manifestSI0 defPermsSI0 appResSI -> defPermsSI0}
+   Siapp _ _ _ defPermsSI0 _ -> defPermsSI0}
 
 type IdInt = Prelude.Int
 
@@ -672,74 +563,50 @@ data Intent0 =
  Data (([]) Category) (Prelude.Maybe Extra) (Prelude.Maybe Flag) (Prelude.Maybe
                                                                  Perm0)
 
-intent_rect :: (IdInt -> (Prelude.Maybe IdCmp) -> IntentType ->
-               (Prelude.Maybe IntentAction) -> Data -> (([]) Category) ->
-               (Prelude.Maybe Extra) -> (Prelude.Maybe Flag) ->
-               (Prelude.Maybe Perm0) -> a1) -> Intent0 -> a1
-intent_rect f i =
-  case i of {
-   Intent x x0 x1 x2 x3 x4 x5 x6 x7 -> f x x0 x1 x2 x3 x4 x5 x6 x7}
-
-intent_rec :: (IdInt -> (Prelude.Maybe IdCmp) -> IntentType -> (Prelude.Maybe
-              IntentAction) -> Data -> (([]) Category) -> (Prelude.Maybe
-              Extra) -> (Prelude.Maybe Flag) -> (Prelude.Maybe Perm0) -> a1)
-              -> Intent0 -> a1
-intent_rec =
-  intent_rect
-
 idI :: Intent0 -> IdInt
 idI i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> idI0}
+   Intent idI0 _ _ _ _ _ _ _ _ -> idI0}
 
 cmpName :: Intent0 -> Prelude.Maybe IdCmp
 cmpName i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> cmpName0}
+   Intent _ cmpName0 _ _ _ _ _ _ _ -> cmpName0}
 
 intType :: Intent0 -> IntentType
 intType i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> intType0}
+   Intent _ _ intType0 _ _ _ _ _ _ -> intType0}
 
 action :: Intent0 -> Prelude.Maybe IntentAction
 action i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> action0}
+   Intent _ _ _ action0 _ _ _ _ _ -> action0}
 
 data0 :: Intent0 -> Data
 data0 i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> data1}
+   Intent _ _ _ _ data1 _ _ _ _ -> data1}
 
 category :: Intent0 -> ([]) Category
 category i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> category0}
+   Intent _ _ _ _ _ category0 _ _ _ -> category0}
 
 extra :: Intent0 -> Prelude.Maybe Extra
 extra i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> extra0}
+   Intent _ _ _ _ _ _ extra0 _ _ -> extra0}
 
 flags :: Intent0 -> Prelude.Maybe Flag
 flags i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> flags0}
+   Intent _ _ _ _ _ _ _ flags0 _ -> flags0}
 
 brperm :: Intent0 -> Prelude.Maybe Perm0
 brperm i =
   case i of {
-   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
-    brperm0 -> brperm0}
+   Intent _ _ _ _ _ _ _ _ brperm0 -> brperm0}
 
 data PType =
    Read
@@ -772,26 +639,24 @@ option_eq aeq id1 id2 =
   option_rec (\a id0 ->
     case id0 of {
      Prelude.Just a0 ->
-      sumbool_rec (\_ -> eq_rec_r a0 Prelude.True a) (\_ -> Prelude.False)
-        (aeq a a0);
+      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (aeq a a0);
      Prelude.Nothing -> Prelude.False}) (\id0 ->
     case id0 of {
-     Prelude.Just a -> Prelude.False;
+     Prelude.Just _ -> Prelude.False;
      Prelude.Nothing -> Prelude.True}) id1 id2
 
 perm_eq :: Perm0 -> Perm0 -> Prelude.Bool
 perm_eq id1 id2 =
-  perm_rec (\idP0 maybeGrp0 pl0 id0 ->
-    case id0 of {
+  case id1 of {
+   Perm idP0 maybeGrp0 pl0 ->
+    case id2 of {
      Perm idP1 maybeGrp1 pl1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idP1
-          (sumbool_rec (\_ ->
-            eq_rec_r maybeGrp1
-              (sumbool_rec (\_ -> eq_rec_r pl1 Prelude.True pl0) (\_ ->
-                Prelude.False) (permLevel_eq pl0 pl1)) maybeGrp0) (\_ ->
-            Prelude.False) (option_eq idGrp_eq maybeGrp0 maybeGrp1)) idP0)
-        (\_ -> Prelude.False) (idPerm_eq idP0 idP1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+            (permLevel_eq pl0 pl1)) (\_ -> Prelude.False)
+          (option_eq idGrp_eq maybeGrp0 maybeGrp1)) (\_ -> Prelude.False)
+        (idPerm_eq idP0 idP1)}}
 
 dataType_eq :: DataType -> DataType -> Prelude.Bool
 dataType_eq id1 id2 =
@@ -808,17 +673,16 @@ dataType_eq id1 id2 =
 
 data_eq :: Data -> Data -> Prelude.Bool
 data_eq id1 id2 =
-  data_rec (\path0 mime0 type1 id0 ->
-    case id0 of {
+  case id1 of {
+   Dt path0 mime0 type1 ->
+    case id2 of {
      Dt path1 mime1 type2 ->
       sumbool_rec (\_ ->
-        eq_rec_r path1
-          (sumbool_rec (\_ ->
-            eq_rec_r mime1
-              (sumbool_rec (\_ -> eq_rec_r type2 Prelude.True type1) (\_ ->
-                Prelude.False) (dataType_eq type1 type2)) mime0) (\_ ->
-            Prelude.False) (option_eq mimeType_eq mime0 mime1)) path0) (\_ ->
-        Prelude.False) (option_eq uri_eq path0 path1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+            (dataType_eq type1 type2)) (\_ -> Prelude.False)
+          (option_eq mimeType_eq mime0 mime1)) (\_ -> Prelude.False)
+        (option_eq uri_eq path0 path1)}}
 
 list_eq :: (a1 -> a1 -> Prelude.Bool) -> (([]) a1) -> (([]) a1) ->
            Prelude.Bool
@@ -826,15 +690,13 @@ list_eq aeq id1 id2 =
   list_rec (\id0 ->
     case id0 of {
      ([]) -> Prelude.True;
-     (:) a l -> Prelude.False}) (\a l h id0 ->
+     (:) _ _ -> Prelude.False}) (\a _ h id0 ->
     case id0 of {
      ([]) -> Prelude.False;
      (:) a0 l0 ->
       sumbool_rec (\_ ->
-        eq_rec_r a0
-          (sumbool_rec (\_ -> eq_rec_r l0 Prelude.True l) (\_ ->
-            Prelude.False) (h l0)) a) (\_ -> Prelude.False) (aeq a a0)}) id1
-    id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (h l0)) (\_ ->
+        Prelude.False) (aeq a a0)}) id1 id2
 
 intentAction_eq :: IntentAction -> IntentAction -> Prelude.Bool
 intentAction_eq id1 id2 =
@@ -862,14 +724,14 @@ bool_eq id1 id2 =
 item_eq :: (a1 -> a1 -> Prelude.Bool) -> (a2 -> a2 -> Prelude.Bool) -> (Item0
            a1 a2) -> (Item0 a1 a2) -> Prelude.Bool
 item_eq aeq beq id1 id2 =
-  item_rec (\item_index0 item_info0 id0 ->
-    case id0 of {
+  case id1 of {
+   Item item_index0 item_info0 ->
+    case id2 of {
      Item item_index1 item_info1 ->
       sumbool_rec (\_ ->
-        eq_rec_r item_index1
-          (sumbool_rec (\_ -> eq_rec_r item_info1 Prelude.True item_info0)
-            (\_ -> Prelude.False) (beq item_info0 item_info1)) item_index0)
-        (\_ -> Prelude.False) (aeq item_index0 item_index1)}) id1 id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+          (beq item_info0 item_info1)) (\_ -> Prelude.False)
+        (aeq item_index0 item_index1)}}
 
 map_eq :: (a1 -> a1 -> Prelude.Bool) -> (a2 -> a2 -> Prelude.Bool) ->
           (Mapping a1 a2) -> (Mapping a1 a2) -> Prelude.Bool
@@ -877,51 +739,36 @@ map_eq aeq beq id1 id2 =
   list_rec (\id0 ->
     case id0 of {
      ([]) -> Prelude.True;
-     (:) i l -> Prelude.False}) (\a l h id0 ->
+     (:) _ _ -> Prelude.False}) (\a _ h id0 ->
     case id0 of {
      ([]) -> Prelude.False;
      (:) i l0 ->
       sumbool_rec (\_ ->
-        eq_rec_r i
-          (sumbool_rec (\_ -> eq_rec_r l0 Prelude.True l) (\_ ->
-            Prelude.False) (h l0)) a) (\_ -> Prelude.False)
-        (item_eq aeq beq a i)}) id1 id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (h l0)) (\_ ->
+        Prelude.False) (item_eq aeq beq a i)}) id1 id2
 
 cProvider_eq :: CProvider -> CProvider -> Prelude.Bool
 cProvider_eq id1 id2 =
-  cProvider_rec
-    (\idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 id0 ->
-    case id0 of {
+  case id1 of {
+   Cprovider idC0 map_res0 expC0 cmpEC0 readE0 writeE0 grantU0 uriP0 ->
+    case id2 of {
      Cprovider idC1 map_res1 expC1 cmpEC1 readE1 writeE1 grantU1 uriP1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idC1
-          (sumbool_rec (\_ ->
-            eq_rec_r map_res1
-              (sumbool_rec (\_ ->
-                eq_rec_r expC1
-                  (sumbool_rec (\_ ->
-                    eq_rec_r cmpEC1
-                      (sumbool_rec (\_ ->
-                        eq_rec_r readE1
-                          (sumbool_rec (\_ ->
-                            eq_rec_r writeE1
-                              (sumbool_rec (\_ ->
-                                eq_rec_r grantU1
-                                  (sumbool_rec (\_ ->
-                                    eq_rec_r uriP1 Prelude.True uriP0) (\_ ->
-                                    Prelude.False)
-                                    (list_eq uri_eq uriP0 uriP1)) grantU0)
-                                (\_ -> Prelude.False)
-                                (bool_eq grantU0 grantU1)) writeE0) (\_ ->
-                            Prelude.False)
-                            (option_eq perm_eq writeE0 writeE1)) readE0)
-                        (\_ -> Prelude.False)
-                        (option_eq perm_eq readE0 readE1)) cmpEC0) (\_ ->
-                    Prelude.False) (option_eq perm_eq cmpEC0 cmpEC1)) expC0)
-                (\_ -> Prelude.False) (option_eq bool_eq expC0 expC1))
-              map_res0) (\_ -> Prelude.False)
-            (map_eq uri_eq res_eq map_res0 map_res1)) idC0) (\_ ->
-        Prelude.False) (idCmp_eq idC0 idC1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ ->
+            sumbool_rec (\_ ->
+              sumbool_rec (\_ ->
+                sumbool_rec (\_ ->
+                  sumbool_rec (\_ ->
+                    sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+                      (list_eq uri_eq uriP0 uriP1)) (\_ -> Prelude.False)
+                    (bool_eq grantU0 grantU1)) (\_ -> Prelude.False)
+                  (option_eq perm_eq writeE0 writeE1)) (\_ -> Prelude.False)
+                (option_eq perm_eq readE0 readE1)) (\_ -> Prelude.False)
+              (option_eq perm_eq cmpEC0 cmpEC1)) (\_ -> Prelude.False)
+            (option_eq bool_eq expC0 expC1)) (\_ -> Prelude.False)
+          (map_eq uri_eq res_eq map_res0 map_res1)) (\_ -> Prelude.False)
+        (idCmp_eq idC0 idC1)}}
 
 intentType_eq :: IntentType -> IntentType -> Prelude.Bool
 intentType_eq id1 id2 =
@@ -938,140 +785,111 @@ intentType_eq id1 id2 =
 
 intent_eq :: Intent0 -> Intent0 -> Prelude.Bool
 intent_eq id1 id2 =
-  intent_rec
-    (\idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0 brperm0 id0 ->
-    case id0 of {
+  case id1 of {
+   Intent idI0 cmpName0 intType0 action0 data1 category0 extra0 flags0
+    brperm0 ->
+    case id2 of {
      Intent idI1 cmpName1 intType1 action1 data2 category1 extra1 flags1
       brperm1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idI1
-          (sumbool_rec (\_ ->
-            eq_rec_r cmpName1
-              (sumbool_rec (\_ ->
-                eq_rec_r intType1
-                  (sumbool_rec (\_ ->
-                    eq_rec_r action1
-                      (sumbool_rec (\_ ->
-                        eq_rec_r data2
-                          (sumbool_rec (\_ ->
-                            eq_rec_r category1
-                              (sumbool_rec (\_ ->
-                                eq_rec_r extra1
-                                  (sumbool_rec (\_ ->
-                                    eq_rec_r flags1
-                                      (sumbool_rec (\_ ->
-                                        eq_rec_r brperm1 Prelude.True brperm0)
-                                        (\_ -> Prelude.False)
-                                        (option_eq perm_eq brperm0 brperm1))
-                                      flags0) (\_ -> Prelude.False)
-                                    (option_eq flag_eq flags0 flags1)) extra0)
-                                (\_ -> Prelude.False)
-                                (option_eq extra_eq extra0 extra1)) category0)
-                            (\_ -> Prelude.False)
-                            (list_eq category_eq category0 category1)) data1)
-                        (\_ -> Prelude.False) (data_eq data1 data2)) action0)
-                    (\_ -> Prelude.False)
-                    (option_eq intentAction_eq action0 action1)) intType0)
-                (\_ -> Prelude.False) (intentType_eq intType0 intType1))
-              cmpName0) (\_ -> Prelude.False)
-            (option_eq idCmp_eq cmpName0 cmpName1)) idI0) (\_ ->
-        Prelude.False) (idInt_eq idI0 idI1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ ->
+            sumbool_rec (\_ ->
+              sumbool_rec (\_ ->
+                sumbool_rec (\_ ->
+                  sumbool_rec (\_ ->
+                    sumbool_rec (\_ ->
+                      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+                        (option_eq perm_eq brperm0 brperm1)) (\_ ->
+                      Prelude.False) (option_eq flag_eq flags0 flags1))
+                    (\_ -> Prelude.False) (option_eq extra_eq extra0 extra1))
+                  (\_ -> Prelude.False)
+                  (list_eq category_eq category0 category1)) (\_ ->
+                Prelude.False) (data_eq data1 data2)) (\_ -> Prelude.False)
+              (option_eq intentAction_eq action0 action1)) (\_ ->
+            Prelude.False) (intentType_eq intType0 intType1)) (\_ ->
+          Prelude.False) (option_eq idCmp_eq cmpName0 cmpName1)) (\_ ->
+        Prelude.False) (idInt_eq idI0 idI1)}}
 
 intentFilter_eq :: IntentFilter -> IntentFilter -> Prelude.Bool
 intentFilter_eq id1 id2 =
-  intentFilter_rec (\actFilter0 dataFilter0 catFilter0 id0 ->
-    case id0 of {
+  case id1 of {
+   IFilter actFilter0 dataFilter0 catFilter0 ->
+    case id2 of {
      IFilter actFilter1 dataFilter1 catFilter1 ->
       sumbool_rec (\_ ->
-        eq_rec_r actFilter1
-          (sumbool_rec (\_ ->
-            eq_rec_r dataFilter1
-              (sumbool_rec (\_ ->
-                eq_rec_r catFilter1 Prelude.True catFilter0) (\_ ->
-                Prelude.False) (list_eq category_eq catFilter0 catFilter1))
-              dataFilter0) (\_ -> Prelude.False)
-            (list_eq data_eq dataFilter0 dataFilter1)) actFilter0) (\_ ->
-        Prelude.False) (list_eq intentAction_eq actFilter0 actFilter1)}) id1
-    id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+            (list_eq category_eq catFilter0 catFilter1)) (\_ ->
+          Prelude.False) (list_eq data_eq dataFilter0 dataFilter1)) (\_ ->
+        Prelude.False) (list_eq intentAction_eq actFilter0 actFilter1)}}
 
 activity_eq :: Activity0 -> Activity0 -> Prelude.Bool
 activity_eq id1 id2 =
-  activity_rec (\idA0 expA0 cmpEA0 intFilterA0 id0 ->
-    case id0 of {
+  case id1 of {
+   Activity idA0 expA0 cmpEA0 intFilterA0 ->
+    case id2 of {
      Activity idA1 expA1 cmpEA1 intFilterA1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idA1
-          (sumbool_rec (\_ ->
-            eq_rec_r expA1
-              (sumbool_rec (\_ ->
-                eq_rec_r cmpEA1
-                  (sumbool_rec (\_ ->
-                    eq_rec_r intFilterA1 Prelude.True intFilterA0) (\_ ->
-                    Prelude.False)
-                    (list_eq intentFilter_eq intFilterA0 intFilterA1)) cmpEA0)
-                (\_ -> Prelude.False) (option_eq perm_eq cmpEA0 cmpEA1))
-              expA0) (\_ -> Prelude.False) (option_eq bool_eq expA0 expA1))
-          idA0) (\_ -> Prelude.False) (idCmp_eq idA0 idA1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ ->
+            sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+              (list_eq intentFilter_eq intFilterA0 intFilterA1)) (\_ ->
+            Prelude.False) (option_eq perm_eq cmpEA0 cmpEA1)) (\_ ->
+          Prelude.False) (option_eq bool_eq expA0 expA1)) (\_ ->
+        Prelude.False) (idCmp_eq idA0 idA1)}}
 
 service_eq :: Service0 -> Service0 -> Prelude.Bool
 service_eq id1 id2 =
-  service_rec (\idS0 expS0 cmpES0 intFilterS0 id0 ->
-    case id0 of {
+  case id1 of {
+   Service idS0 expS0 cmpES0 intFilterS0 ->
+    case id2 of {
      Service idS1 expS1 cmpES1 intFilterS1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idS1
-          (sumbool_rec (\_ ->
-            eq_rec_r expS1
-              (sumbool_rec (\_ ->
-                eq_rec_r cmpES1
-                  (sumbool_rec (\_ ->
-                    eq_rec_r intFilterS1 Prelude.True intFilterS0) (\_ ->
-                    Prelude.False)
-                    (list_eq intentFilter_eq intFilterS0 intFilterS1)) cmpES0)
-                (\_ -> Prelude.False) (option_eq perm_eq cmpES0 cmpES1))
-              expS0) (\_ -> Prelude.False) (option_eq bool_eq expS0 expS1))
-          idS0) (\_ -> Prelude.False) (idCmp_eq idS0 idS1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ ->
+            sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+              (list_eq intentFilter_eq intFilterS0 intFilterS1)) (\_ ->
+            Prelude.False) (option_eq perm_eq cmpES0 cmpES1)) (\_ ->
+          Prelude.False) (option_eq bool_eq expS0 expS1)) (\_ ->
+        Prelude.False) (idCmp_eq idS0 idS1)}}
 
 broadReceiver_eq :: BroadReceiver -> BroadReceiver -> Prelude.Bool
 broadReceiver_eq id1 id2 =
-  broadReceiver_rec (\idB0 expB0 cmpEB0 intFilterB0 id0 ->
-    case id0 of {
+  case id1 of {
+   Broadreceiver idB0 expB0 cmpEB0 intFilterB0 ->
+    case id2 of {
      Broadreceiver idB1 expB1 cmpEB1 intFilterB1 ->
       sumbool_rec (\_ ->
-        eq_rec_r idB1
-          (sumbool_rec (\_ ->
-            eq_rec_r expB1
-              (sumbool_rec (\_ ->
-                eq_rec_r cmpEB1
-                  (sumbool_rec (\_ ->
-                    eq_rec_r intFilterB1 Prelude.True intFilterB0) (\_ ->
-                    Prelude.False)
-                    (list_eq intentFilter_eq intFilterB0 intFilterB1)) cmpEB0)
-                (\_ -> Prelude.False) (option_eq perm_eq cmpEB0 cmpEB1))
-              expB0) (\_ -> Prelude.False) (option_eq bool_eq expB0 expB1))
-          idB0) (\_ -> Prelude.False) (idCmp_eq idB0 idB1)}) id1 id2
+        sumbool_rec (\_ ->
+          sumbool_rec (\_ ->
+            sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+              (list_eq intentFilter_eq intFilterB0 intFilterB1)) (\_ ->
+            Prelude.False) (option_eq perm_eq cmpEB0 cmpEB1)) (\_ ->
+          Prelude.False) (option_eq bool_eq expB0 expB1)) (\_ ->
+        Prelude.False) (idCmp_eq idB0 idB1)}}
 
 cmp_eq :: Cmp -> Cmp -> Prelude.Bool
 cmp_eq id1 id2 =
   cmp_rec (\a id0 ->
     case id0 of {
      CmpAct a0 ->
-      sumbool_rec (\_ -> eq_rec_r a0 Prelude.True a) (\_ -> Prelude.False)
+      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
         (activity_eq a a0);
      _ -> Prelude.False}) (\s id0 ->
     case id0 of {
      CmpSrv s0 ->
-      sumbool_rec (\_ -> eq_rec_r s0 Prelude.True s) (\_ -> Prelude.False)
+      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
         (service_eq s s0);
      _ -> Prelude.False}) (\c id0 ->
     case id0 of {
      CmpCP c0 ->
-      sumbool_rec (\_ -> eq_rec_r c0 Prelude.True c) (\_ -> Prelude.False)
+      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
         (cProvider_eq c c0);
      _ -> Prelude.False}) (\b id0 ->
     case id0 of {
      CmpBR b0 ->
-      sumbool_rec (\_ -> eq_rec_r b0 Prelude.True b) (\_ -> Prelude.False)
+      sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
         (broadReceiver_eq b b0);
      _ -> Prelude.False}) id1 id2
 
@@ -1082,10 +900,8 @@ sentIntentsElems_eq id1 id2 =
     case id0 of {
      (,) i i0 ->
       sumbool_rec (\_ ->
-        eq_rec_r i
-          (sumbool_rec (\_ -> eq_rec_r i0 Prelude.True b) (\_ ->
-            Prelude.False) (intent_eq b i0)) a) (\_ -> Prelude.False)
-        (iCmp_eq a i)}) id1 id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+          (intent_eq b i0)) (\_ -> Prelude.False) (iCmp_eq a i)}) id1 id2
 
 sentintentseq :: ((,) ICmp Intent0) -> ((,) ICmp Intent0) -> Prelude.Bool
 sentintentseq id1 id2 =
@@ -1093,10 +909,8 @@ sentintentseq id1 id2 =
     case id0 of {
      (,) i i0 ->
       sumbool_rec (\_ ->
-        eq_rec_r i
-          (sumbool_rec (\_ -> eq_rec_r i0 Prelude.True b) (\_ ->
-            Prelude.False) (intent_eq b i0)) a) (\_ -> Prelude.False)
-        (iCmp_eq a i)}) id1 id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+          (intent_eq b i0)) (\_ -> Prelude.False) (iCmp_eq a i)}) id1 id2
 
 delppermsdomeq :: ((,) ((,) IdApp CProvider) Uri) -> ((,)
                   ((,) IdApp CProvider) Uri) -> Prelude.Bool
@@ -1105,17 +919,15 @@ delppermsdomeq id1 id2 =
     case id0 of {
      (,) p u ->
       sumbool_rec (\_ ->
-        eq_rec_r p
-          (sumbool_rec (\_ -> eq_rec_r u Prelude.True b) (\_ ->
-            Prelude.False) (uri_eq b u)) a) (\_ -> Prelude.False)
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (uri_eq b u))
+        (\_ -> Prelude.False)
         (prod_rec (\a0 b0 p0 ->
           case p0 of {
            (,) i c ->
             sumbool_rec (\_ ->
-              eq_rec_r i
-                (sumbool_rec (\_ -> eq_rec_r c Prelude.True b0) (\_ ->
-                  Prelude.False) (cProvider_eq b0 c)) a0) (\_ ->
-              Prelude.False) (idApp_eq a0 i)}) a p)}) id1 id2
+              sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+                (cProvider_eq b0 c)) (\_ -> Prelude.False) (idApp_eq a0 i)})
+          a p)}) id1 id2
 
 deltpermsdomeq :: ((,) ((,) ICmp CProvider) Uri) -> ((,) ((,) ICmp CProvider)
                   Uri) -> Prelude.Bool
@@ -1124,17 +936,15 @@ deltpermsdomeq id1 id2 =
     case id0 of {
      (,) p u ->
       sumbool_rec (\_ ->
-        eq_rec_r p
-          (sumbool_rec (\_ -> eq_rec_r u Prelude.True b) (\_ ->
-            Prelude.False) (uri_eq b u)) a) (\_ -> Prelude.False)
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (uri_eq b u))
+        (\_ -> Prelude.False)
         (prod_rec (\a0 b0 p0 ->
           case p0 of {
            (,) i c ->
             sumbool_rec (\_ ->
-              eq_rec_r i
-                (sumbool_rec (\_ -> eq_rec_r c Prelude.True b0) (\_ ->
-                  Prelude.False) (cProvider_eq b0 c)) a0) (\_ ->
-              Prelude.False) (iCmp_eq a0 i)}) a p)}) id1 id2
+              sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False)
+                (cProvider_eq b0 c)) (\_ -> Prelude.False) (iCmp_eq a0 i)}) a
+          p)}) id1 id2
 
 rescontdomeq :: ((,) IdApp Res) -> ((,) IdApp Res) -> Prelude.Bool
 rescontdomeq id1 id2 =
@@ -1142,10 +952,8 @@ rescontdomeq id1 id2 =
     case id0 of {
      (,) i r ->
       sumbool_rec (\_ ->
-        eq_rec_r i
-          (sumbool_rec (\_ -> eq_rec_r r Prelude.True b) (\_ ->
-            Prelude.False) (res_eq b r)) a) (\_ -> Prelude.False)
-        (idApp_eq a i)}) id1 id2
+        sumbool_rec (\_ -> Prelude.True) (\_ -> Prelude.False) (res_eq b r))
+        (\_ -> Prelude.False) (idApp_eq a i)}) id1 id2
 
 data Environment =
    Env (Mapping IdApp Manifest) (Mapping IdApp Cert) (Mapping IdApp
@@ -1155,22 +963,22 @@ data Environment =
 manifest :: Environment -> Mapping IdApp Manifest
 manifest e =
   case e of {
-   Env manifest0 cert0 defPerms0 systemImage0 -> manifest0}
+   Env manifest0 _ _ _ -> manifest0}
 
 cert :: Environment -> Mapping IdApp Cert
 cert e =
   case e of {
-   Env manifest0 cert0 defPerms0 systemImage0 -> cert0}
+   Env _ cert0 _ _ -> cert0}
 
 defPerms :: Environment -> Mapping IdApp (([]) Perm0)
 defPerms e =
   case e of {
-   Env manifest0 cert0 defPerms0 systemImage0 -> defPerms0}
+   Env _ _ defPerms0 _ -> defPerms0}
 
 systemImage :: Environment -> ([]) SysImgApp
 systemImage e =
   case e of {
-   Env manifest0 cert0 defPerms0 systemImage0 -> systemImage0}
+   Env _ _ _ systemImage0 -> systemImage0}
 
 data State =
    St (([]) IdApp) (Mapping IdApp (([]) IdGrp)) (Mapping IdApp (([]) Perm0)) 
@@ -1186,50 +994,42 @@ data State =
 apps :: State -> ([]) IdApp
 apps s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> apps0}
+   St apps0 _ _ _ _ _ _ _ -> apps0}
 
 grantedPermGroups :: State -> Mapping IdApp (([]) IdGrp)
 grantedPermGroups s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> grantedPermGroups0}
+   St _ grantedPermGroups0 _ _ _ _ _ _ -> grantedPermGroups0}
 
 perms :: State -> Mapping IdApp (([]) Perm0)
 perms s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> perms0}
+   St _ _ perms0 _ _ _ _ _ -> perms0}
 
 running :: State -> Mapping ICmp Cmp
 running s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> running0}
+   St _ _ _ running0 _ _ _ _ -> running0}
 
 delPPerms :: State -> Mapping ((,) ((,) IdApp CProvider) Uri) PType
 delPPerms s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> delPPerms0}
+   St _ _ _ _ delPPerms0 _ _ _ -> delPPerms0}
 
 delTPerms :: State -> Mapping ((,) ((,) ICmp CProvider) Uri) PType
 delTPerms s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> delTPerms0}
+   St _ _ _ _ _ delTPerms0 _ _ -> delTPerms0}
 
 resCont :: State -> Mapping ((,) IdApp Res) Val
 resCont s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> resCont0}
+   St _ _ _ _ _ _ resCont0 _ -> resCont0}
 
 sentIntents :: State -> ([]) ((,) ICmp Intent0)
 sentIntents s =
   case s of {
-   St apps0 grantedPermGroups0 perms0 running0 delPPerms0 delTPerms0 resCont0
-    sentIntents0 -> sentIntents0}
+   St _ _ _ _ _ _ _ sentIntents0 -> sentIntents0}
 
 data System =
    Sys State Environment
@@ -1237,12 +1037,12 @@ data System =
 state :: System -> State
 state s =
   case s of {
-   Sys state0 environment0 -> state0}
+   Sys state0 _ -> state0}
 
 environment :: System -> Environment
 environment s =
   case s of {
-   Sys state0 environment0 -> environment0}
+   Sys _ environment0 -> environment0}
 
 getCmpId :: Cmp -> IdCmp
 getCmpId c =
@@ -1313,8 +1113,8 @@ ptplus pt pt' =
      _ -> Both};
    Write ->
     case pt' of {
-     Write -> Write;
-     _ -> Both};
+     Read -> Both;
+     x -> x};
    Both -> Both}
 
 ptminus :: PType -> PType -> Prelude.Maybe PType
@@ -1376,7 +1176,7 @@ data Result0 =
 system :: Result0 -> System
 system r =
   case r of {
-   Result response system0 -> system0}
+   Result _ system0 -> system0}
 
 getValues :: (([]) (Exc a2 a1)) -> ([]) a2
 getValues l =
@@ -1385,7 +1185,7 @@ getValues l =
    (:) e rest ->
     case e of {
      Value a -> (:) a (getValues rest);
-     Error a -> getValues rest}}
+     Error _ -> getValues rest}}
 
 getAllComponents :: System -> ([]) Cmp
 getAllComponents s =
@@ -1467,7 +1267,7 @@ isNil :: (([]) a1) -> Prelude.Bool
 isNil l =
   case l of {
    ([]) -> Prelude.True;
-   (:) a l0 -> Prelude.False}
+   (:) _ _ -> Prelude.False}
 
 definesIntentFilterCorrectlyBool :: Cmp -> Prelude.Bool
 definesIntentFilterCorrectlyBool cmp0 =
@@ -1475,7 +1275,7 @@ definesIntentFilterCorrectlyBool cmp0 =
    theFilters = case cmp0 of {
                  CmpAct a -> intFilterA a;
                  CmpSrv s -> intFilterS s;
-                 CmpCP c -> ([]);
+                 CmpCP _ -> ([]);
                  CmpBR br -> intFilterB br}}
   in
   Prelude.not
@@ -1522,40 +1322,40 @@ isAnyCmpRunning :: IdApp -> System -> Prelude.Bool
 isAnyCmpRunning app0 s =
   case map_apply idApp_eq (manifest (environment s)) app0 of {
    Value mfst -> existsb (\c -> isCmpRunning c s) (cmp mfst);
-   Error i -> Prelude.False}
+   Error _ -> Prelude.False}
 
 fst3 :: ((,) ((,) a1 a2) a3) -> a1
 fst3 tuple3 =
   case tuple3 of {
-   (,) a b -> fst a}
+   (,) a _ -> fst a}
 
 snd3 :: ((,) ((,) a1 a2) a3) -> a2
 snd3 tuple3 =
   case tuple3 of {
-   (,) a b -> snd a}
+   (,) a _ -> snd a}
 
 isCProviderBool :: Cmp -> Prelude.Bool
 isCProviderBool c =
   case c of {
-   CmpCP c0 -> Prelude.True;
+   CmpCP _ -> Prelude.True;
    _ -> Prelude.False}
 
 isActivityBool :: Cmp -> Prelude.Bool
 isActivityBool c =
   case c of {
-   CmpAct a -> Prelude.True;
+   CmpAct _ -> Prelude.True;
    _ -> Prelude.False}
 
 isServiceBool :: Cmp -> Prelude.Bool
 isServiceBool c =
   case c of {
-   CmpSrv s -> Prelude.True;
+   CmpSrv _ -> Prelude.True;
    _ -> Prelude.False}
 
 isBroadReceiverBool :: Cmp -> Prelude.Bool
 isBroadReceiverBool c =
   case c of {
-   CmpBR b -> Prelude.True;
+   CmpBR _ -> Prelude.True;
    _ -> Prelude.False}
 
 defaultManifest :: Manifest
@@ -1576,7 +1376,7 @@ getAllCmps :: IdApp -> System -> ([]) Cmp
 getAllCmps app0 s =
   case map_apply idApp_eq (manifest (environment s)) app0 of {
    Value m -> cmp m;
-   Error i ->
+   Error _ ->
     cmp
       (manifestSI
         (hd defaultSysApp
@@ -1595,7 +1395,7 @@ dropAppPerms oldstate app0 =
    defPermsApp = case map_apply idApp_eq (defPerms (environment oldstate))
                         app0 of {
                   Value l -> l;
-                  Error i -> ([])}}
+                  Error _ -> ([])}}
   in
   let {theKeys = map_getKeys (perms (state oldstate))} in
   let {
@@ -1604,7 +1404,7 @@ dropAppPerms oldstate app0 =
                     Value l ->
                      filter (\p ->
                        Prelude.not (inBool perm_eq p defPermsApp)) l;
-                    Error i -> ([])})) theKeys}
+                    Error _ -> ([])})) theKeys}
   in
   map_drop idApp_eq (addAll idApp_eq theKeyVals (perms (state oldstate)))
     app0
@@ -1651,7 +1451,7 @@ permsInUse :: IdApp -> System -> ([]) IdPerm
 permsInUse app0 s =
   case map_apply idApp_eq (manifest (environment s)) app0 of {
    Value m -> use m;
-   Error i ->
+   Error _ ->
     hd ([])
       (map (\sysapp -> use (manifestSI sysapp))
         (filter (\sysapp ->
@@ -1663,35 +1463,35 @@ grantedPermsForApp :: IdApp -> System -> ([]) Perm0
 grantedPermsForApp app0 s =
   case map_apply idApp_eq (perms (state s)) app0 of {
    Value list -> list;
-   Error i -> ([])}
+   Error _ -> ([])}
 
 grantPermission :: IdApp -> Perm0 -> (Mapping IdApp (([]) Perm0)) -> Mapping
                    IdApp (([]) Perm0)
 grantPermission app0 p oldperms =
   case map_apply idApp_eq oldperms app0 of {
    Value list -> map_add idApp_eq oldperms app0 ((:) p list);
-   Error i -> oldperms}
+   Error _ -> oldperms}
 
 revokePermission :: IdApp -> Perm0 -> (Mapping IdApp (([]) Perm0)) -> Mapping
                     IdApp (([]) Perm0)
 revokePermission app0 p oldperms =
   case map_apply idApp_eq oldperms app0 of {
    Value list -> map_add idApp_eq oldperms app0 (remove perm_eq p list);
-   Error i -> oldperms}
+   Error _ -> oldperms}
 
 grantPermissionGroup :: IdApp -> IdGrp -> (Mapping IdApp (([]) IdGrp)) ->
                         Mapping IdApp (([]) IdGrp)
 grantPermissionGroup app0 g oldpermGroups =
   case map_apply idApp_eq oldpermGroups app0 of {
    Value list -> map_add idApp_eq oldpermGroups app0 ((:) g list);
-   Error i -> oldpermGroups}
+   Error _ -> oldpermGroups}
 
 revokePermissionGroup :: IdApp -> IdGrp -> (Mapping IdApp (([]) IdGrp)) ->
                          Mapping IdApp (([]) IdGrp)
 revokePermissionGroup app0 g oldpermGroups =
   case map_apply idApp_eq oldpermGroups app0 of {
    Value list -> map_add idApp_eq oldpermGroups app0 (remove idGrp_eq g list);
-   Error i -> oldpermGroups}
+   Error _ -> oldpermGroups}
 
 getManifestAndAppFromCmp :: Cmp -> System -> (,) IdApp Manifest
 getManifestAndAppFromCmp c s =
@@ -1711,7 +1511,7 @@ getManifestAndAppFromCmp c s =
                     case snd pair of {
                      Value mfst ->
                       inBool idCmp_eq (getCmpId c) (map getCmpId (cmp mfst));
-                     Error y -> Prelude.False}) maybeinstalledPairs0}
+                     Error _ -> Prelude.False}) maybeinstalledPairs0}
   in
   let {
    theapp = fst (hd ((,) defaultApp (Value defaultManifest)) hisManifests)}
@@ -1723,7 +1523,7 @@ getManifestAndAppFromCmp c s =
   in
   case theMaybeMfst of {
    Value mfst -> (,) theapp mfst;
-   Error i -> (,) theapp defaultManifest}
+   Error _ -> (,) theapp defaultManifest}
 
 getManifestFromCmp :: Cmp -> System -> Manifest
 getManifestFromCmp c s =
@@ -1768,7 +1568,7 @@ getDefPermsForApp :: IdApp -> System -> ([]) Perm0
 getDefPermsForApp a s =
   case map_apply idApp_eq (defPerms (environment s)) a of {
    Value l -> l;
-   Error i ->
+   Error _ ->
     hd ([])
       (map defPermsSI
         (filter (\sysapp ->
@@ -1780,7 +1580,7 @@ getAppCert :: IdApp -> System -> Cert
 getAppCert a s =
   case map_apply idApp_eq (cert (environment s)) a of {
    Value c -> c;
-   Error i ->
+   Error _ ->
     hd defaultCert
       (map certSI
         (filter (\sysapp ->
@@ -1801,7 +1601,7 @@ getManifestForApp :: IdApp -> System -> Manifest
 getManifestForApp a s =
   case map_apply idApp_eq (manifest (environment s)) a of {
    Value m -> m;
-   Error i ->
+   Error _ ->
     hd defaultManifest
       (map manifestSI
         (filter (\sysapp ->
@@ -1815,7 +1615,7 @@ groupIsGranted a p s =
    Prelude.Just grp ->
     case map_apply idApp_eq (grantedPermGroups (state s)) a of {
      Value grps -> inBool idGrp_eq grp grps;
-     Error i -> Prelude.False};
+     Error _ -> Prelude.False};
    Prelude.Nothing -> Prelude.False}
 
 appHasPermissionBool :: IdApp -> Perm0 -> System -> Prelude.Bool
@@ -1861,7 +1661,7 @@ canDoThisBool c cp s thisE =
      Prelude.True -> Prelude.False;
      Prelude.False ->
       case getManifestAndAppFromCmp c s of {
-       (,) a1 m1 ->
+       (,) a1 _ ->
         case getManifestAndAppFromCmp (CmpCP cp) s of {
          (,) a2 m2 ->
           let {
@@ -1940,7 +1740,7 @@ delPermsBool c cp u pt s =
              case pt' of {
               Both -> Prelude.True;
               _ -> eq_PType pt' pt};
-            Error p -> Prelude.False}) myRunningiCmps of {
+            Error _ -> Prelude.False}) myRunningiCmps of {
      Prelude.True -> Prelude.True;
      Prelude.False ->
       case map_apply delppermsdomeq (delPPerms (state s)) ((,) ((,) a cp) u) of {
@@ -1948,7 +1748,7 @@ delPermsBool c cp u pt s =
         case pt' of {
          Both -> Prelude.True;
          _ -> eq_PType pt' pt};
-       Error p -> Prelude.False}}}
+       Error _ -> Prelude.False}}}
 
 existsResBool :: CProvider -> Uri -> System -> Prelude.Bool
 existsResBool cp u s =
@@ -1960,18 +1760,18 @@ existsResBool cp u s =
     case map_apply uri_eq (map_res cp) u of {
      Value r ->
       case map_apply rescontdomeq (resCont (state s)) ((,) theapp r) of {
-       Value v -> Prelude.True;
-       Error p -> Prelude.False};
-     Error u0 -> Prelude.False}}
+       Value _ -> Prelude.True;
+       Error _ -> Prelude.False};
+     Error _ -> Prelude.False}}
 
 writeResCont :: ICmp -> CProvider -> Uri -> Val -> System -> Mapping
                 ((,) IdApp Res) Val
-writeResCont icmp cp u val s =
+writeResCont _ cp u val s =
   let {oldResCont = resCont (state s)} in
   let {a = getAppFromCmp (CmpCP cp) s} in
   case map_apply uri_eq (map_res cp) u of {
    Value r -> map_add rescontdomeq oldResCont ((,) a r) val;
-   Error u0 -> oldResCont}
+   Error _ -> oldResCont}
 
 intTypeEqBool :: IntentType -> IntentType -> Prelude.Bool
 intTypeEqBool t t' =
@@ -1992,7 +1792,7 @@ intTypeEqBool t t' =
 isSomethingBool :: (Prelude.Maybe a1) -> Prelude.Bool
 isSomethingBool x =
   case x of {
-   Prelude.Just a -> Prelude.True;
+   Prelude.Just _ -> Prelude.True;
    Prelude.Nothing -> Prelude.False}
 
 isiCmpRunningBool :: ICmp -> System -> Prelude.Bool
@@ -2009,13 +1809,13 @@ getSomes f l =
      Prelude.Nothing -> getSomes f rest}}
 
 actionTestBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-actionTestBool i iFil s =
+actionTestBool i iFil _ =
   case action i of {
    Prelude.Just iAct -> inBool intentAction_eq iAct (actFilter iFil);
    Prelude.Nothing -> Prelude.not (isNil (actFilter iFil))}
 
 categoryTestBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-categoryTestBool i iFil s =
+categoryTestBool i iFil _ =
   case category i of {
    ([]) -> Prelude.True;
    (:) c l ->
@@ -2045,28 +1845,28 @@ isContentOrFileBool i =
     (eqDataType (type0 (data0 i)) File)
 
 notUriAndNotMimeBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-notUriAndNotMimeBool i iFil s =
+notUriAndNotMimeBool i iFil _ =
   (Prelude.&&)
     ((Prelude.&&) (Prelude.not (isSomethingBool (path (data0 i))))
       (Prelude.not (isSomethingBool (mime (data0 i)))))
     (isNil (dataFilter iFil))
 
 uriAndNotMimeBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-uriAndNotMimeBool i iFil s =
+uriAndNotMimeBool i iFil _ =
   (Prelude.&&)
     ((Prelude.&&) (isSomethingBool (path (data0 i)))
       (Prelude.not (isSomethingBool (mime (data0 i)))))
     (inBool data_eq (data0 i) (dataFilter iFil))
 
 notUriAndMimeBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-notUriAndMimeBool i iFil s =
+notUriAndMimeBool i iFil _ =
   (Prelude.&&)
     ((Prelude.&&) (Prelude.not (isSomethingBool (path (data0 i))))
       (isSomethingBool (mime (data0 i))))
     (inBool data_eq (data0 i) (dataFilter iFil))
 
 uriAndMimeBool :: Intent0 -> IntentFilter -> System -> Prelude.Bool
-uriAndMimeBool i iFil s =
+uriAndMimeBool i iFil _ =
   let {allSomeMimes = getSomes mime (dataFilter iFil)} in
   let {allPaths = map path (dataFilter iFil)} in
   let {allSomePaths = getSomes path (dataFilter iFil)} in
@@ -2159,7 +1959,7 @@ getFilters c =
   case c of {
    CmpAct ac -> intFilterA ac;
    CmpSrv s -> intFilterS s;
-   CmpCP c0 -> ([]);
+   CmpCP _ -> ([]);
    CmpBR br -> intFilterB br}
 
 maybeIntentForAppCmp :: Intent0 -> IdApp -> ICmp -> System -> Prelude.Maybe
@@ -2180,7 +1980,7 @@ maybeIntentForAppCmp i a ic s =
                 Prelude.True -> Prelude.True;
                 Prelude.False -> Prelude.False}) allCmpsA of {
          ([]) -> Prelude.Nothing;
-         (:) c l -> Prelude.Just c};
+         (:) c _ -> Prelude.Just c};
        Prelude.Nothing -> Prelude.Nothing}}}
 
 canGrantBool :: CProvider -> Uri -> System -> Prelude.Bool
@@ -2269,7 +2069,7 @@ chooseCmp pair a s =
                                startableCmps}
     in
     hd defaultCmp filteredstartableCmps;
-   Error i -> defaultCmp}
+   Error _ -> defaultCmp}
 
 chooseCmpId :: ((,) ICmp Intent0) -> IdApp -> System -> IdCmp
 chooseCmpId pair a s =
@@ -2300,7 +2100,7 @@ resolveImplicitToExplicitIntent i a s =
   app remainingSentIntents updatedSentIntents
 
 performRunCmp :: Intent0 -> ICmp -> Cmp -> System -> Mapping ICmp Cmp
-performRunCmp i ic c s =
+performRunCmp _ ic c s =
   let {oldrunning = running (state s)} in map_add iCmp_eq oldrunning ic c
 
 iCmpGenerator :: (([]) ICmp) -> ICmp
@@ -2312,10 +2112,10 @@ getAnyCProviderWithUri u s =
   let {
    allCProviders = getSomes (\cmp0 ->
                      case cmp0 of {
-                      CmpAct a -> Prelude.Nothing;
-                      CmpSrv s0 -> Prelude.Nothing;
+                      CmpAct _ -> Prelude.Nothing;
+                      CmpSrv _ -> Prelude.Nothing;
                       CmpCP cp -> Prelude.Just cp;
-                      CmpBR b -> Prelude.Nothing}) allCmps}
+                      CmpBR _ -> Prelude.Nothing}) allCmps}
   in
   let {filteredCPs = filter (\cp -> existsResBool cp u s) allCProviders} in
   hd defaultCProvider filteredCPs
@@ -2333,7 +2133,7 @@ addDelPPerm oldPPerms idx pt =
   map_add delppermsdomeq oldPPerms idx
     (case map_apply delppermsdomeq oldPPerms idx of {
       Value pt' -> ptplus pt' pt;
-      Error p -> pt})
+      Error _ -> pt})
 
 removeAllPerms :: (((,) ((,) a1 CProvider) Uri) -> ((,) ((,) a1 CProvider)
                   Uri) -> Prelude.Bool) -> (Mapping
@@ -2353,13 +2153,13 @@ removeAllPerms domeq mp cp u pt =
    willdrop = filter (\tuple ->
                 case map_apply domeq mp tuple of {
                  Value pt' -> Prelude.not (isSomethingBool (ptminus pt' pt));
-                 Error p -> Prelude.False}) willupdate}
+                 Error _ -> Prelude.False}) willupdate}
   in
   let {
    overrideKeys = filter (\tuple ->
                     case map_apply domeq mp tuple of {
                      Value pt' -> isSomethingBool (ptminus pt' pt);
-                     Error p -> Prelude.False}) willupdate}
+                     Error _ -> Prelude.False}) willupdate}
   in
   let {
    overrideKeyVals = map (\tuple -> (,) tuple
@@ -2368,7 +2168,7 @@ removeAllPerms domeq mp cp u pt =
                           case ptminus pt' pt of {
                            Prelude.Just pt'' -> pt'';
                            Prelude.Nothing -> Both};
-                         Error p -> Both})) overrideKeys}
+                         Error _ -> Both})) overrideKeys}
   in
   dropAll domeq willdrop (addAll domeq overrideKeyVals mp)
 
@@ -2377,7 +2177,7 @@ getMandatoryPerms = \_ -> []
 
 install_pre :: IdApp -> Manifest -> Cert -> (([]) Res) -> System ->
                Prelude.Maybe ErrorCode
-install_pre app0 m c lRes s =
+install_pre app0 m _ _ s =
   case isAppInstalledBool app0 s of {
    Prelude.True -> Prelude.Just App_already_installed;
    Prelude.False ->
@@ -2387,7 +2187,7 @@ install_pre app0 m c lRes s =
       case has_duplicates idPerm_eq (map idP (usrP m)) of {
        Prelude.True -> Prelude.Just Duplicated_perm_id;
        Prelude.False ->
-        case existsb (\c0 -> cmpIdInStateBool c0 s) (cmp m) of {
+        case existsb (\c -> cmpIdInStateBool c s) (cmp m) of {
          Prelude.True -> Prelude.Just Cmp_already_defined;
          Prelude.False ->
           case Prelude.not (authPermsBool m s) of {
@@ -2525,7 +2325,7 @@ grantgroup_pre g a s =
               Prelude.Nothing -> Prelude.False}) dangerousPermsUsedByA of {
        Prelude.True -> Prelude.Nothing;
        Prelude.False -> Prelude.Just Group_not_in_use}};
-   Error i -> Prelude.Just No_such_app}
+   Error _ -> Prelude.Just No_such_app}
 
 grantgroup_post :: IdGrp -> IdApp -> System -> System
 grantgroup_post g app0 s =
@@ -2549,7 +2349,7 @@ revokegroup_pre g app0 s =
     case inBool idGrp_eq g lGrp of {
      Prelude.True -> Prelude.Nothing;
      Prelude.False -> Prelude.Just Group_wasnt_granted};
-   Error i -> Prelude.Just Group_wasnt_granted}
+   Error _ -> Prelude.Just Group_wasnt_granted}
 
 revokegroup_post :: IdGrp -> IdApp -> System -> System
 revokegroup_post g app0 s =
@@ -2576,10 +2376,10 @@ read_pre icmp cp u s =
       case (Prelude.||) (canReadBool c cp s) (delPermsBool c cp u Read s) of {
        Prelude.True -> Prelude.Nothing;
        Prelude.False -> Prelude.Just Not_enough_permissions};
-     Error i -> Prelude.Just Instance_not_running}}
+     Error _ -> Prelude.Just Instance_not_running}}
 
 read_post :: ICmp -> CProvider -> Uri -> System -> System
-read_post icmp cp u s =
+read_post _ _ _ s =
   s
 
 read_safe :: ICmp -> CProvider -> Uri -> System -> Result0
@@ -2590,7 +2390,7 @@ read_safe icmp cp u s =
 
 write_pre :: ICmp -> CProvider -> Uri -> Val -> System -> Prelude.Maybe
              ErrorCode
-write_pre icmp cp u v s =
+write_pre icmp cp u _ s =
   case Prelude.not (existsResBool cp u s) of {
    Prelude.True -> Prelude.Just No_such_res;
    Prelude.False ->
@@ -2599,7 +2399,7 @@ write_pre icmp cp u v s =
       case (Prelude.||) (canWriteBool c cp s) (delPermsBool c cp u Write s) of {
        Prelude.True -> Prelude.Nothing;
        Prelude.False -> Prelude.Just Not_enough_permissions};
-     Error i -> Prelude.Just Instance_not_running}}
+     Error _ -> Prelude.Just Instance_not_running}}
 
 write_post :: ICmp -> CProvider -> Uri -> Val -> System -> System
 write_post icmp cp u v s =
@@ -2678,7 +2478,7 @@ startService_safe intt icmp s =
 
 sendBroadcast_pre :: Intent0 -> ICmp -> (Prelude.Maybe Perm0) -> System ->
                      Prelude.Maybe ErrorCode
-sendBroadcast_pre intt icmp p s =
+sendBroadcast_pre intt icmp _ s =
   case Prelude.not (intTypeEqBool (intType intt) IntBroadcast) of {
    Prelude.True -> Prelude.Just Incorrect_intent_type;
    Prelude.False ->
@@ -2765,7 +2565,7 @@ resolveIntent_pre i a s =
                       (categoryTestBool intt iFil s))
                     (dataTestBool intt iFil s))
                   (concat (map getFilters startableCmps));
-               Error i0 -> Prelude.False})) (sentIntents (state s)) of {
+               Error _ -> Prelude.False})) (sentIntents (state s)) of {
      Prelude.True -> Prelude.Nothing;
      Prelude.False -> Prelude.Just No_such_intt}}
 
@@ -2818,7 +2618,7 @@ receiveIntent_pre i ic a s =
                  Prelude.True -> Prelude.Nothing;
                  Prelude.False -> Prelude.Just Not_enough_permissions};
                Prelude.Nothing -> Prelude.Nothing}}}};
-       Error i0 -> Prelude.Just Instance_not_running}};
+       Error _ -> Prelude.Just Instance_not_running}};
    Prelude.Nothing -> Prelude.Just No_such_intt}
 
 receiveIntent_post :: Intent0 -> ICmp -> IdApp -> System -> System
@@ -2908,10 +2708,10 @@ grantP_pre icmp cp a u pt s =
                    (Prelude.not thiscanwrite) of {
              Prelude.True -> Prelude.Just Not_enough_permissions;
              Prelude.False -> Prelude.Nothing}};
-         Error i -> Prelude.Just Instance_not_running}}}}
+         Error _ -> Prelude.Just Instance_not_running}}}}
 
 grantP_post :: ICmp -> CProvider -> IdApp -> Uri -> PType -> System -> System
-grantP_post icmp cp a u pt s =
+grantP_post _ cp a u pt s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
   Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
@@ -2955,10 +2755,10 @@ revokeDel_pre icmp cp u pt s =
                (Prelude.not thiscanwrite) of {
          Prelude.True -> Prelude.Just Not_enough_permissions;
          Prelude.False -> Prelude.Nothing}};
-     Error i -> Prelude.Just Instance_not_running}}
+     Error _ -> Prelude.Just Instance_not_running}}
 
 revokeDel_post :: ICmp -> CProvider -> Uri -> PType -> System -> System
-revokeDel_post icmp cp u pt s =
+revokeDel_post _ cp u pt s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
   Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
@@ -2982,10 +2782,10 @@ call_pre icmp sac s =
            (getMandatoryPerms sac) of {
      Prelude.True -> Prelude.Just Not_enough_permissions;
      Prelude.False -> Prelude.Nothing};
-   Error i -> Prelude.Just Instance_not_running}
+   Error _ -> Prelude.Just Instance_not_running}
 
 call_post :: ICmp -> SACall -> System -> System
-call_post icmp sac s =
+call_post _ _ s =
   s
 
 call_safe :: ICmp -> SACall -> System -> Result0
@@ -3003,11 +2803,11 @@ step s a =
    Revoke p app0 -> revoke_safe p app0 s;
    GrantPermGroup grp app0 -> grantgroup_safe grp app0 s;
    RevokePermGroup grp app0 -> revokegroup_safe grp app0 s;
-   HasPermission a0 p -> Result Ok s;
+   HasPermission _ _ -> Result Ok s;
    Read0 ic cp u -> read_safe ic cp u s;
    Write0 ic cp u v -> write_safe ic cp u v s;
    StartActivity intt ic -> startActivity_safe intt ic s;
-   StartActivityForResult intt n ic -> startActivity_safe intt ic s;
+   StartActivityForResult intt _ ic -> startActivity_safe intt ic s;
    StartService intt ic -> startService_safe intt ic s;
    SendBroadcast intt ic p -> sendBroadcast_safe intt ic p s;
    SendOrderedBroadcast intt ic p -> sendBroadcast_safe intt ic p s;
@@ -3019,10 +2819,10 @@ step s a =
    RevokeDel ic cp u pt -> revokeDel_safe ic cp u pt s;
    Call ic sac -> call_safe ic sac s}
 
-certAndroidSec :: System -> (([]) Action) -> ([]) System
-certAndroidSec s actions =
+trace :: System -> (([]) Action) -> ([]) System
+trace s actions =
   case actions of {
    ([]) -> ([]);
    (:) action0 rest ->
-    let {sys = system (step s action0)} in (:) sys (certAndroidSec sys rest)}
+    let {sys = system (step s action0)} in (:) sys (trace sys rest)}
 

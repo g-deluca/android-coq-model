@@ -152,13 +152,13 @@ Proof.
     assert (exists l, map_apply idApp_eq (perms (state s)) a = Value idApp l).
     apply ifInAppsOrSysAppThenPerms;auto.
     destruct H1 as [l].
-    remember (fun p0 : Perm => negb (InBool Perm Perm_eq p0 match map_apply idApp_eq (defPerms (environment s)) i with | Value l0 => l0 | Error _ => nil end)) as filterFun.
+    remember (fun p0 : Perm => negb (InBool Perm Perm_eq p0 match map_apply idApp_eq (defPerms (environment s)) i with | Value _ l0 => l0 | Error _ _ => nil end)) as filterFun.
     exists l.
     split;auto.
-    assert (map_apply idApp_eq (addAll idApp (list Perm) idApp_eq (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value l => filter filterFun l | Error _ => nil end)) (map_getKeys (perms (state s)))) (perms (state s))) a = Value idApp (filter filterFun l) ).
+    assert (map_apply idApp_eq (addAll idApp (list Perm) idApp_eq (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value _ l => filter filterFun l | Error _ _ => nil end)) (map_getKeys (perms (state s)))) (perms (state s))) a = Value idApp (filter filterFun l) ).
     apply inAddAll.
     remember (fun pair : idApp * list Perm => if idApp_eq (fst pair) a then true else false) as f.
-    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value l0 => filter filterFun l0 | Error _ => nil end)) (map_getKeys (perms (state s)))) as l2.
+    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value _ l0 => filter filterFun l0 | Error _ _ => nil end)) (map_getKeys (perms (state s)))) as l2.
     assert (In (a, filter filterFun l) l2).
     rewrite Heql2.
     rewrite in_map_iff.

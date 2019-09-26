@@ -1130,7 +1130,7 @@ map_apply delppermsdomeq (delPPerms (state s')) (a', cp', u') = Value (idApp*CPr
 map_apply delppermsdomeq (delPPerms (state s')) (a', cp', u') = Value (idApp*CProvider*uri) pt' -> 
 ((a=a'/\cp=cp'/\u=u') ->
 match map_apply delppermsdomeq (delPPerms (state s)) (a', cp', u') with
-    | Value pt'' => ptplus pt pt'' = pt'
+    | Value _ pt'' => ptplus pt pt'' = pt'
     | _ => pt = pt'
 end
 ) /\
@@ -1138,7 +1138,7 @@ end
 map_apply delppermsdomeq (delPPerms (state s)) (a', cp', u') = Value (idApp*CProvider*uri) pt')) /\
 map_apply delppermsdomeq (delPPerms (state s')) (a, cp, u) =
 match map_apply delppermsdomeq (delPPerms (state s)) (a, cp, u) with
-    | Value pt' => Value (idApp*CProvider*uri) (ptplus pt' pt)
+    | Value _ pt' => Value (idApp*CProvider*uri) (ptplus pt' pt)
     | _ => Value (idApp*CProvider*uri) pt
 end /\
 (* se debe asegurar la corrección de delPPerms *)
@@ -1204,8 +1204,8 @@ map_apply deltpermsdomeq (delTPerms (state s)) (ic', cp', u') = Value (iCmp*CPro
 (* se pisa el permiso temporal con la resta entre él y el que se desea quitar *)
 (forall ic':iCmp,
 match map_apply deltpermsdomeq (delTPerms (state s)) (ic', cp, u) with
-    | Error _ => ~(is_Value (map_apply deltpermsdomeq (delTPerms (state s')) (ic', cp, u)))
-    | Value pt' => match ptminus pt' pt with
+    | Error _ _ => ~(is_Value (map_apply deltpermsdomeq (delTPerms (state s')) (ic', cp, u)))
+    | Value _ pt' => match ptminus pt' pt with
         | None => ~(is_Value (map_apply deltpermsdomeq (delTPerms (state s')) (ic', cp, u)))
         | Some pt'' => map_apply deltpermsdomeq (delTPerms (state s')) (ic', cp, u) = Value (iCmp*CProvider*uri) pt''
         end
@@ -1228,8 +1228,8 @@ map_apply delppermsdomeq (delPPerms (state s)) (a', cp', u') = Value (idApp*CPro
 (cp' = cp /\ u' = u /\ ptminus pt' pt = Some pt'')))) /\
 (forall a':idApp,
 match map_apply delppermsdomeq (delPPerms (state s)) (a', cp, u) with
-    | Error _ => ~(is_Value (map_apply delppermsdomeq (delPPerms (state s')) (a', cp, u)))
-    | Value pt' => match ptminus pt' pt with
+    | Error _ _ => ~(is_Value (map_apply delppermsdomeq (delPPerms (state s')) (a', cp, u)))
+    | Value _ pt' => match ptminus pt' pt with
         | None => ~(is_Value (map_apply delppermsdomeq (delPPerms (state s')) (a', cp, u)))
         | Some pt'' => map_apply delppermsdomeq (delPPerms (state s')) (a', cp, u) = Value (idApp*CProvider*uri) pt''
     end

@@ -27,7 +27,7 @@ Section AuxDefinitions.
 Fixpoint getValues (A B:Set) (l:list (exc B A)) {struct l} : list B := 
     match l with
     | nil => nil
-    | Value a::rest => a :: getValues A B rest
+    | Value _ a::rest => a :: getValues A B rest
     | _ :: rest => getValues A B rest
     end.
 
@@ -135,8 +135,8 @@ Definition isCmpRunning (c:Cmp) (s:System) : bool :=
 (* Indica si algún componente de la app se está ejecutando en ese momento *)
 Definition isAnyCmpRunning (app:idApp) (s:System) : bool :=
     match map_apply idApp_eq (manifest (environment s)) app with
-    | Error _ => false (* No pasa nunca *)
-    | Value mfst => existsb (fun c => isCmpRunning c s) (cmp mfst)
+    | Error _ _ => false (* No pasa nunca *)
+    | Value _ mfst => existsb (fun c => isCmpRunning c s) (cmp mfst)
     end.
 
 (* fst de una tripla *)
@@ -200,8 +200,8 @@ Definition defaultSysApp : SysImgApp := siapp defaultApp defaultCert defaultMani
 (* Retorna todos los componentes que pertenecen a una app *)
 Definition getAllCmps (app:idApp) (s:System) : list Cmp :=
     match map_apply idApp_eq (manifest (environment s)) app with
-    | Value m => cmp m
-    | Error _ => cmp (manifestSI (hd defaultSysApp (filter (fun sysapp => If idApp_eq app (idSI sysapp) then true else false) (systemImage (environment s)))))
+    | Value _ m => cmp m
+    | Error _ _ => cmp (manifestSI (hd defaultSysApp (filter (fun sysapp => If idApp_eq app (idSI sysapp) then true else false) (systemImage (environment s)))))
     end.
 
 (* Retorna todos los proveedores de contenido de una aplicación *)
@@ -211,11 +211,11 @@ Definition getCProviders (app:idApp) (s:System) : list Cmp :=
 (* Elimina todos los otorgamientos a todos los permisos definidos por la aplicación *)
 Definition dropAppPerms (oldstate:System) (app:idApp) : mapping idApp (list Perm) :=
     let defPermsApp := match map_apply idApp_eq (defPerms (environment oldstate)) app with
-                    | Value l => l
-                    | Error _ => nil (* nunca pasa *)
+                    | Value _ l => l
+                    | Error _ _ => nil (* nunca pasa *)
                     end in
     let theKeys := map_getKeys (perms (state oldstate)) in
-    let theKeyVals := map (fun key => (key,match map_apply idApp_eq (perms (state oldstate)) key with | Value l => filter (fun p => negb (InBool Perm Perm_eq p defPermsApp)) l | Error _ => nil (*nunca pasa*) end)) theKeys in
+    let theKeyVals := map (fun key => (key,match map_apply idApp_eq (perms (state oldstate)) key with | Value _ l => filter (fun p => negb (InBool Perm Perm_eq p defPermsApp)) l | Error _ _ => nil (*nunca pasa*) end)) theKeys in
             map_drop idApp_eq (addAll idApp (list Perm) idApp_eq theKeyVals (perms (state oldstate))) app.
 
 (* Elimina todas las delegaciones permanentes a todos los proveedores de contenido de la aplicación *)
@@ -240,55 +240,55 @@ Definition dropAllRes (resCont : mapping (idApp*res) Val) (app:idApp) : mapping 
 (* Retorna la lista de permisos que la aplicación lista como usados *)
 Definition permsInUse (app:idApp) (s:System) : list idPerm :=
     match map_apply idApp_eq (manifest (environment s)) app with
-    | Error _ => hd nil (map (fun sysapp => use (manifestSI sysapp)) (filter (fun sysapp => If idApp_eq app (idSI sysapp) then true else false) (systemImage (environment s))))
-    | Value m => use m
+    | Error _ _ => hd nil (map (fun sysapp => use (manifestSI sysapp)) (filter (fun sysapp => If idApp_eq app (idSI sysapp) then true else false) (systemImage (environment s))))
+    | Value _ m => use m
     end.
 
 (* Retorna la lista de permisos individualmente otorgados a la aplicación *)
 Definition grantedPermsForApp (app:idApp) (s:System) : list Perm :=
     match map_apply idApp_eq (perms (state s)) app with
-    | Error _ => nil (* Nunca pasa *)
-    | Value list => list
+    | Error _ _ => nil (* Nunca pasa *)
+    | Value _ list => list
     end.
 
 (* Agrega un permiso como individualmente otorgado a la aplicación *)
 Definition grantPermission (app:idApp) (p:Perm) (oldperms : mapping idApp (list Perm)) : mapping idApp (list Perm) :=
     match map_apply idApp_eq oldperms app with
-    | Error _ => oldperms (* Nunca pasa *)
-    | Value list => map_add idApp_eq oldperms app (p::list)
+    | Error _ _ => oldperms (* Nunca pasa *)
+    | Value _ list => map_add idApp_eq oldperms app (p::list)
     end.
 
 (* Elimina un permiso de los individualmente otorgados a la aplicación *)
 Definition revokePermission (app:idApp) (p:Perm) (oldperms : mapping idApp (list Perm)) : mapping idApp (list Perm) :=
     match map_apply idApp_eq oldperms app with
-    | Error _ => oldperms (* Nunca pasa *)
-    | Value list => map_add idApp_eq oldperms app (remove Perm_eq p list)
+    | Error _ _ => oldperms (* Nunca pasa *)
+    | Value _ list => map_add idApp_eq oldperms app (remove Perm_eq p list)
     end.
 
 (* Agrega un grupo de permisos como otorgado a la aplicación *)
 Definition grantPermissionGroup (app:idApp) (g:idGrp) (oldpermGroups : mapping idApp (list idGrp)) : mapping idApp (list idGrp) :=
     match map_apply idApp_eq oldpermGroups app with
-    | Error _ => oldpermGroups (* Nunca pasa *)
-    | Value list => map_add idApp_eq oldpermGroups app (g::list)
+    | Error _ _ => oldpermGroups (* Nunca pasa *)
+    | Value _ list => map_add idApp_eq oldpermGroups app (g::list)
     end.
 
 (* Elimina un grupo de permisos de los otorgados a la aplicación *)
 Definition revokePermissionGroup (app:idApp) (g:idGrp) (oldpermGroups : mapping idApp (list idGrp)) : mapping idApp (list idGrp) :=
     match map_apply idApp_eq oldpermGroups app with
-    | Error _ => oldpermGroups (* Nunca pasa *)
-    | Value list => map_add idApp_eq oldpermGroups app (remove idGrp_eq g list)
+    | Error _ _ => oldpermGroups (* Nunca pasa *)
+    | Value _ list => map_add idApp_eq oldpermGroups app (remove idGrp_eq g list)
     end.
 
 (* Retorna el id de la aplicación a la cual el componente pertenece; junto con su manifiesto *)
 Definition getManifestAndAppFromCmp (c:Cmp) (s:System) : (idApp*Manifest) :=
     let maybeinstalledPairs := map (fun a => (a, (map_apply idApp_eq (manifest (environment s)) a ))) (apps (state s)) in
     let maybeinstalledPairs := maybeinstalledPairs ++ map (fun sysapp => (idSI sysapp, Value idApp (manifestSI sysapp))) (systemImage (environment s)) in
-    let hisManifests := filter (fun pair => match (snd pair) with | Error _ => false | Value mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) end) maybeinstalledPairs in
+    let hisManifests := filter (fun pair => match (snd pair) with | Error _ _ => false | Value _ mfst => InBool idCmp idCmp_eq (getCmpId c) (map getCmpId (cmp mfst)) end) maybeinstalledPairs in
     let theapp := fst (hd (defaultApp, Value idApp defaultManifest) hisManifests) in
     let theMaybeMfst := snd (hd (defaultApp, Value idApp defaultManifest) hisManifests) in
     match theMaybeMfst with
-    | Error _ => (theapp, defaultManifest)
-    | Value mfst => (theapp, mfst)
+    | Error _ _ => (theapp, defaultManifest)
+    | Value _ mfst => (theapp, mfst)
     end.
 
 (* Retorna el manifiesto de la aplicación a la cual el componente pertenece *)
@@ -330,15 +330,15 @@ Definition getDefaultExpBool (cp: CProvider) (s:System): bool :=
 (* Retorna la lista de permisos definidos por la aplicación *)
 Definition getDefPermsForApp (a:idApp) (s:System) : list Perm :=
     match (map_apply idApp_eq (defPerms (environment s)) a) with
-    | Value l => l
-    | Error _ => hd nil (map defPermsSI (filter (fun sysapp => If idApp_eq a (idSI sysapp)then true else false) (systemImage (environment s))))
+    | Value _ l => l
+    | Error _ _ => hd nil (map defPermsSI (filter (fun sysapp => If idApp_eq a (idSI sysapp)then true else false) (systemImage (environment s))))
     end.
 
 (* Retorna el certificado con el que fue firmada una aplicación *)
 Definition getAppCert (a:idApp) (s:System) : Cert :=
     match (map_apply idApp_eq (cert (environment s)) a) with
-    | Value c => c
-    | Error _ => hd defaultCert (map certSI (filter (fun sysapp => If idApp_eq a (idSI sysapp) then true else false) (systemImage (environment s))))
+    | Value _ c => c
+    | Error _ _ => hd defaultCert (map certSI (filter (fun sysapp => If idApp_eq a (idSI sysapp) then true else false) (systemImage (environment s))))
     end.
 
 (* Retorna el certificado con el que fue firmada la aplicación que declara cierto permiso *)
@@ -350,8 +350,8 @@ Definition getCertOfDefiner (p:Perm) (s:System) : Cert :=
 (* Retorna el manifiesto de una aplicación *)
 Definition getManifestForApp (a:idApp) (s:System) : Manifest :=
     match (map_apply idApp_eq (manifest (environment s)) a) with
-    | Value m => m
-    | Error _ => hd defaultManifest (map manifestSI (filter (fun sysapp => If idApp_eq a (idSI sysapp) then true else false) (systemImage (environment s))))
+    | Value _ m => m
+    | Error _ _ => hd defaultManifest (map manifestSI (filter (fun sysapp => If idApp_eq a (idSI sysapp) then true else false) (systemImage (environment s))))
     end.
 
 (* Indica si el permiso forma parte de un grupo y este grupo fue otorgado a la aplicación *)
@@ -359,8 +359,8 @@ Definition groupIsGranted (a:idApp) (p:Perm) (s:System) : bool :=
     match maybeGrp p with
     | None => false
     | Some grp => match map_apply idApp_eq (grantedPermGroups (state s)) a with
-        | Error _ => false
-        | Value grps => InBool idGrp idGrp_eq grp grps
+        | Error _ _ => false
+        | Value _ grps => InBool idGrp idGrp_eq grp grps
         end
     end.
 
@@ -453,8 +453,8 @@ Definition delPermsBool (c:Cmp)(cp:CProvider)(u:uri)(pt:PType)(s:System) : bool 
     let a := getAppFromCmp c s in
     let runningAppAndiCmps := map (fun pair=> (item_index pair, getAppFromCmp (item_info pair) s)) (running (state s)) in
     let myRunningiCmps := map (fun pair => fst pair) (filter (fun pair => If idApp_eq a (snd pair) then true else false) runningAppAndiCmps) in
-    if existsb (fun icmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Error _ => false | Value Both => true | Value pt' => eq_PType pt' pt end) myRunningiCmps then true
-    else match map_apply delppermsdomeq (delPPerms (state s)) (a, cp, u) with | Error _ => false | Value Both => true | Value pt' => eq_PType pt' pt end.
+    if existsb (fun icmp => match map_apply deltpermsdomeq (delTPerms (state s)) (icmp, cp, u) with | Error _ _ => false | Value _ Both => true | Value _ pt' => eq_PType pt' pt end) myRunningiCmps then true
+    else match map_apply delppermsdomeq (delPPerms (state s)) (a, cp, u) with | Error _ _ => false | Value _ Both => true | Value _ pt' => eq_PType pt' pt end.
 
 (* Indica si existe el recurso apuntado por el URI u en
   el content provider cp *)
@@ -463,9 +463,9 @@ Definition existsResBool (cp : CProvider)(u:uri)(s:System) : bool :=
     if negb (InBool Cmp Cmp_eq (cmpCP cp) allTheComponents) then false else
     let theapp := getAppFromCmp (cmpCP cp) s in
     match map_apply uri_eq (map_res cp) u with
-    | Error _ => false
-    | Value r => match map_apply rescontdomeq (resCont (state s)) (theapp, r) with
-        | Error _ => false
+    | Error _ _ => false
+    | Value _ r => match map_apply rescontdomeq (resCont (state s)) (theapp, r) with
+        | Error _ _ => false
         | _ => true
         end
     end.
@@ -475,8 +475,8 @@ Definition writeResCont (icmp:iCmp) (cp:CProvider) (u:uri) (val:Val) (s:System) 
     let oldResCont := resCont (state s) in
     let a := getAppFromCmp (cmpCP cp) s in
     match map_apply uri_eq (map_res cp) u with
-    | Error _ => oldResCont (* Nunca pasa *)
-    | Value r => map_add rescontdomeq oldResCont (a, r) val
+    | Error _ _ => oldResCont (* Nunca pasa *)
+    | Value _ r => map_add rescontdomeq oldResCont (a, r) val
     end.
 
 (* Indica si dos tipos de intent son iguales *)
@@ -697,8 +697,8 @@ Definition chooseCmp (pair:iCmp * Intent) (a:idApp) (s:System) :=
     let intt := snd pair in
     let defaultCmp := cmpCP defaultCProvider in
     match map_apply iCmp_eq (running (state s)) ic with
-        | Error _ => defaultCmp (* nunca pasa *)
-        | Value c1 => let startableCmps := match intType intt with
+        | Error _ _ => defaultCmp (* nunca pasa *)
+        | Value _ c1 => let startableCmps := match intType intt with
                 | intActivity => filter (fun c2 => canStartBool c1 c2 s) allActsA (* Si el intent es de actividad, busco entre las actividades *)
                 | intService => filter (fun c2 => canStartBool c1 c2 s) allServsA (* Si el intent es de servicio, busco entre los servicios *)
                 | intBroadcast  => filter (fun c2 => canStartBool c1 c2 s) allBroadsA (* Si el intent es de broadcast, busco entre los broadcasts *)
@@ -754,16 +754,16 @@ Definition performGrantTempPerm (pt:PType) (u:uri) (cp:CProvider) (ic:iCmp) (s:S
 Definition addDelPPerm (oldPPerms: mapping (idApp * CProvider * uri) PType) (idx:(idApp * CProvider * uri)) (pt:PType) : mapping (idApp * CProvider * uri) PType :=
     map_add delppermsdomeq oldPPerms idx (
         match map_apply delppermsdomeq oldPPerms idx with
-        | Value pt' => ptplus pt' pt
+        | Value _ pt' => ptplus pt' pt
         | _ => pt
         end).
 
 (* Se revoca los permisos de efectuar pt en el mapa mp sobre el uri u del proveedor de contenido cp *)
 Definition removeAllPerms (A:Set) (domeq: forall (id1 id2 : (A*CProvider*uri)), {id1 = id2} + {id1 <> id2}) (mp:mapping (A*CProvider*uri) PType) (cp:CProvider) (u:uri) (pt:PType) : mapping (A*CProvider*uri) PType :=
     let willupdate := filter (fun tuple => If CProvider_eq cp (snd (fst tuple)) then (If uri_eq u (snd tuple) then true else false) else false) (map_getKeys mp) in
-    let willdrop := filter (fun tuple => match map_apply domeq mp tuple with | Error _ => false | Value pt' => negb (isSomethingBool PType (ptminus pt' pt)) end) willupdate in
-    let overrideKeys := filter (fun tuple => match map_apply domeq mp tuple with | Error _ => false | Value pt' => isSomethingBool PType (ptminus pt' pt) end) willupdate in
-    let overrideKeyVals := map (fun tuple => (tuple,match map_apply domeq mp tuple with | Error _ => Both (*no ocurre*) | Value pt' => match ptminus pt' pt with None => Both (*no ocurre*) | Some pt'' => pt'' end end)) overrideKeys in
+    let willdrop := filter (fun tuple => match map_apply domeq mp tuple with | Error _ _ => false | Value _ pt' => negb (isSomethingBool PType (ptminus pt' pt)) end) willupdate in
+    let overrideKeys := filter (fun tuple => match map_apply domeq mp tuple with | Error _ _ => false | Value _ pt' => isSomethingBool PType (ptminus pt' pt) end) willupdate in
+    let overrideKeyVals := map (fun tuple => (tuple,match map_apply domeq mp tuple with | Error _ _ => Both (*no ocurre*) | Value _ pt' => match ptminus pt' pt with None => Both (*no ocurre*) | Some pt'' => pt'' end end)) overrideKeys in
     dropAll (A*CProvider*uri) PType domeq willdrop (addAll (A*CProvider*uri) PType domeq overrideKeyVals mp).
 
 
@@ -924,8 +924,8 @@ Section ImplGrantGroup.
 
 Definition grantgroup_pre (g:idGrp) (a:idApp) (s:System) : option ErrorCode :=
     match map_apply idApp_eq (grantedPermGroups (state s)) a with
-    | Error _ => Some no_such_app
-    | Value lGrp => if InBool idGrp idGrp_eq g lGrp then Some group_already_granted else
+    | Error _ _ => Some no_such_app
+    | Value _ lGrp => if InBool idGrp idGrp_eq g lGrp then Some group_already_granted else
             let useIdPermsA := permsInUse a s in
             let usePermsA := filter (fun p => InBool idPerm idPerm_eq (idP p) useIdPermsA) (getAllPerms s) in
             let dangerousPermsUsedByA := filter (fun p => match pl p with | dangerous => true | _ => false end) usePermsA in
@@ -961,8 +961,8 @@ Section ImplRevokeGroup.
 
 Definition revokegroup_pre (g:idGrp) (app:idApp) (s:System) : option ErrorCode :=
     match map_apply idApp_eq (grantedPermGroups (state s)) app with
-    | Error _ => Some group_wasnt_granted
-    | Value lGrp => if InBool idGrp idGrp_eq g lGrp then None else Some group_wasnt_granted
+    | Error _ _ => Some group_wasnt_granted
+    | Value _ lGrp => if InBool idGrp idGrp_eq g lGrp then None else Some group_wasnt_granted
     end.
 
 
@@ -996,8 +996,8 @@ Section ImplRead.
 Definition read_pre (icmp:iCmp) (cp:CProvider) (u:uri) (s:System) : option ErrorCode :=
     if negb (existsResBool cp u s) then Some no_such_res else
     match map_apply iCmp_eq (running (state s)) icmp with
-    | Error _ => Some instance_not_running
-    | Value c => if canReadBool c cp s || delPermsBool c cp u Read s then None else Some not_enough_permissions
+    | Error _ _ => Some instance_not_running
+    | Value _ c => if canReadBool c cp s || delPermsBool c cp u Read s then None else Some not_enough_permissions
     end.
     
 
@@ -1016,8 +1016,8 @@ Section ImplWrite.
 Definition write_pre (icmp:iCmp) (cp:CProvider) (u:uri) (v:Val) (s:System) : option ErrorCode :=
     if negb (existsResBool cp u s) then Some no_such_res else
     match map_apply iCmp_eq (running (state s)) icmp with
-    | Error _ => Some instance_not_running
-    | Value c => if canWriteBool c cp s || delPermsBool c cp u Write s then None else Some not_enough_permissions
+    | Error _ _ => Some instance_not_running
+    | Value _ c => if canWriteBool c cp s || delPermsBool c cp u Write s then None else Some not_enough_permissions
     end.
     
 
@@ -1159,8 +1159,8 @@ Definition resolveIntent_pre (i:Intent) (a:idApp) (s:System) : option ErrorCode 
         negb (isSomethingBool idCmp (cmpName intt))
         && (If idInt_eq (idI intt) theId then true else false)
         && match map_apply iCmp_eq (running (state s)) ic with
-        | Error _ => false
-        | Value c1 => let startableCmps := match intType intt with
+        | Error _ _ => false
+        | Value _ c1 => let startableCmps := match intType intt with
                 | intActivity => filter (fun c2 => canStartBool c1 c2 s) allActsA
                 | intService => filter (fun c2 => canStartBool c1 c2 s) allServsA
                 | intBroadcast  => filter (fun c2 => canStartBool c1 c2 s) allBroadsA
@@ -1204,8 +1204,8 @@ Definition receiveIntent_pre (i:Intent) (ic:iCmp) (a:idApp) (s:System) : option 
     | None => Some no_such_intt
     | Some c => if isCProviderBool c then Some cmp_is_CProvider else
                 match map_apply iCmp_eq (running (state s)) ic with
-                | Error _ => Some instance_not_running
-                | Value c' => if isCProviderBool c' then Some cmp_is_CProvider else
+                | Error _ _ => Some instance_not_running
+                | Value _ c' => if isCProviderBool c' then Some cmp_is_CProvider else
                         if negb (canStartBool c' c s) then Some a_cant_start_b else
                         match intType i with
                         | intBroadcast => match brperm i with
@@ -1297,8 +1297,8 @@ Definition grantP_pre (icmp:iCmp) (cp:CProvider) (a:idApp) (u:uri) (pt:PType) (s
     if negb (existsResBool cp u s) then Some no_such_res else
     if negb (isAppInstalledBool a s) then Some no_such_app else
     match map_apply iCmp_eq (running (state s)) icmp with
-    | Error _ => Some instance_not_running
-    | Value c => let thiscanread := (canReadBool c cp s || delPermsBool c cp u Read s) in
+    | Error _ _ => Some instance_not_running
+    | Value _ c => let thiscanread := (canReadBool c cp s || delPermsBool c cp u Read s) in
                 let thiscanwrite := (canWriteBool c cp s || delPermsBool c cp u Write s) in
             match pt with
             | Read => if negb thiscanread then Some not_enough_permissions else None
@@ -1336,8 +1336,8 @@ Section ImplRevokeDel.
 Definition revokeDel_pre (icmp:iCmp) (cp:CProvider) (u:uri) (pt:PType) (s:System) : option ErrorCode := 
     if negb (existsResBool cp u s) then Some no_such_res else
     match map_apply iCmp_eq (running (state s)) icmp with
-    | Error _ => Some instance_not_running
-    | Value c => let thiscanread := canReadBool c cp s || delPermsBool c cp u Read s in
+    | Error _ _ => Some instance_not_running
+    | Value _ c => let thiscanread := canReadBool c cp s || delPermsBool c cp u Read s in
                  let thiscanwrite := canWriteBool c cp s || delPermsBool c cp u Write s in
             match pt with
             | Read => if negb thiscanread then Some not_enough_permissions else None
@@ -1374,8 +1374,8 @@ Section ImplCall.
 
 Definition call_pre (icmp:iCmp) (sac:SACall) (s:System) : option ErrorCode := 
     match map_apply iCmp_eq (running (state s)) icmp with
-    | Error _ => Some instance_not_running
-    | Value c => let a := getAppFromCmp c s in
+    | Error _ _ => Some instance_not_running
+    | Value _ c => let a := getAppFromCmp c s in
             if existsb (fun p => negb (appHasPermissionBool a p s)) (getMandatoryPerms sac) then Some not_enough_permissions else None
     end.
 

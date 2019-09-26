@@ -84,7 +84,7 @@ Proof.
     split;intros.
     apply (valueDropValue) in H2.
     destruct H2.
-    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value l => filter (fun p : Perm => negb (InBool Perm Perm_eq p lPerm)) l | Error _ => nil end)) (map_getKeys (perms (state s)))) as indexAndVals.
+    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value _ l => filter (fun p : Perm => negb (InBool Perm Perm_eq p lPerm)) l | Error _ _ => nil end)) (map_getKeys (perms (state s)))) as indexAndVals.
     elim (classic (In a' (map (fun pair=>fst pair) indexAndVals)));intros.
     assert (In a' (map_getKeys (perms (state s)))).
     rewrite in_map_iff in H4.
@@ -120,7 +120,7 @@ Proof.
     apply inAddAll;auto.
     remember (fun p : Perm => negb (InBool Perm Perm_eq p lPerm)) as dasFun.
     remember (fun pair : idApp * list Perm => if idApp_eq (fst pair) a' then true else false) as filterFun.
-    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value l => filter dasFun l | Error _ => nil end)) (map_getKeys (perms (state s)))) as theList.
+    remember (map (fun key : idApp => (key, match map_apply idApp_eq (perms (state s)) key with | Value _ l => filter dasFun l | Error _ _ => nil end)) (map_getKeys (perms (state s)))) as theList.
     assert (In (a', filter dasFun lPerm0) (filter filterFun theList)).
     rewrite filter_In.
     split.

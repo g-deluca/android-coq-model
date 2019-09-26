@@ -16,17 +16,20 @@ Inductive exc (V E : Set) : Set :=
   | Error : E -> exc V E.
 
 Variable V1 V2 V3 E1 E2 : Set.
+Variable v : V1.
+
+
 
 Definition is_Value (e : exc V1 E1) : Prop :=
   match e with
-  | Value _ => True
-  | Error _ => False
+  | Value _ _ => True
+  | Error _ _ => False
   end.
 
 Definition is_ValueBool (e : exc V1 E1) : bool:=
   match e with
-  | Value _ => true
-  | Error _ => false
+  | Value _ _ => true
+  | Error _ _ => false
   end.
 End Exc_Type.
 

@@ -47,9 +47,9 @@ match goal with
                         | h=>
                              let ph0 := fresh "H" in
                              destruct (h a) as [mfstSC ph0];
-                             destruct (ph0) as [certSC ph0];
-                             destruct (ph0) as [defPermsSC ph0];
-                             destruct (ph0) as [permsSC grantedPermGroupsSC]
+                             destruct ph0 as [certSC ph0];
+                             destruct ph0 as [defPermsSC ph0];
+                             destruct ph0 as [permsSC grantedPermGroupsSC]
   end end.
 
 
