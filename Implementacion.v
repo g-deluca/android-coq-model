@@ -10,6 +10,7 @@ Require Import Operaciones.
 Require Import RuntimePermissions.
 Require Import MyList.
 Require Export Coq.Bool.Bool.
+Require Export Coq.Arith.PeanoNat.
 
 Section Result.
 
@@ -617,6 +618,14 @@ Definition canStartBool (c1 c2: Cmp)(s:System) : bool :=
             | Some p => appHasPermissionBool a1 p s (* Si requiere el permiso p, la aplicacioón a la cual c1 pertenece debe conter con él *)
         end.
 
+Parameter vulnerableSdk : nat.
+
+Definition canRunBool (app: idApp) (s: System) : bool :=
+    match targetSdk (getManifestForApp app s) with
+    | None => false
+    | Some n => (InBool idApp idApp_eq app (alreadyRun (state s))) || (vulnerableSdk <? n)
+    end.
+
 (* Retorna los intentFilters de un componente *)
 Definition getFilters (c:Cmp) : list intentFilter :=
     match c with
@@ -794,6 +803,7 @@ Definition install_post (app:idApp) (m:Manifest) (c:Cert) (lRes : list res) (s:S
     let oldenv := environment s in
     sys (st
             (app :: (apps oldstate))
+            (alreadyRun oldstate)
             (map_add idApp_eq (grantedPermGroups oldstate) app nil)
             (map_add idApp_eq (perms oldstate) app nil)
             (running oldstate)
@@ -831,6 +841,7 @@ Definition uninstall_post (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (remove idApp_eq app (apps oldstate))
+            (alreadyRun oldstate)
             (map_drop idApp_eq (grantedPermGroups oldstate) app)
             (dropAppPerms s app)
             (running oldstate)
@@ -869,6 +880,7 @@ Definition grant_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (grantPermission app p (perms oldstate))
             (running oldstate)
@@ -901,6 +913,7 @@ Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (revokePermission app p (perms oldstate))
             (running oldstate)
@@ -937,6 +950,7 @@ Definition grantgroup_post (g:idGrp) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantPermissionGroup app g (grantedPermGroups oldstate))
             (perms oldstate)
             (running oldstate)
@@ -971,6 +985,7 @@ Definition revokegroup_post (g:idGrp) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (revokePermissionGroup app g (grantedPermGroups oldstate))
             (perms oldstate)
             (running oldstate)
@@ -1019,13 +1034,13 @@ Definition write_pre (icmp:iCmp) (cp:CProvider) (u:uri) (v:Val) (s:System) : opt
     | Error _ _ => Some instance_not_running
     | Value _ c => if canWriteBool c cp s || delPermsBool c cp u Write s then None else Some not_enough_permissions
     end.
-    
 
 Definition write_post (icmp:iCmp) (cp:CProvider) (u:uri) (v:Val) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1058,6 +1073,7 @@ Definition startActivity_post (intt:Intent) (icmp:iCmp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1111,6 +1127,7 @@ Definition sendBroadcast_post (intt:Intent) (icmp:iCmp) (p:option Perm) (s:Syste
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1176,6 +1193,7 @@ Definition resolveIntent_post (intt:Intent) (a:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1203,6 +1221,7 @@ Definition receiveIntent_pre (i:Intent) (ic:iCmp) (a:idApp) (s:System) : option 
     match maybeIntentForAppCmp i a ic s with
     | None => Some no_such_intt
     | Some c => if isCProviderBool c then Some cmp_is_CProvider else
+                if negb (canRunBool a s) then Some should_verify_permissions else
                 match map_apply iCmp_eq (running (state s)) ic with
                 | Error _ _ => Some instance_not_running
                 | Value _ c' => if isCProviderBool c' then Some cmp_is_CProvider else
@@ -1229,6 +1248,7 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
         let oldstate := state s in
         let oldenv := environment s in
         let runningicmps := map_getKeys (running oldstate) in
+        let newAlreadyRun := cons a (alreadyRun oldstate) in
         let ic' := iCmpGenerator runningicmps in
         let newTPerms := match intType intt with
             | intActivity => match path (data intt) with
@@ -1236,11 +1256,11 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
                 | Some u => let cp := getAnyCProviderWithUri u s in
                         performGrantTempPerm (intentActionType intt) u cp ic' s
                 end
-                        
             | _ => delTPerms oldstate
             end in
         sys (st
                 (apps oldstate)
+                newAlreadyRun
                 (grantedPermGroups oldstate)
                 (perms oldstate)
                 (performRunCmp intt ic' c s)
@@ -1271,6 +1291,7 @@ Definition stop_post (icmp:iCmp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (map_drop iCmp_eq (running oldstate) icmp)
@@ -1312,6 +1333,7 @@ Definition grantP_post (icmp:iCmp) (cp:CProvider) (a:idApp) (u:uri) (pt:PType) (
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1351,6 +1373,7 @@ Definition revokeDel_post (icmp:iCmp) (cp:CProvider) (u:uri) (pt:PType) (s:Syste
     let oldenv := environment s in
     sys (st
             (apps oldstate)
+            (alreadyRun oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1390,6 +1413,19 @@ Definition call_safe (icmp:iCmp) (sac:SACall) (s:System) : Result :=
 
 End ImplCall.
 
+Section VerifyOldApp.
+
+Parameter verifyOldApp_pre : idApp -> System -> option ErrorCode.
+Parameter verifyOldApp_post : idApp -> System -> System.
+
+Definition verifyOldApp_safe (a: idApp) (s: System) : Result :=
+    match verifyOldApp_pre a s with
+    | Some ec => result (error ec) s
+    | None => result ok (verifyOldApp_post a s)
+    end.
+
+End VerifyOldApp.
+
 Section ImplStep.
 
 (* Función principal: dado un sistema y una acción, retorna el sistema resultante y "ok" si la ejecución fue correcta o un código de error si fue incorrecta *)
@@ -1416,5 +1452,6 @@ Definition step (s:System) (a:Action) : Result :=
     | grantP ic cp a u pt => grantP_safe ic cp a u pt s
     | revokeDel ic cp u pt => revokeDel_safe ic cp u pt s
     | call ic sac => call_safe ic sac s
+    | verifyOldApp a => verifyOldApp_safe a s
     end.
 End ImplStep.

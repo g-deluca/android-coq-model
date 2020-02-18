@@ -937,8 +937,26 @@ inApp (cmpCP cp) a s /\
 (* Dado un Intent, se necesita conocer el tipo de acceso que efectuará *)
 Parameter intentActionType: Intent -> PType. 
 
+(* TODO: Preguntar cómo representar esto. Sabemos el número del sdk a partir del
+cual no podría correrse, pero no sé si conviene dejarlo como parámetro o no *)
+Parameter vulnerableSdk : nat.
+
+(* Defino un predicado que establece las condiciones en las que una aplicación puede correr *)
+Definition canRun (a: idApp) (s: System) : Prop :=
+(* Puede ejecutarse si ya fue ejecutada previamente*)
+In a (alreadyRun (state s)) \/
+(* o si el targetSdk de la aplicación existe y es lo suficientemente alto *)
+(forall (m: Manifest),
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m ->
+        (exists n: nat, targetSdk m = Some n /\ n > vulnerableSdk)).
+        (* TODO: Qué pasa cuando no existe el targetSdk? *)
+
+
+
 (* Precondición de receive intent *)
 Definition pre_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s:System): Prop :=
+(* a puede recibir el intent si está en condiciones de ser ejecutada *)
+canRun a s /\
 (* a puede recibir el intent si está destinado a uno de sus componentes *)
 exists (c:Cmp), intentForApp i a c ic s /\
 (* que no es un cprovider *)
@@ -1007,8 +1025,23 @@ map_apply deltpermsdomeq (delTPerms (state s)) (ic', cp', u') = Value (iCmp*CPro
 map_apply deltpermsdomeq (delTPerms (state s')) (ic, cp, u) = Value (iCmp*CProvider*uri) pt ) /\
 map_correct (delTPerms (state s')).
 
+Definition runApp (a: idApp) (s s': System): Prop :=
+(* Mantenemos la información sobre las aplicaciones que no son a *)
+(forall a':idApp,
+    In a' (alreadyRun (state s)) ->
+        In a' (alreadyRun (state s'))) /\
+(* Todas las aplicaciones que ahora están marcadas como ejecutadas lo estaban desde antes 
+   o es la aplicación en cuestión*)
+(forall a':idApp,
+    In a' (apps (state s')) ->
+        In a' (apps (state s)) \/ (a' = a)) /\
+(* La aplicación 'a' ahora quedó marcada como ya ejecutada *)
+In a (apps (state s')).
+
 (* Postcondición de receive intent *)
 Definition post_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s s':System):Prop :=
+(* Seteamos que la aplicación ya fue ejecutada al menos una vez*)
+runApp a s s' /\
 (exists (ic':iCmp)(c:Cmp), intentForApp i a c ic s /\
 ~isCProvider c /\
 (* ic' no debe ser el id de una instancia ya en ejecución *)
@@ -1269,3 +1302,43 @@ Definition post_call (ic:iCmp)(sac:SACall)(s s':System) : Prop :=
 s = s'.
 
 End SemCall.
+
+Section SemVerifyOldApp.
+
+Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
+(* Chequeamos que la aplicación esté instalada ... *)
+(In a (apps (state s))) /\
+(* ... que no haya sido ejecutada nunca ... *)
+~ (In a (alreadyRun (state s))) /\
+(* ... y que el targetSdk sea lo suficientemente viejo *)
+(forall (m:Manifest),
+    isManifestOfApp a m s ->
+        (exists n: nat, targetSdk m = Some n /\ n < vulnerableSdk)
+).
+
+Definition post_verifyOldApp (a: idApp) (s s': System) :=
+(**
+ * Removemos todos los permisos que hayan sido otorgados a esta aplicación,
+ * porque fueron otorgados en tiempo de instalación. Representamos la idea
+ * del popup que le sale al usuario para verificar los permisos con una
+ * traza de 'grant's sucesivos.
+ *)
+(forall (lPerm: list Perm) (p: Perm),
+    map_apply idApp_eq (perms (state s)) a = Value idApp lPerm ->
+        In p lPerm -> revokePerm a p s s') /\
+
+(**
+ * Marcamos a la aplicación como que ya fue ejecutada alguna vez
+ * TODO: Quizás queda un poco raro hacer esto.
+ *)
+runApp a s s' /\
+(* Nada más cambia  *)
+(environment s = environment s') /\
+(apps (state s) = apps (state s')) /\
+(running (state s) = running (state s')) /\
+(delPPerms (state s) = delPPerms (state s')) /\
+(delTPerms (state s) = delTPerms (state s')) /\
+(resCont (state s) = resCont (state s')) /\
+(sentIntents (state s) = sentIntents (state s')).
+
+End SemVerifyOldApp.

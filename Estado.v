@@ -25,6 +25,9 @@ Record Environment := env {
 Record State := st { 
                     (* La lista de aplicaciones instaladas por el usuario *)
                      apps: list idApp;
+                     (* Las aplicaciones que ya fueron ejecutadas alguna vez *)
+                     (* NOTE: alreadyRun \subset apps podría ser un invariante nuevo *)
+                     alreadyRun: list idApp;
                     (* Para cada aplicación instalada, retorna la lista de grupos de permisos a ella otorgados *)
                      grantedPermGroups : mapping idApp (list idGrp);
                     (* Para cada aplicación instalada, retorna la lista de permisos a ella individualmente otorgados *)

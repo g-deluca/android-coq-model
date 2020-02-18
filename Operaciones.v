@@ -25,7 +25,11 @@ Inductive Action : Type :=
     | stop: iCmp -> Action
     | grantP: iCmp -> CProvider -> idApp -> uri -> PType -> Action
     | revokeDel: iCmp -> CProvider -> uri -> PType -> Action
-    | call: iCmp -> SACall -> Action.
+    | call: iCmp -> SACall -> Action
+    (* Esta acción será la encargada de verificar si una aplicación está en condiciones de ser ejecutada*)
+    | verifyOldApp: idApp -> Action.
+
+
 
 End Operaciones.
 

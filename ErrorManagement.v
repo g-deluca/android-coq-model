@@ -46,6 +46,7 @@ Inductive ErrorCode : Set :=
     | a_cant_start_b
     | not_enough_permissions
     | no_CProvider_fits
+    | should_verify_permissions
 
     | CProvider_not_grantable.
 
@@ -222,6 +223,7 @@ match action with
                         | Write => canWrite c' cp s \/ delPerms c' cp u Write s
                         | Both => (canRead c' cp s \/ delPerms c' cp u Read s) /\ (canWrite c' cp s \/ delPerms c' cp u Write s)
                         end))
+        | should_verify_permissions => ~ (canRun a s)
         | _ => False
         end
    | stop ic => match ec with
@@ -272,6 +274,8 @@ match action with
                 appHasPermission a p s)
         | _ => False
         end
+    (* TODO: Revisar los errores para esta operación *)
+    | verifyOldApp idApp => False
     end.
 
 End ErrorMessages.

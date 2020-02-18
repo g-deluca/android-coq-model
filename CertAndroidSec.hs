@@ -74,6 +74,19 @@ sumbool_rec :: (() -> a1) -> (() -> a1) -> Prelude.Bool -> a1
 sumbool_rec =
   sumbool_rect
 
+leb :: Nat -> Nat -> Prelude.Bool
+leb n m =
+  case n of {
+   O -> Prelude.True;
+   S n' ->
+    case m of {
+     O -> Prelude.False;
+     S m' -> leb n' m'}}
+
+ltb :: Nat -> Nat -> Prelude.Bool
+ltb n m =
+  leb (S n) m
+
 hd :: a1 -> (([]) a1) -> a1
 hd default0 l =
   case l of {
@@ -981,7 +994,9 @@ systemImage e =
    Env _ _ _ systemImage0 -> systemImage0}
 
 data State =
-   St (([]) IdApp) (Mapping IdApp (([]) IdGrp)) (Mapping IdApp (([]) Perm0)) 
+   St (([]) IdApp) (([]) IdApp) (Mapping IdApp (([]) IdGrp)) (Mapping 
+                                                             IdApp
+                                                             (([]) Perm0)) 
  (Mapping ICmp Cmp) (Mapping ((,) ((,) IdApp CProvider) Uri) PType) (Mapping
                                                                     ((,)
                                                                     ((,) 
@@ -994,42 +1009,47 @@ data State =
 apps :: State -> ([]) IdApp
 apps s =
   case s of {
-   St apps0 _ _ _ _ _ _ _ -> apps0}
+   St apps0 _ _ _ _ _ _ _ _ -> apps0}
+
+alreadyRun :: State -> ([]) IdApp
+alreadyRun s =
+  case s of {
+   St _ alreadyRun0 _ _ _ _ _ _ _ -> alreadyRun0}
 
 grantedPermGroups :: State -> Mapping IdApp (([]) IdGrp)
 grantedPermGroups s =
   case s of {
-   St _ grantedPermGroups0 _ _ _ _ _ _ -> grantedPermGroups0}
+   St _ _ grantedPermGroups0 _ _ _ _ _ _ -> grantedPermGroups0}
 
 perms :: State -> Mapping IdApp (([]) Perm0)
 perms s =
   case s of {
-   St _ _ perms0 _ _ _ _ _ -> perms0}
+   St _ _ _ perms0 _ _ _ _ _ -> perms0}
 
 running :: State -> Mapping ICmp Cmp
 running s =
   case s of {
-   St _ _ _ running0 _ _ _ _ -> running0}
+   St _ _ _ _ running0 _ _ _ _ -> running0}
 
 delPPerms :: State -> Mapping ((,) ((,) IdApp CProvider) Uri) PType
 delPPerms s =
   case s of {
-   St _ _ _ _ delPPerms0 _ _ _ -> delPPerms0}
+   St _ _ _ _ _ delPPerms0 _ _ _ -> delPPerms0}
 
 delTPerms :: State -> Mapping ((,) ((,) ICmp CProvider) Uri) PType
 delTPerms s =
   case s of {
-   St _ _ _ _ _ delTPerms0 _ _ -> delTPerms0}
+   St _ _ _ _ _ _ delTPerms0 _ _ -> delTPerms0}
 
 resCont :: State -> Mapping ((,) IdApp Res) Val
 resCont s =
   case s of {
-   St _ _ _ _ _ _ resCont0 _ -> resCont0}
+   St _ _ _ _ _ _ _ resCont0 _ -> resCont0}
 
 sentIntents :: State -> ([]) ((,) ICmp Intent0)
 sentIntents s =
   case s of {
-   St _ _ _ _ _ _ _ sentIntents0 -> sentIntents0}
+   St _ _ _ _ _ _ _ _ sentIntents0 -> sentIntents0}
 
 data System =
    Sys State Environment
@@ -1074,6 +1094,7 @@ data Action =
  | GrantP ICmp CProvider IdApp Uri PType
  | RevokeDel ICmp CProvider Uri PType
  | Call ICmp SACall
+ | VerifyOldApp IdApp
 
 manufacturerCert :: Cert
 manufacturerCert = "ManufacturerCert"
@@ -1158,6 +1179,7 @@ data ErrorCode =
  | A_cant_start_b
  | Not_enough_permissions
  | No_CProvider_fits
+ | Should_verify_permissions
  | CProvider_not_grantable
 
 data Response =
@@ -1954,6 +1976,18 @@ canStartBool c1 c2 s =
               Prelude.Just p -> appHasPermissionBool a1 p s;
               Prelude.Nothing -> Prelude.True})}}}}
 
+vulnerableSdk :: Nat
+vulnerableSdk =
+  Prelude.error "AXIOM TO BE REALIZED"
+
+canRunBool :: IdApp -> System -> Prelude.Bool
+canRunBool app0 s =
+  case targetSdk (getManifestForApp app0 s) of {
+   Prelude.Just n ->
+    (Prelude.||) (inBool idApp_eq app0 (alreadyRun (state s)))
+      (ltb vulnerableSdk n);
+   Prelude.Nothing -> Prelude.False}
+
 getFilters :: Cmp -> ([]) IntentFilter
 getFilters c =
   case c of {
@@ -2201,7 +2235,7 @@ install_post :: IdApp -> Manifest -> Cert -> (([]) Res) -> System -> System
 install_post app0 m c lRes s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St ((:) app0 (apps oldstate))
+  Sys (St ((:) app0 (apps oldstate)) (alreadyRun oldstate)
   (map_add idApp_eq (grantedPermGroups oldstate) app0 ([]))
   (map_add idApp_eq (perms oldstate) app0 ([])) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate)
@@ -2230,7 +2264,7 @@ uninstall_post :: IdApp -> System -> System
 uninstall_post app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (remove idApp_eq app0 (apps oldstate))
+  Sys (St (remove idApp_eq app0 (apps oldstate)) (alreadyRun oldstate)
   (map_drop idApp_eq (grantedPermGroups oldstate) app0) (dropAppPerms s app0)
   (running oldstate) (dropAllPPerms s app0) (dropAllTPerms s app0)
   (dropAllRes (resCont oldstate) app0) (sentIntents oldstate)) (Env
@@ -2266,7 +2300,7 @@ grant_post :: Perm0 -> IdApp -> System -> System
 grant_post p app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate)
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
   (grantPermission app0 p (perms oldstate)) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
   (sentIntents oldstate)) oldenv
@@ -2287,7 +2321,7 @@ revoke_post :: Perm0 -> IdApp -> System -> System
 revoke_post p app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate)
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
   (revokePermission app0 p (perms oldstate)) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
   (sentIntents oldstate)) oldenv
@@ -2331,7 +2365,7 @@ grantgroup_post :: IdGrp -> IdApp -> System -> System
 grantgroup_post g app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate)
+  Sys (St (apps oldstate) (alreadyRun oldstate)
   (grantPermissionGroup app0 g (grantedPermGroups oldstate)) (perms oldstate)
   (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
   (resCont oldstate) (sentIntents oldstate)) oldenv
@@ -2355,7 +2389,7 @@ revokegroup_post :: IdGrp -> IdApp -> System -> System
 revokegroup_post g app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate)
+  Sys (St (apps oldstate) (alreadyRun oldstate)
   (revokePermissionGroup app0 g (grantedPermGroups oldstate))
   (perms oldstate) (running oldstate) (delPPerms oldstate)
   (delTPerms oldstate) (resCont oldstate) (sentIntents oldstate)) oldenv
@@ -2405,9 +2439,10 @@ write_post :: ICmp -> CProvider -> Uri -> Val -> System -> System
 write_post icmp cp u v s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
-  (writeResCont icmp cp u v s) (sentIntents oldstate)) oldenv
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate) (delPPerms oldstate)
+  (delTPerms oldstate) (writeResCont icmp cp u v s) (sentIntents oldstate))
+  oldenv
 
 write_safe :: ICmp -> CProvider -> Uri -> Val -> System -> Result0
 write_safe icmp cp u v s =
@@ -2437,10 +2472,10 @@ startActivity_post :: Intent0 -> ICmp -> System -> System
 startActivity_post intt icmp s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
-  (resCont oldstate) ((:) ((,) icmp (createIntent intt Prelude.Nothing))
-  (sentIntents oldstate))) oldenv
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate) (delPPerms oldstate)
+  (delTPerms oldstate) (resCont oldstate) ((:) ((,) icmp
+  (createIntent intt Prelude.Nothing)) (sentIntents oldstate))) oldenv
 
 startActivity_safe :: Intent0 -> ICmp -> System -> Result0
 startActivity_safe intt icmp s =
@@ -2500,10 +2535,10 @@ sendBroadcast_post :: Intent0 -> ICmp -> (Prelude.Maybe Perm0) -> System ->
 sendBroadcast_post intt icmp p s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
-  (resCont oldstate) ((:) ((,) icmp (createIntent intt p))
-  (sentIntents oldstate))) oldenv
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate) (delPPerms oldstate)
+  (delTPerms oldstate) (resCont oldstate) ((:) ((,) icmp
+  (createIntent intt p)) (sentIntents oldstate))) oldenv
 
 sendBroadcast_safe :: Intent0 -> ICmp -> (Prelude.Maybe Perm0) -> System ->
                       Result0
@@ -2573,9 +2608,10 @@ resolveIntent_post :: Intent0 -> IdApp -> System -> System
 resolveIntent_post intt a s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
-  (resCont oldstate) (resolveImplicitToExplicitIntent intt a s)) oldenv
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate) (delPPerms oldstate)
+  (delTPerms oldstate) (resCont oldstate)
+  (resolveImplicitToExplicitIntent intt a s)) oldenv
 
 resolveIntent_safe :: Intent0 -> IdApp -> System -> Result0
 resolveIntent_safe intt a s =
@@ -2591,34 +2627,37 @@ receiveIntent_pre i ic a s =
     case isCProviderBool c of {
      Prelude.True -> Prelude.Just Cmp_is_CProvider;
      Prelude.False ->
-      case map_apply iCmp_eq (running (state s)) ic of {
-       Value c' ->
-        case isCProviderBool c' of {
-         Prelude.True -> Prelude.Just Cmp_is_CProvider;
-         Prelude.False ->
-          case Prelude.not (canStartBool c' c s) of {
-           Prelude.True -> Prelude.Just A_cant_start_b;
+      case Prelude.not (canRunBool a s) of {
+       Prelude.True -> Prelude.Just Should_verify_permissions;
+       Prelude.False ->
+        case map_apply iCmp_eq (running (state s)) ic of {
+         Value c' ->
+          case isCProviderBool c' of {
+           Prelude.True -> Prelude.Just Cmp_is_CProvider;
            Prelude.False ->
-            case intType i of {
-             IntActivity ->
-              case path (data0 i) of {
-               Prelude.Just u ->
-                let {allComponents = getAllComponents s} in
-                case existsb
-                       (receiveIntentCmpRequirements c' u s
-                         (intentActionType i)) allComponents of {
-                 Prelude.True -> Prelude.Nothing;
-                 Prelude.False -> Prelude.Just No_CProvider_fits};
-               Prelude.Nothing -> Prelude.Nothing};
-             IntService -> Prelude.Nothing;
-             IntBroadcast ->
-              case brperm i of {
-               Prelude.Just p ->
-                case appHasPermissionBool a p s of {
-                 Prelude.True -> Prelude.Nothing;
-                 Prelude.False -> Prelude.Just Not_enough_permissions};
-               Prelude.Nothing -> Prelude.Nothing}}}};
-       Error _ -> Prelude.Just Instance_not_running}};
+            case Prelude.not (canStartBool c' c s) of {
+             Prelude.True -> Prelude.Just A_cant_start_b;
+             Prelude.False ->
+              case intType i of {
+               IntActivity ->
+                case path (data0 i) of {
+                 Prelude.Just u ->
+                  let {allComponents = getAllComponents s} in
+                  case existsb
+                         (receiveIntentCmpRequirements c' u s
+                           (intentActionType i)) allComponents of {
+                   Prelude.True -> Prelude.Nothing;
+                   Prelude.False -> Prelude.Just No_CProvider_fits};
+                 Prelude.Nothing -> Prelude.Nothing};
+               IntService -> Prelude.Nothing;
+               IntBroadcast ->
+                case brperm i of {
+                 Prelude.Just p ->
+                  case appHasPermissionBool a p s of {
+                   Prelude.True -> Prelude.Nothing;
+                   Prelude.False -> Prelude.Just Not_enough_permissions};
+                 Prelude.Nothing -> Prelude.Nothing}}}};
+         Error _ -> Prelude.Just Instance_not_running}}};
    Prelude.Nothing -> Prelude.Just No_such_intt}
 
 receiveIntent_post :: Intent0 -> ICmp -> IdApp -> System -> System
@@ -2628,6 +2667,7 @@ receiveIntent_post intt ic a s =
     let {oldstate = state s} in
     let {oldenv = environment s} in
     let {runningicmps = map_getKeys (running oldstate)} in
+    let {newAlreadyRun = (:) a (alreadyRun oldstate)} in
     let {ic' = iCmpGenerator runningicmps} in
     let {
      newTPerms = case intType intt of {
@@ -2639,9 +2679,9 @@ receiveIntent_post intt ic a s =
                     Prelude.Nothing -> delTPerms oldstate};
                   _ -> delTPerms oldstate}}
     in
-    Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-    (performRunCmp intt ic' c s) (delPPerms oldstate) newTPerms
-    (resCont oldstate)
+    Sys (St (apps oldstate) newAlreadyRun (grantedPermGroups oldstate)
+    (perms oldstate) (performRunCmp intt ic' c s) (delPPerms oldstate)
+    newTPerms (resCont oldstate)
     (remove sentIntentsElems_eq ((,) ic intt) (sentIntents oldstate))) oldenv;
    Prelude.Nothing -> s}
 
@@ -2661,10 +2701,10 @@ stop_post :: ICmp -> System -> System
 stop_post icmp s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (map_drop iCmp_eq (running oldstate) icmp) (delPPerms oldstate)
-  (removeTPerms icmp oldstate) (resCont oldstate) (sentIntents oldstate))
-  oldenv
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (map_drop iCmp_eq (running oldstate) icmp)
+  (delPPerms oldstate) (removeTPerms icmp oldstate) (resCont oldstate)
+  (sentIntents oldstate)) oldenv
 
 stop_safe :: ICmp -> System -> Result0
 stop_safe icmp s =
@@ -2714,8 +2754,9 @@ grantP_post :: ICmp -> CProvider -> IdApp -> Uri -> PType -> System -> System
 grantP_post _ cp a u pt s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate) (addDelPPerm (delPPerms oldstate) ((,) ((,) a cp) u) pt)
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate)
+  (addDelPPerm (delPPerms oldstate) ((,) ((,) a cp) u) pt)
   (delTPerms oldstate) (resCont oldstate) (sentIntents oldstate)) oldenv
 
 grantP_safe :: ICmp -> CProvider -> IdApp -> Uri -> PType -> System ->
@@ -2761,8 +2802,8 @@ revokeDel_post :: ICmp -> CProvider -> Uri -> PType -> System -> System
 revokeDel_post _ cp u pt s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (grantedPermGroups oldstate) (perms oldstate)
-  (running oldstate)
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (perms oldstate) (running oldstate)
   (removeAllPerms delppermsdomeq (delPPerms oldstate) cp u pt)
   (removeAllPerms deltpermsdomeq (delTPerms oldstate) cp u pt)
   (resCont oldstate) (sentIntents oldstate)) oldenv
@@ -2794,6 +2835,20 @@ call_safe icmp sac s =
    Prelude.Just ec -> Result (Error0 ec) s;
    Prelude.Nothing -> Result Ok (call_post icmp sac s)}
 
+verifyOldApp_pre :: IdApp -> System -> Prelude.Maybe ErrorCode
+verifyOldApp_pre =
+  Prelude.error "AXIOM TO BE REALIZED"
+
+verifyOldApp_post :: IdApp -> System -> System
+verifyOldApp_post =
+  Prelude.error "AXIOM TO BE REALIZED"
+
+verifyOldApp_safe :: IdApp -> System -> Result0
+verifyOldApp_safe a s =
+  case verifyOldApp_pre a s of {
+   Prelude.Just ec -> Result (Error0 ec) s;
+   Prelude.Nothing -> Result Ok (verifyOldApp_post a s)}
+
 step :: System -> Action -> Result0
 step s a =
   case a of {
@@ -2817,7 +2872,8 @@ step s a =
    Stop ic -> stop_safe ic s;
    GrantP ic cp a0 u pt -> grantP_safe ic cp a0 u pt s;
    RevokeDel ic cp u pt -> revokeDel_safe ic cp u pt s;
-   Call ic sac -> call_safe ic sac s}
+   Call ic sac -> call_safe ic sac s;
+   VerifyOldApp a0 -> verifyOldApp_safe a0 s}
 
 trace :: System -> (([]) Action) -> ([]) System
 trace s actions =

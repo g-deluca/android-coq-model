@@ -31,6 +31,7 @@ match act with
    | grantP ic cp a u pt => pre_grantP ic cp a u pt s
    | revokeDel ic cp u pt => pre_revokeDel ic cp u pt s
    | call ic aCall => pre_call ic aCall s
+   | verifyOldApp a => pre_verifyOldApp a s
 end.
 
 (* Indica si la postcondición de una acción se cumple en un sistema
@@ -58,6 +59,7 @@ match act with
    | grantP ic cp a u pt => post_grantP ic cp a u pt s s'
    | revokeDel ic cp u pt => post_revokeDel ic cp u pt s s'
    | call ic aCall => post_call ic aCall s s'
+   | verifyOldApp a => post_verifyOldApp a s s'
 end.
 
 (* Esta proposición captura la semántica de la ejecución de una acción *)
