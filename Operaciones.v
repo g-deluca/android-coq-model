@@ -8,6 +8,9 @@ Inductive Action : Type :=
     | install : idApp -> Manifest -> Cert -> (list res) -> Action
     | uninstall: idApp -> Action
     | grant: Perm -> idApp -> Action
+    (* Incorporamos una nueva operación de grant, que representa el otorgamiento de un permiso sin la notificación
+     * al usuario *)
+    | grantAuto: Perm -> idApp -> Action
     | revoke: Perm -> idApp -> Action
     | grantPermGroup: idGrp -> idApp -> Action
     | revokePermGroup: idGrp -> idApp -> Action

@@ -323,16 +323,17 @@ In (idP p) (use m)) /\ (* Solo permito grantear independientemente permisos decl
 (isSystemPerm p \/ usrDefPerm p s) /\ (* , que existan *)
 ~(exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\ (* No hayan sido ya granteados *)
 pl p = dangerous /\ (* , sean peligrosos *)
-maybeGrp p = None. (* y no agrupados *)
+(exists (g: idGrp), maybeGrp p = Some g -> (* y si el permiso está agrupado, ese grupo no debe haber sido 'otorgado' previamente *)
+    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> ~(In g lGroup))).
 
 (* Agrega los permisos otorgados a la aplicación *)
 Definition grantPerm (a:idApp)(p:Perm)(s s':System) : Prop :=
-(forall (a':idApp)(lPerm:list Perm), 
+(forall (a':idApp)(lPerm:list Perm),
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
 exists lPerm':list Perm, map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' /\
 forall p':Perm, In p' lPerm -> In p' lPerm') /\
 
-(forall (a':idApp)(lPerm':list Perm), 
+(forall (a':idApp)(lPerm':list Perm),
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
 exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm /\
 forall p':Perm, In p' lPerm' -> ~In p' lPerm -> (a=a' /\ p=p')) /\
@@ -340,8 +341,50 @@ forall p':Perm, In p' lPerm' -> ~In p' lPerm -> (a=a' /\ p=p')) /\
 (exists (lPerm':(list Perm)), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' /\ In p lPerm') /\
 map_correct (perms (state s')).
 
+(* Marca que un permiso del grupo de permisos g ya fue otorgado a la aplicación *)
+Definition grantPermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
+(forall (a':idApp)(lGrp:list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
+exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
+forall g':idGrp, In g' lGrp -> In g' lGrp') /\
+(forall (a':idApp)(lGrp':list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
+exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
+forall g':idGrp, In g' lGrp' -> ~In g' lGrp -> (a=a' /\ g=g')) /\
+(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ In g lGrp') /\
+map_correct (grantedPermGroups (state s')).
+
 (* Postcondición grant *)
 Definition post_grant (p:Perm)(a:idApp)(s s':System) : Prop :=
+(* Se otorga el permiso p a a *)
+grantPerm a p s s' /\
+(* y si el permiso está agrupado, marcamos al grupo como otorgado *)
+(exists (g: idGrp), maybeGrp p = Some g -> grantPermGroup a g s s') /\
+(* nada más cambia *)
+(environment s) = (environment s') /\
+(apps (state s)) = (apps (state s')) /\
+(running (state s)) = (running (state s')) /\
+(delPPerms (state s)) = (delPPerms (state s')) /\
+(delTPerms (state s)) = (delTPerms (state s')) /\
+(resCont (state s)) = (resCont (state s')) /\
+(sentIntents (state s)) = (sentIntents (state s')).
+
+End SemGrant.
+
+Section SemGrantAuto.
+
+Definition pre_grantAuto (a: idApp) (p: Perm) (s: System) : Prop :=
+(* La precondición es casi la misma que la de grant *)
+(exists m:Manifest, isManifestOfApp a m s /\
+In (idP p) (use m)) /\
+(isSystemPerm p \/ usrDefPerm p s) /\
+~(exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
+pl p = dangerous /\
+(* con la diferencia de que si el permiso está agrupado, ese grupo ya debe haber sido 'otorgado' antes *)
+(exists (g: idGrp), maybeGrp p = Some g ->
+    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)).
+
+Definition post_grantAuto (p:Perm)(a:idApp)(s s':System) : Prop :=
 (* Se otorga el permiso p a a *)
 grantPerm a p s s' /\
 (* nada más cambia *)
@@ -353,8 +396,7 @@ grantPerm a p s s' /\
 (delTPerms (state s)) = (delTPerms (state s')) /\
 (resCont (state s)) = (resCont (state s')) /\
 (sentIntents (state s)) = (sentIntents (state s')).
-
-End SemGrant.
+End SemGrantAuto.
 
 
 Section SemRevoke.
@@ -362,8 +404,10 @@ Section SemRevoke.
 (* Precondición revoke *)
 Definition pre_revoke (p:Perm)(a:idApp)(s:System) : Prop :=
 (* El permiso debe estar otorgado *)
-exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm
-/\ In p lPerm.
+(exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
+(* y si el permiso pertenece a un grupo, el grupo debe estar marcado como 'otorgado' *)
+(exists (g: idGrp), maybeGrp p = Some g ->
+    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)).
 
 (* Quita el permiso otorgado a la aplicación *)
 Definition revokePerm (a:idApp)(p:Perm)(s s':System) : Prop :=
@@ -380,15 +424,38 @@ forall p':Perm, In p' lPerm -> ~In p' lPerm' -> (a=a' /\ p=p')) /\
 (exists (lPerm':(list Perm)), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' /\ ~In p lPerm') /\
 map_correct (perms (state s')).
 
+Definition revokePermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
+(forall (a':idApp)(lGrp':list idGrp), 
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
+exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
+forall g':idGrp, In g' lGrp' -> In g' lGrp) /\
+
+(forall (a':idApp)(lGrp:list idGrp), 
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
+exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
+forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> (a=a' /\ g=g')) /\
+
+(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ ~In g lGrp') /\
+map_correct (grantedPermGroups (state s')).
+
 
 (* Postcondición revoke *)
 Definition post_revoke (p:Perm)(a:idApp)(s s':System) : Prop :=
 (* Se revoca el permiso p a a *)
 revokePerm a p s s' /\
+
+(* Si el permiso está agrupado, *)
+(exists (g: idGrp),
+    (maybeGrp p = Some g ->
+        (* y  todos los permisos que quedan otorgados a la aplicación en s'*)
+        (forall (p': Perm) (lPerm': list Perm), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' -> In p' lPerm' ->
+            (* que están agrupados pertenecen a un grupo distinto al del permiso que estoy revocando*)
+            (exists (g': idGrp), maybeGrp p' = Some g' -> ~(g=g')))) -> 
+    revokePermGroup a g s s') /\ (* , entonces removemos el grupo del *)
+
 (* nada más cambia *)
 (environment s) = (environment s') /\
 apps (state s) = apps (state s') /\
-grantedPermGroups (state s) = grantedPermGroups (state s') /\
 running (state s) = running (state s') /\
 delPPerms (state s) = delPPerms (state s') /\
 delTPerms (state s) = delTPerms (state s') /\
@@ -407,18 +474,6 @@ In (idP p) (use m) /\ (* , sean de algun permiso que declara en el manifest, *)
 (isSystemPerm p \/ usrDefPerm p s)  /\ maybeGrp p = Some g /\ (* , que existan *)
 pl p = dangerous). (* y quien lo define haya dicho que es peligroso *)
 
-(* Agrega los permisos otorgados a la aplicación *)
-Definition grantPermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
-(forall (a':idApp)(lGrp:list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
-exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
-forall g':idGrp, In g' lGrp -> In g' lGrp') /\
-(forall (a':idApp)(lGrp':list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
-exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
-forall g':idGrp, In g' lGrp' -> ~In g' lGrp -> (a=a' /\ g=g')) /\
-(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ In g lGrp') /\
-map_correct (grantedPermGroups (state s')).
 
 (* Postcondición grant *)
 Definition post_grantGroup (g:idGrp)(a:idApp)(s s':System) : Prop :=
@@ -444,23 +499,6 @@ Definition pre_revokeGroup (g:idGrp)(a:idApp)(s:System) : Prop :=
 (* El permiso debe estar otorgado *)
 exists (lGrp : list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGrp
 /\ In g lGrp.
-
-(* Quita el permiso otorgado a la aplicación *)
-Definition revokePermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
-(forall (a':idApp)(lGrp':list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
-exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
-forall g':idGrp, In g' lGrp' -> In g' lGrp) /\
-
-(forall (a':idApp)(lGrp:list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
-exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
-forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> (a=a' /\ g=g')) /\
-
-(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ ~In g lGrp') /\
-map_correct (grantedPermGroups (state s')).
-
-
 
 (* Postcondición revoke *)
 Definition post_revokeGroup (g:idGrp)(a:idApp)(s s':System) : Prop :=

@@ -28,7 +28,8 @@ Record State := st {
                      (* Las aplicaciones que ya fueron ejecutadas alguna vez *)
                      (* NOTE: alreadyRun \subset apps podría ser un invariante nuevo *)
                      alreadyRun: list idApp;
-                    (* Para cada aplicación instalada, retorna la lista de grupos de permisos a ella otorgados *)
+                    (* Para cada aplicación instalada, retorna la lista de grupos de permisos para los cuales 
+                     * la aplicación posee algùn permiso otorgado *)
                      grantedPermGroups : mapping idApp (list idGrp);
                     (* Para cada aplicación instalada, retorna la lista de permisos a ella individualmente otorgados *)
                      perms: mapping idApp (list Perm);
