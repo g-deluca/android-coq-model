@@ -13,6 +13,7 @@ match act with
    | install a m c l => pre_install a m c l s
    | uninstall a => pre_uninstall a s
    | grant p c => pre_grant p c s
+   | grantAuto p c => pre_grantAuto p c s
    | revoke p c => pre_revoke p c s
    | grantPermGroup g c => pre_grantGroup g c s
    | revokePermGroup g c => pre_revokeGroup g c s
@@ -41,6 +42,7 @@ match act with
    | install a m c l => post_install a m c l s s'
    | uninstall a => post_uninstall a s s'
    | grant p c => post_grant p c s s'
+   | grantAuto p c => post_grantAuto p c s s'
    | revoke p c => post_revoke p c s s'
    | grantPermGroup g c => post_grantGroup g c s s'
    | revokePermGroup g c => post_revokeGroup g c s s'

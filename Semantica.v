@@ -377,7 +377,7 @@ End SemGrant.
 
 Section SemGrantAuto.
 
-Definition pre_grantAuto (a: idApp) (p: Perm) (s: System) : Prop :=
+Definition pre_grantAuto (p: Perm) (a: idApp) (s: System) : Prop :=
 (* La precondición es casi la misma que la de grant *)
 (exists m:Manifest, isManifestOfApp a m s /\
 In (idP p) (use m)) /\
@@ -388,7 +388,7 @@ pl p = dangerous /\
 (exists (g: idGrp), maybeGrp p = Some g /\
     (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)).
 
-Definition post_grantAuto (p:Perm)(a:idApp)(s s':System) : Prop :=
+Definition post_grantAuto (p:Perm) (a:idApp) (s s':System) : Prop :=
 (* Se otorga el permiso p a a *)
 grantPerm a p s s' /\
 (* nada más cambia *)
@@ -408,10 +408,13 @@ Section SemRevoke.
 (* Precondición revoke *)
 Definition pre_revoke (p:Perm)(a:idApp)(s:System) : Prop :=
 (* El permiso debe estar otorgado *)
-(exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
+(exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm).
+
 (* y si el permiso pertenece a un grupo, el grupo debe estar marcado como 'otorgado' *)
-(forall (g: idGrp), maybeGrp p = Some g ->
-    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)).
+(* TODO: Es necesaria esta precondición? Si no se cumpliera es porque estaríamos en un estado inconsistente
+ * del sistema *)
+(* (forall (g: idGrp), maybeGrp p = Some g ->
+    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)). *)
 
 (* Quita el permiso otorgado a la aplicación *)
 Definition revokePerm (a:idApp)(p:Perm)(s s':System) : Prop :=
@@ -454,8 +457,11 @@ revokePerm a p s s' /\
         (* y  todos los permisos que quedan otorgados a la aplicación en s'*)
         (forall (p': Perm) (lPerm': list Perm), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' -> In p' lPerm' ->
             (* que están agrupados pertenecen a un grupo distinto al del permiso que estoy revocando*)
-            (forall (g': idGrp), maybeGrp p' = Some g' -> ~(g=g')))) -> 
-    revokePermGroup a g s s') /\ (* , entonces removemos el grupo del *)
+            (forall (g': idGrp), maybeGrp p' = Some g' -> ~(g=g')))) ->
+    revokePermGroup a g s s') /\ (* , entonces removemos el grupo del estado *)
+
+(* Si el permiso no está agrupado *)
+(maybeGrp p = None -> (grantedPermGroups (state s)) = (grantedPermGroups (state s'))) /\
 
 (* nada más cambia *)
 (environment s) = (environment s') /\

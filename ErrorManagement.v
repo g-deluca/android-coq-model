@@ -25,7 +25,10 @@ Inductive ErrorCode : Set :=
     | no_such_perm
     | perm_already_granted
     | perm_not_dangerous
-    | perm_is_grouped
+    | perm_is_grouped (* TODO: Delete*)
+    | perm_not_grouped
+    | perm_should_auto_grant
+    | cannot_auto_grant
 
     | perm_wasnt_granted
 
@@ -89,8 +92,25 @@ match action with
         | perm_already_granted => (exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm)
         (* Se quiere otorgar un permiso que no es peligroso *)
         | perm_not_dangerous => pl p <> dangerous
-        (* Se quiere otorgar un permiso que está agrupado *)
-        | perm_is_grouped => maybeGrp p <> None
+        (* Se quiere pedir confirmación al usuario por un permiso que debería ser otorgado automáticamente *)
+        | perm_should_auto_grant => (exists (g: idGrp), maybeGrp p = Some g /\
+               (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup))
+        | _ => False
+        end
+   | grantAuto p a => match ec with
+        (* Se quiere otorgar un permiso no marcado como usado *)
+        | perm_not_in_use => ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In (idP p) (use m))
+        (* Se quiere otorgar un permiso inexistente *)
+        | no_such_perm => ~(isSystemPerm p \/ usrDefPerm p s)
+        (* Se quiere reotorgar un permiso ya otorgado *)
+        | perm_already_granted => (exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm)
+        (* Se quiere otorgar un permiso que no es peligroso *)
+        | perm_not_dangerous => pl p <> dangerous
+        (* Se quiere otorgar automáticamente un permiso que no está agrupado *)
+        | perm_not_grouped => maybeGrp p <> None
+        (* Se quiere otorgar automáticamente un permiso que no pertenece a ningún grupo ya visitado *)
+        | cannot_auto_grant => (exists (g: idGrp), maybeGrp p = Some g /\
+               (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> ~(In g lGroup)))
         | _ => False
         end
    | revoke p c => match ec with

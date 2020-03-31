@@ -1076,6 +1076,7 @@ data Action =
    Install IdApp Manifest Cert (([]) Res)
  | Uninstall IdApp
  | Grant Perm0 IdApp
+ | GrantAuto Perm0 IdApp
  | Revoke Perm0 IdApp
  | GrantPermGroup IdGrp IdApp
  | RevokePermGroup IdGrp IdApp
@@ -1165,6 +1166,9 @@ data ErrorCode =
  | Perm_already_granted
  | Perm_not_dangerous
  | Perm_is_grouped
+ | Perm_not_grouped
+ | Perm_should_auto_grant
+ | Cannot_auto_grant
  | Perm_wasnt_granted
  | Group_already_granted
  | Group_not_in_use
@@ -1290,6 +1294,12 @@ isNil l =
   case l of {
    ([]) -> Prelude.True;
    (:) _ _ -> Prelude.False}
+
+isSomethingBool :: (Prelude.Maybe a1) -> Prelude.Bool
+isSomethingBool x =
+  case x of {
+   Prelude.Just _ -> Prelude.True;
+   Prelude.Nothing -> Prelude.False}
 
 definesIntentFilterCorrectlyBool :: Cmp -> Prelude.Bool
 definesIntentFilterCorrectlyBool cmp0 =
@@ -1486,6 +1496,22 @@ grantedPermsForApp app0 s =
   case map_apply idApp_eq (perms (state s)) app0 of {
    Value list -> list;
    Error _ -> ([])}
+
+permissionGroupsInUse :: IdApp -> System -> ([]) IdGrp
+permissionGroupsInUse app0 s =
+  let {permsForApp = grantedPermsForApp app0 s} in
+  let {
+   groupedPerms = filter (\perm ->
+                    Prelude.not (isSomethingBool (maybeGrp perm)))
+                    permsForApp}
+  in
+  let {
+   groups = map (\perm ->
+              case maybeGrp perm of {
+               Prelude.Just g -> (:) g ([]);
+               Prelude.Nothing -> ([])}) groupedPerms}
+  in
+  concat groups
 
 grantPermission :: IdApp -> Perm0 -> (Mapping IdApp (([]) Perm0)) -> Mapping
                    IdApp (([]) Perm0)
@@ -1810,12 +1836,6 @@ intTypeEqBool t t' =
     case t' of {
      IntBroadcast -> Prelude.True;
      _ -> Prelude.False}}
-
-isSomethingBool :: (Prelude.Maybe a1) -> Prelude.Bool
-isSomethingBool x =
-  case x of {
-   Prelude.Just _ -> Prelude.True;
-   Prelude.Nothing -> Prelude.False}
 
 isiCmpRunningBool :: ICmp -> System -> Prelude.Bool
 isiCmpRunningBool ic s =
@@ -2291,8 +2311,8 @@ grant_pre p app0 s =
        Prelude.False ->
         case permLevel_eq (pl p) Dangerous of {
          Prelude.True ->
-          case isSomethingBool (maybeGrp p) of {
-           Prelude.True -> Prelude.Just Perm_is_grouped;
+          case groupIsGranted app0 p s of {
+           Prelude.True -> Prelude.Just Perm_should_auto_grant;
            Prelude.False -> Prelude.Nothing};
          Prelude.False -> Prelude.Just Perm_not_dangerous}}}}
 
@@ -2300,7 +2320,14 @@ grant_post :: Perm0 -> IdApp -> System -> System
 grant_post p app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  let {
+   newGrantedPermGroups = case maybeGrp p of {
+                           Prelude.Just g ->
+                            grantPermissionGroup app0 g
+                              (grantedPermGroups oldstate);
+                           Prelude.Nothing -> grantedPermGroups oldstate}}
+  in
+  Sys (St (apps oldstate) (alreadyRun oldstate) newGrantedPermGroups
   (grantPermission app0 p (perms oldstate)) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
   (sentIntents oldstate)) oldenv
@@ -2310,6 +2337,42 @@ grant_safe p app0 s =
   case grant_pre p app0 s of {
    Prelude.Just ec -> Result (Error0 ec) s;
    Prelude.Nothing -> Result Ok (grant_post p app0 s)}
+
+grantAuto_pre :: Perm0 -> IdApp -> System -> Prelude.Maybe ErrorCode
+grantAuto_pre p app0 s =
+  case Prelude.not (inBool idPerm_eq (idP p) (permsInUse app0 s)) of {
+   Prelude.True -> Prelude.Just Perm_not_in_use;
+   Prelude.False ->
+    case Prelude.not (inBool perm_eq p (getAllPerms s)) of {
+     Prelude.True -> Prelude.Just No_such_perm;
+     Prelude.False ->
+      case inBool perm_eq p (grantedPermsForApp app0 s) of {
+       Prelude.True -> Prelude.Just Perm_already_granted;
+       Prelude.False ->
+        case permLevel_eq (pl p) Dangerous of {
+         Prelude.True ->
+          case Prelude.not (isSomethingBool (maybeGrp p)) of {
+           Prelude.True -> Prelude.Just Perm_not_grouped;
+           Prelude.False ->
+            case Prelude.not (groupIsGranted app0 p s) of {
+             Prelude.True -> Prelude.Just Cannot_auto_grant;
+             Prelude.False -> Prelude.Nothing}};
+         Prelude.False -> Prelude.Just Perm_not_dangerous}}}}
+
+grantAuto_post :: Perm0 -> IdApp -> System -> System
+grantAuto_post p app0 s =
+  let {oldstate = state s} in
+  let {oldenv = environment s} in
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  (grantPermission app0 p (perms oldstate)) (running oldstate)
+  (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
+  (sentIntents oldstate)) oldenv
+
+grantAuto_safe :: Perm0 -> IdApp -> System -> Result0
+grantAuto_safe p app0 s =
+  case grantAuto_pre p app0 s of {
+   Prelude.Just ec -> Result (Error0 ec) s;
+   Prelude.Nothing -> Result Ok (grantAuto_post p app0 s)}
 
 revoke_pre :: Perm0 -> IdApp -> System -> Prelude.Maybe ErrorCode
 revoke_pre p app0 s =
@@ -2321,7 +2384,18 @@ revoke_post :: Perm0 -> IdApp -> System -> System
 revoke_post p app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
+  let {
+   newGrantedPermGroups = case maybeGrp p of {
+                           Prelude.Just g ->
+                            let {groups = permissionGroupsInUse app0 s} in
+                            case inBool idGrp_eq g groups of {
+                             Prelude.True -> grantedPermGroups oldstate;
+                             Prelude.False ->
+                              revokePermissionGroup app0 g
+                                (grantedPermGroups oldstate)};
+                           Prelude.Nothing -> grantedPermGroups oldstate}}
+  in
+  Sys (St (apps oldstate) (alreadyRun oldstate) newGrantedPermGroups
   (revokePermission app0 p (perms oldstate)) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
   (sentIntents oldstate)) oldenv
@@ -2855,6 +2929,7 @@ step s a =
    Install app0 m c lRes -> install_safe app0 m c lRes s;
    Uninstall app0 -> uninstall_safe app0 s;
    Grant p app0 -> grant_safe p app0 s;
+   GrantAuto p app0 -> grantAuto_safe p app0 s;
    Revoke p app0 -> revoke_safe p app0 s;
    GrantPermGroup grp app0 -> grantgroup_safe grp app0 s;
    RevokePermGroup grp app0 -> revokegroup_safe grp app0 s;

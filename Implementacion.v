@@ -93,6 +93,10 @@ Definition isNil (A:Set) (l:list A) : bool :=
     | _ => false
     end.
 
+(* Indica si x contiene un valor *)
+Definition isSomethingBool (A:Set) (x:option A) : bool :=
+    match x with | Some _ => true | _ => false end.
+
 (* Indica si un componente define correctamente sus intentFilters *)
 Definition definesIntentFilterCorrectlyBool (cmp:Cmp) : bool :=
     let theFilters :=
@@ -251,6 +255,15 @@ Definition grantedPermsForApp (app:idApp) (s:System) : list Perm :=
     | Error _ _ => nil (* Nunca pasa *)
     | Value _ list => list
     end.
+
+(* Retorna una lista de idGrp que indica los grupos que están asociados a permisos
+   actualmente otorgados*)
+Definition permissionGroupsInUse (app: idApp) (s: System) : list idGrp :=
+    let permsForApp := grantedPermsForApp app s in
+    let groupedPerms := filter (fun perm => negb (isSomethingBool idGrp (maybeGrp perm))) permsForApp in
+    let groups := map (fun perm => match maybeGrp perm with | None => nil | Some g => cons g nil end) groupedPerms in
+    concat groups.
+
 
 (* Agrega un permiso como individualmente otorgado a la aplicación *)
 Definition grantPermission (app:idApp) (p:Perm) (oldperms : mapping idApp (list Perm)) : mapping idApp (list Perm) :=
@@ -487,10 +500,6 @@ Definition intTypeEqBool (t t' : intentType) : bool :=
     | intService => match t' with | intService => true | _ => false end
     | intBroadcast => match t' with | intBroadcast => true | _ => false end
     end.
-
-(* Indica si x contiene un valor *)
-Definition isSomethingBool (A:Set) (x:option A) : bool :=
-    match x with | Some _ => true | _ => false end.
 
 (* Indica si ic es el identificador de una instancia en ejecución *)
 Definition isiCmpRunningBool (ic:iCmp) (s:System) : bool :=
@@ -871,11 +880,54 @@ Definition grant_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
     if (negb (InBool Perm Perm_eq p (getAllPerms s))) then Some no_such_perm else
     if (InBool Perm Perm_eq p (grantedPermsForApp app s)) then Some perm_already_granted else
     if (If permLevel_eq (pl p) (dangerous) then false else true) then Some perm_not_dangerous else
-    if (isSomethingBool idGrp (maybeGrp p)) then Some perm_is_grouped else
+    (* Si el permiso está agrupado y algún otro permiso del grupo ya fue otorgado, fallamos *)
+    if (groupIsGranted app p s) then Some perm_should_auto_grant else
+    None.
+
+Definition grant_post (p:Perm) (app:idApp) (s:System) : System :=
+    let oldstate := state s in
+    let oldenv := environment s in
+    let newGrantedPermGroups := match maybeGrp p with
+      | None => grantedPermGroups oldstate
+      | Some g => grantPermissionGroup app g (grantedPermGroups oldstate)
+      end
+    in
+    sys (st
+            (apps oldstate)
+            (alreadyRun oldstate)
+            newGrantedPermGroups
+            (grantPermission app p (perms oldstate))
+            (running oldstate)
+            (delPPerms oldstate)
+            (delTPerms oldstate)
+            (resCont oldstate)
+            (sentIntents oldstate)
+        )
+        oldenv.
+
+Definition grant_safe (p:Perm) (app:idApp) (s:System) : Result :=
+    match grant_pre p app s with
+    | Some ec => result (error ec) s
+    | None => result ok (grant_post p app s)
+    end.
+
+End ImplGrant.
+
+Section ImplGrantAuto.
+
+Definition grantAuto_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
+    if (negb (InBool idPerm idPerm_eq (idP p) (permsInUse app s))) then Some perm_not_in_use else
+    if (negb (InBool Perm Perm_eq p (getAllPerms s))) then Some no_such_perm else
+    if (InBool Perm Perm_eq p (grantedPermsForApp app s)) then Some perm_already_granted else
+    if (If permLevel_eq (pl p) (dangerous) then false else true) then Some perm_not_dangerous else
+    (* Si el permiso no está agrrupado, fallamos.  *)
+    if (negb (isSomethingBool idGrp (maybeGrp p))) then Some perm_not_grouped else
+    (*Si el permiso está agrupado pero no fue 'otorgado' previamente, fallamos. *)
+    if (negb (groupIsGranted app p s)) then Some cannot_auto_grant else
     None.
 
 
-Definition grant_post (p:Perm) (app:idApp) (s:System) : System :=
+Definition grantAuto_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
     sys (st
@@ -891,15 +943,12 @@ Definition grant_post (p:Perm) (app:idApp) (s:System) : System :=
         )
         oldenv.
 
-
-Definition grant_safe (p:Perm) (app:idApp) (s:System) : Result :=
-    match grant_pre p app s with
+Definition grantAuto_safe (p:Perm) (app:idApp) (s:System) : Result :=
+    match grantAuto_pre p app s with
     | Some ec => result (error ec) s
-    | None => result ok (grant_post p app s)
+    | None => result ok (grantAuto_post p app s)
     end.
-
-End ImplGrant.
-
+End ImplGrantAuto.
 
 Section ImplRevoke.
 
@@ -911,10 +960,19 @@ Definition revoke_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
 Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
+    let newGrantedPermGroups := 
+        match maybeGrp p with
+          | None => grantedPermGroups oldstate
+          | Some g => let groups := permissionGroupsInUse app s in
+                      if InBool idGrp idGrp_eq g groups
+                        then grantedPermGroups oldstate 
+                        else (revokePermissionGroup app g (grantedPermGroups oldstate))
+        end
+    in
     sys (st
             (apps oldstate)
             (alreadyRun oldstate)
-            (grantedPermGroups oldstate)
+            newGrantedPermGroups
             (revokePermission app p (perms oldstate))
             (running oldstate)
             (delPPerms oldstate)
@@ -1434,6 +1492,7 @@ Definition step (s:System) (a:Action) : Result :=
     | install app m c lRes => install_safe app m c lRes s
     | uninstall app => uninstall_safe app s
     | grant p app => grant_safe p app s
+    | grantAuto p app => grantAuto_safe p app s
     | revoke p app => revoke_safe p app s
     | grantPermGroup grp app => grantgroup_safe grp app s
     | revokePermGroup grp app => revokegroup_safe grp app s
