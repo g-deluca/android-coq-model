@@ -4122,4 +4122,12 @@ Proof.
     inversion H.
 Qed.
 
+Lemma ifNotNoneThenSomething : forall (m : option idGrp), ~(m = None) -> (exists (g:idGrp), m = Some g).
+Proof.
+  intros.
+  destruct m.
+  - exists i. auto.
+  - destruct H. auto. 
+Qed.
+
 End AuxLemmas.

@@ -214,6 +214,16 @@ Lemma ifPermsThenInApp : forall (s : System) (sValid : validstate s) (a : idApp)
     exists l;auto.
 Qed.
 
+Lemma ifGroupedPermsThenInApp : forall (s : System) (sValid : validstate s) (a : idApp) (l : list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp l -> (In a (apps (state s))) \/ (exists sysapp:SysImgApp, In sysapp (systemImage (environment s)) /\ idSI sysapp = a).
+    intros.
+    destructVS sValid.
+    destructSC statesConsistencyVS a.
+    apply grantedPermGroupsSC.
+    exists l;auto.
+Qed.
+
+
+
 Lemma ifInAppsThenGrantedGroups: forall (s : System) (sValid : validstate s) (a : idApp), In a (apps (state s)) -> exists v : list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp v.
 Proof.
     intros.
