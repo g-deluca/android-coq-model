@@ -408,22 +408,18 @@ Section SemRevoke.
 (* Precondición revoke *)
 Definition pre_revoke (p:Perm)(a:idApp)(s:System) : Prop :=
 (* El permiso debe estar otorgado *)
-(exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm).
-
-(* y si el permiso pertenece a un grupo, el grupo debe estar marcado como 'otorgado' *)
-(* TODO: Es necesaria esta precondición? Si no se cumpliera es porque estaríamos en un estado inconsistente
- * del sistema *)
-(* (forall (g: idGrp), maybeGrp p = Some g ->
-    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)). *)
+(exists (lPerm : list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
+(* y no debe esar agrupado*)
+maybeGrp p = None.
 
 (* Quita el permiso otorgado a la aplicación *)
 Definition revokePerm (a:idApp)(p:Perm)(s s':System) : Prop :=
-(forall (a':idApp)(lPerm':list Perm), 
+(forall (a':idApp)(lPerm':list Perm),
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
 exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm /\
 forall p':Perm, In p' lPerm' -> In p' lPerm) /\
 
-(forall (a':idApp)(lPerm:list Perm), 
+(forall (a':idApp)(lPerm:list Perm),
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
 exists lPerm':list Perm, map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' /\
 forall p':Perm, In p' lPerm -> ~In p' lPerm' -> (a=a' /\ p=p')) /\
@@ -431,41 +427,16 @@ forall p':Perm, In p' lPerm -> ~In p' lPerm' -> (a=a' /\ p=p')) /\
 (exists (lPerm':(list Perm)), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' /\ ~In p lPerm') /\
 map_correct (perms (state s')).
 
-Definition revokePermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
-(forall (a':idApp)(lGrp':list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
-exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
-forall g':idGrp, In g' lGrp' -> In g' lGrp) /\
-
-(forall (a':idApp)(lGrp:list idGrp), 
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
-exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
-forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> (a=a' /\ g=g')) /\
-
-(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ ~In g lGrp') /\
-map_correct (grantedPermGroups (state s')).
-
 
 (* Postcondición revoke *)
 Definition post_revoke (p:Perm)(a:idApp)(s s':System) : Prop :=
 (* Se revoca el permiso p a a *)
 revokePerm a p s s' /\
 
-(* Si el permiso está agrupado, *)
-(forall (g: idGrp),
-    (maybeGrp p = Some g ->
-        (* y  todos los permisos que quedan otorgados a la aplicación en s'*)
-        (forall (p': Perm) (lPerm': list Perm), map_apply idApp_eq (perms (state s')) a = Value idApp lPerm' -> In p' lPerm' ->
-            (* que están agrupados pertenecen a un grupo distinto al del permiso que estoy revocando*)
-            (forall (g': idGrp), maybeGrp p' = Some g' -> ~(g=g')))) ->
-    revokePermGroup a g s s') /\ (* , entonces removemos el grupo del estado *)
-
-(* Si el permiso no está agrupado *)
-(maybeGrp p = None -> (grantedPermGroups (state s)) = (grantedPermGroups (state s'))) /\
-
 (* nada más cambia *)
 (environment s) = (environment s') /\
 apps (state s) = apps (state s') /\
+grantedPermGroups (state s) = grantedPermGroups (state s') /\
 running (state s) = running (state s') /\
 delPPerms (state s) = delPPerms (state s') /\
 delTPerms (state s) = delTPerms (state s') /\
@@ -507,17 +478,38 @@ Section SemRevokeGroup.
 (* Precondición revoke *)
 Definition pre_revokeGroup (g:idGrp)(a:idApp)(s:System) : Prop :=
 (* El permiso debe estar otorgado *)
-exists (lGrp : list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGrp
-/\ In g lGrp.
+exists (lGrp : list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGrp /\ In g lGrp.
+
+Definition revokePermGroup (a:idApp)(g:idGrp)(s s':System) : Prop :=
+(forall (a':idApp)(lGrp':list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
+exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
+forall g':idGrp, In g' lGrp' -> In g' lGrp) /\
+
+(forall (a':idApp)(lGrp:list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
+exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
+forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> (a=a' /\ g=g')) /\
+
+(exists (lGrp':(list idGrp)), map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp' /\ ~In g lGrp') /\
+map_correct (grantedPermGroups (state s')).
+
 
 (* Postcondición revoke *)
 Definition post_revokeGroup (g:idGrp)(a:idApp)(s s':System) : Prop :=
-(* Se revoca el grupo g a a *)
+(* Quitamos el grupo g*)
 revokePermGroup a g s s' /\
+
+(* Revoco todos los permisos pertenecientes a ese grupo*)
+(forall (p: Perm) (lPerm: list Perm),
+    map_apply idApp_eq (perms (state s')) a = Value idApp lPerm ->
+        In p lPerm ->
+          maybeGrp p = Some g ->
+            revokePerm a p s s') /\
+
 (* nada más cambia *)
 (environment s) = (environment s') /\
 apps (state s) = apps (state s') /\
-(perms (state s)) = (perms (state s')) /\
 running (state s) = running (state s') /\
 delPPerms (state s) = delPPerms (state s') /\
 delTPerms (state s) = delTPerms (state s') /\

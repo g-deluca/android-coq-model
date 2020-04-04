@@ -11,8 +11,10 @@ Inductive Action : Type :=
     (* Incorporamos una nueva operación de grant, que representa el otorgamiento de un permiso sin la notificación
      * al usuario *)
     | grantAuto: Perm -> idApp -> Action
+    (* Revoke solo permite remover permisos que no estén agrupados*)
     | revoke: Perm -> idApp -> Action
     | grantPermGroup: idGrp -> idApp -> Action
+    (* RevokePermGroup quita todos los permisos otorgados que estén agrupados en idGrp*)
     | revokePermGroup: idGrp -> idApp -> Action
     | hasPermission: Perm -> Cmp -> Action
     | read : iCmp -> CProvider -> uri -> Action
