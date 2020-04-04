@@ -25,7 +25,7 @@ Proof.
     unfold validstate.
     unfold post_revoke in H0.
     unfold pre_revoke in H.
-    destruct H.
+    destruct H as [H maybeGrp].
     destruct_conj H0.
     
     unfold allCmpDifferent.
@@ -76,19 +76,19 @@ Proof.
     destruct H10.
     destruct H1.
     destruct_conj H12.
-    specialize (H13 a0 x0 H10).
+    specialize (H13 a0 x H10).
     destruct H13.
     destruct H12.
     destruct H13.
-    exists x1;auto.
+    exists x0;auto.
     destruct H8.
     destruct permsSC.
     apply H11.
     destruct H1.
-    specialize (H1 a0 x0 H8).
+    specialize (H1 a0 x H8).
     destruct H1.
     destruct H1.
-    exists x1;auto.
+    exists x0;auto.
     
     unfold notDupApp.
     split.
@@ -123,7 +123,7 @@ Proof.
     apply (permExistsSpermExistsS' s);auto. 
     destruct H1.
     specialize (H12 p0 H10).
-    apply (grantedPermsExistVS s sValid a0 p0 x0);auto.
+    apply (grantedPermsExistVS s sValid a0 p0 x);auto.
 
     unfold noDupSentIntents.
     rewrite<- H9.
