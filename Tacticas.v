@@ -38,7 +38,8 @@ match goal with
                                destruct ph0 as [notDupSysAppVS ph0];
                                destruct ph0 as [notDupPermVS ph0];
                                destruct ph0 as [allMapsCorrectVS ph0];
-                               destruct ph0 as [grantedPermsExistVS sentIntentsCorrectVS]
+                               destruct ph0 as [grantedPermsExistVS ph0];
+                               destruct ph0 as [sentIntentsCorrectVS individualInstanceOfGroupedPermVS]
   end end.
 
 Ltac destructSC h a :=

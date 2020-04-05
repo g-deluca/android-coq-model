@@ -238,6 +238,15 @@ Definition noDupSentIntents : Prop :=
         idI i = idI i' ->
         ic=ic' /\ i=i'.
 
+Definition individualInstanceOfGroupedPerm : Prop :=
+    forall (a: idApp) (g: idGrp) (lGroup: list idGrp),
+      map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\ In g lGroup ->
+        exists (p: Perm) (lPerm: list Perm),
+            map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\
+            In p lPerm /\
+            maybeGrp p = Some g.
+
+
 (* Esta proposición vale si y sólo si el estado es válido *)
 Definition validstate  : Prop := allCmpDifferent /\
                                  notRepeatedCmps /\
@@ -251,6 +260,7 @@ Definition validstate  : Prop := allCmpDifferent /\
                                  notDupPerm /\
                                  allMapsCorrect /\
                                  grantedPermsExist /\
-                                 noDupSentIntents.
+                                 noDupSentIntents /\
+                                 individualInstanceOfGroupedPerm.
 
 End EstadoValido.

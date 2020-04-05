@@ -502,10 +502,8 @@ revokePermGroup a g s s' /\
 
 (* Revoco todos los permisos pertenecientes a ese grupo*)
 (forall (p: Perm) (lPerm: list Perm),
-    map_apply idApp_eq (perms (state s')) a = Value idApp lPerm ->
-        In p lPerm ->
-          maybeGrp p = Some g ->
-            revokePerm a p s s') /\
+    map_apply idApp_eq (perms (state s)) a = Value idApp lPerm -> In p lPerm ->
+      maybeGrp p = Some g -> revokePerm a p s s') /\
 
 (* nada más cambia *)
 (environment s) = (environment s') /\

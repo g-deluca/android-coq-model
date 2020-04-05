@@ -124,13 +124,26 @@ Proof.
     destruct H1.
     specialize (H12 p0 H10).
     apply (grantedPermsExistVS s sValid a0 p0 x);auto.
+    split.
 
-    unfold noDupSentIntents.
+    unfold noDupSentIntents in *.
     rewrite<- H9.
-    destructVS sValid.
-    auto.
+    destructVS sValid. auto.
+
+    unfold individualInstanceOfGroupedPerm.
+    intros. destructVS sValid.
+    rewrite <- H3 in H8.
+    apply individualInstanceOfGroupedPermVS in H8.
+    destruct H8 as [pWitness [lPerm' [H8 [H10 H11]]]].
+    destruct H1. 
+    destruct H12. specialize (H12 a0 lPerm' H8).
+    destruct H12 as [lPermWitness [H12 H14]].
+    
+    destruct (classic (In pWitness lPermWitness));intros.
+ -- exists pWitness, lPermWitness. auto.
+ -- specialize (H14 pWitness H10 H15). destruct H14.
+    rewrite <- H16 in H11. rewrite -> H11 in maybeGrp.
+    inversion maybeGrp.
 Qed.
-
-
 End RevokeInv.
 
