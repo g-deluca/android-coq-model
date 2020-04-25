@@ -164,5 +164,19 @@ Proof.
     auto.
 Qed.
 
+Lemma individualInstanceOfGroupedPermS' :
+    forall (s s': System) (sValid: validstate s) (sameEnv: environment s = environment s')
+        (samePerms: perms (state s) = perms (state s'))
+            (sameGroups: grantedPermGroups (state s) = grantedPermGroups (state s')),
+                individualInstanceOfGroupedPerm s'.
+Proof.
+intros.
+unfold individualInstanceOfGroupedPerm; intros.
+rewrite <- sameGroups in H.
+destructVS sValid.
+apply individualInstanceOfGroupedPermVS in H.
+rewrite <- samePerms. auto.
+Qed.
+
 
 End SameEnvLemmas.

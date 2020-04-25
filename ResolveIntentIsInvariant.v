@@ -90,6 +90,7 @@ Proof.
     
     split.    
     apply (grantedPermsExistS' s);auto.
+    split.
 
 
     unfold implicitToExplicitIntent in H1.
@@ -149,7 +150,7 @@ Proof.
     rewrite H11 ,H26 ,H27 ,H28 ,H29 ,H30 ,H31 ,H32 ,H34.
     auto.
 
-
+    apply (individualInstanceOfGroupedPermS' s); auto.
 Qed.
 
 

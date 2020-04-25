@@ -102,11 +102,14 @@ Proof.
     
     split.
     apply (grantedPermsExistS' s);auto.
+    split.
 
     unfold noDupSentIntents.
     rewrite<- H12.
     destructVS sValid.
     auto.
+
+    apply (individualInstanceOfGroupedPermS' s); auto.
 Qed.
 
 

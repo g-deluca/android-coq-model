@@ -221,6 +221,7 @@ Definition revokePerms (a:idApp) (s s': System) : Prop :=
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
 exists lPerm:list Perm,
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm) /\
+
 (forall (a':idApp)(lPerm: list Perm),
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
 (exists lPerm',
@@ -229,7 +230,9 @@ forall (defPermsA : list Perm) (p:Perm),
 map_apply idApp_eq (defPerms (environment s)) a = Value idApp defPermsA ->
 ((In p lPerm /\ ~In p defPermsA) <-> In p lPerm')) \/
 a = a')/\
+
 ~is_Value (map_apply idApp_eq (perms (state s')) a) /\
+
 map_correct (perms (state s')).
 
 (* Revocar los permisos otorgados a la aplicación *)

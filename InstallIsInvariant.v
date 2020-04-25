@@ -558,12 +558,26 @@ split.
     absurd (l=nil).
     apply inNotNilExists.
     exists p;auto.
-    auto.
+    auto. split.
 
     unfold noDupSentIntents.
     rewrite<- H15.
     destructVS sValid.
     auto.
+
+    unfold initializePermLists in H9.
+    destruct H9 as [H9 [H16 [H17 [H18 H19]]]].
+    destruct H19 as [H19 [H20 [H21 H22]]].
+    unfold individualInstanceOfGroupedPerm.
+    intros. destruct H14.
+    apply H19 in H14. destruct H14.
+  - destructVS sValid. 
+    assert (map_apply idApp_eq (grantedPermGroups (state s)) a0 = Value idApp lGroup /\ In g lGroup); auto.
+    apply individualInstanceOfGroupedPermVS in H24.
+    destruct H24 as [pWitness [lPermWitness [H24 [H25 H26]]]].
+    apply H9 in H24.
+    exists pWitness, lPermWitness. auto.
+  - destruct H14. rewrite H24 in H23. inversion H23.
 Qed.
 
 

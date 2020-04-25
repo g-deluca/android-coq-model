@@ -97,6 +97,7 @@ Proof.
     
     split.
     apply (grantedPermsExistS' s);auto.
+    split.
 
     unfold noDupSentIntents.
     intros.
@@ -137,6 +138,8 @@ Proof.
     split.
     rewrite<- H0;auto.
     rewrite H3;auto.
+
+    apply (individualInstanceOfGroupedPermS' s); auto.
 Qed.
 
 

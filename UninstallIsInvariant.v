@@ -470,12 +470,44 @@ Proof.
     rewrite<-H14 in *.
     rewrite H10 in H13.
     destruct H13;auto.
+    split.
 
     unfold noDupSentIntents.
     rewrite<- H11.
     destructVS sValid.
     auto.
-Qed.
+
+    unfold individualInstanceOfGroupedPerm.
+    intros.
+
+    destruct H3 as [H3 [H12 [H13 H14]]].
+    destruct H10 as [H10 H15].
+    assert (H10' := H10).
+    apply H3 in H10. destructVS sValid.
+    assert (map_apply idApp_eq (grantedPermGroups (state s)) a0 = Value idApp lGroup /\ In g lGroup);auto.
+    apply individualInstanceOfGroupedPermVS in H16.
+    destruct H16 as [pWitness [lPerm' [H16 [H17 H18]]]].
+    assert (H16' := H16).
+    destruct H0 as [H0 H19].
+
+    clear H3 H12. destruct H19.
+    apply H3 in H16.
+    destruct H16.
+  - destruct H16 as [lPermWitness [H19 H20]].
+    destructSC statesConsistencyVS a.
+    apply defPermsSC in H. destruct H as [lPermDef H].
+    clear certSC defPermsSC permsSC grantedPermGroupsSC mfstSC.
+    assert (H' := H).
+    apply (H20 lPermDef pWitness) in H.
+    elim (classic (In pWitness lPermDef)); intros.
+ -- admit.
+ -- assert (In pWitness lPerm' /\ ~ In pWitness lPermDef); auto.
+    apply H in H21.
+    exists pWitness, lPermWitness. auto.
+  - rewrite <- H16 in H10'.
+    destruct H13. unfold is_Value. rewrite H10'. auto.
+Admitted.
+
 
 
 

@@ -163,13 +163,37 @@ Proof.
     apply (permExistsSpermExistsS' s);auto.
     destruct H1.
     auto.
- -- unfold noDupSentIntents.
+ -- split. unfold noDupSentIntents.
     rewrite<- H11.
     destructVS sValid.
     auto.
+
+    unfold individualInstanceOfGroupedPerm. intros.
+    assert (H10' := H10). destruct H10.
+    elim (classic (maybeGrp p = None)); intros.
+ 
+  * apply H3 in H13. rewrite <- H13 in H10'.
+    destructVS sValid. apply individualInstanceOfGroupedPermVS in H10'.
+    destruct H10' as [pWitness [lPerm [H14 [H15 H16]]]].
+    destruct H2. apply H2 in H14. destruct H14 as [lPermWitness [H18 H19]].
+    apply H19 in H15.
+    exists pWitness, lPermWitness. auto.
+  * apply (ifNotNoneThenSomething (maybeGrp p)) in H13.
+    destruct H13 as [g' H13]. assert (H13' := H13). apply H0 in H13.
+    destruct H13. destruct H14. apply H14 in H10.
+    destruct H10 as [lGroup' [H10 H16]].
+    specialize (H16 g H12). elim (classic (In g lGroup')); intros.
+    assert (map_apply idApp_eq (grantedPermGroups (state s)) a0 =
+      Value idApp lGroup' /\ In g lGroup'); auto.
+ ** destructVS sValid. apply individualInstanceOfGroupedPermVS in H18.
+    destruct H18 as [pWitness [lPerm'[H19 [H20 H21]]]].
+    destruct H2. apply H2 in H19. destruct H19 as [lPermWitness [H22 H23]].
+    apply H23 in H20. exists pWitness, lPermWitness. auto.
+ ** apply H16 in H17. destruct H17. destruct H2 as [H2 [H19 H20]].
+    destruct H20 as [[lPermWitness [H20 H21]] H22].
+    rewrite <- H17, <- H18.
+    exists p, lPermWitness. auto.
 Qed.
-
-
 
 End GrantInv.
 
