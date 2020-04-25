@@ -68,58 +68,66 @@ Proof.
     unfold statesConsistency.
     split.
     rewrite <- H3.
-    rewrite <- H0.
     rewrite <- H2.
     intros.
     assert (sv2:=sValid).
     destructVS sValid.
     destructSC statesConsistencyVS a0.
     repeat (split;intros; auto).
-    destruct H1.
-    destruct grantedPermGroupsSC.
-    specialize (H11 H8).
-    destruct H11.
+  - destruct H0.
+    apply permsSC in H8. destruct H8 as [lPerm H8].
     destruct_conj H10.
-    specialize (H13 a0 x H11).
-    destruct H13.
-    destruct H13.
-    exists x0;auto.
-    destruct H8.
-    destruct grantedPermGroupsSC.
-    apply H11.
-    destruct H1.
-    specialize (H1 a0 x H8).
-    destruct H1.
-    destruct H1.
-    exists x0;auto.
-    
-    unfold notDupApp.
+    apply H11 in H8.
+    destruct H8 as [lPerm' [H8 _]]. exists lPerm'. auto.
+  - destruct H8 as [lPerm' H8].
+    destruct H0. apply H0 in H8.
+    destruct H8 as [lPerm [H8 _]].
+    apply (ifPermsThenInApp s sv2 a0 lPerm).
+    auto.
+  - apply grantedPermGroupsSC in H8.
+    destruct H8 as [lPerm H8].
+    destruct H1. destruct_conj H10.
+    apply H11 in H8.
+    destruct H8 as [lPerm' [H8 _]].
+    exists lPerm'. auto.
+  - destruct H8 as [lPerm' H8].
+    destruct H1. apply H1 in H8.
+    destruct H8 as [lPerm [H8 _]].
+    apply (ifGroupedPermsThenInApp s sv2 a0 lPerm).
+    auto.
+  - unfold notDupApp.
     split.
     rewrite <- H2.
-    rewrite<-H0.
+    rewrite <- H3.
     destructVS sValid.
     auto.
-    
+
     unfold notDupSysApp.
     split.
-    rewrite <-H0.
+    rewrite <- H2.
     destructVS sValid.
     auto.
-    
-    
+
     split.
     apply (notDupPermS' s);auto.
-    
+
     unfold allMapsCorrect.
     split.
     destruct H1.
     destruct_conj H8.
-    rewrite <-H0, <-H4, <-H5, <- H6, <-H7, <-H3.
+    destruct H0.
+    destruct_conj H11.
+    rewrite <-H2, <-H4, <-H5, <- H6, <-H7.
     repeat (split;auto; try mapcorrect sValid).
-    
-    
+
     split.
-    apply (grantedPermsExistS' s);auto.
+    unfold grantedPermsExist. intros.
+    destruct H0.
+    apply H0 in H8.
+    destruct H8 as [lPerm' [H8 H12]].
+    apply (permExistsSpermExistsS' s);auto.
+    apply H12 in H10.
+    apply (grantedPermsExistVS s sValid a0 p lPerm');auto.
 
     unfold noDupSentIntents.
     rewrite<- H9.
