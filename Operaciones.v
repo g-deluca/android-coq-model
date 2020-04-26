@@ -13,7 +13,6 @@ Inductive Action : Type :=
     | grantAuto: Perm -> idApp -> Action
     (* Revoke solo permite remover permisos que no estén agrupados*)
     | revoke: Perm -> idApp -> Action
-    | grantPermGroup: idGrp -> idApp -> Action
     (* RevokePermGroup quita todos los permisos otorgados que estén agrupados en idGrp*)
     | revokePermGroup: idGrp -> idApp -> Action
     | hasPermission: Perm -> Cmp -> Action

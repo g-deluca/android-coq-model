@@ -445,34 +445,6 @@ sentIntents (state s) = sentIntents (state s').
 
 End SemRevoke.
 
-Section SemGrantGroup.
-
-(* Precondición grantGroup *)
-Definition pre_grantGroup (g:idGrp)(a:idApp)(s:System) : Prop := 
-~(exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGrp /\ In g lGrp) /\ (* Solo permito grantear grupos de permisos que no hayan sido granteados, *)
-(exists (m:Manifest) (p:Perm), isManifestOfApp a m s /\
-In (idP p) (use m) /\ (* , sean de algun permiso que declara en el manifest, *)
-(isSystemPerm p \/ usrDefPerm p s)  /\ maybeGrp p = Some g /\ (* , que existan *)
-pl p = dangerous). (* y quien lo define haya dicho que es peligroso *)
-
-
-(* Postcondición grant *)
-Definition post_grantGroup (g:idGrp)(a:idApp)(s s':System) : Prop :=
-(* Se otorga el grupo g a a *)
-(grantPermGroup a g s s') /\
-(* nada más cambia *)
-(environment s) = (environment s') /\
-(apps (state s)) = (apps (state s')) /\
-(perms (state s)) = (perms (state s')) /\
-(running (state s)) = (running (state s')) /\
-(delPPerms (state s)) = (delPPerms (state s')) /\
-(delTPerms (state s)) = (delTPerms (state s')) /\
-(resCont (state s)) = (resCont (state s')) /\
-(sentIntents (state s)) = (sentIntents (state s')).
-
-End SemGrantGroup.
-
-
 Section SemRevokeGroup.
 
 (* Precondición revoke *)

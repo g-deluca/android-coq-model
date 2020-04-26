@@ -10,7 +10,6 @@ Require Export InstallIsInvariant.
 Require Export UninstallIsInvariant.
 Require Export GrantIsInvariant.
 Require Export RevokeIsInvariant.
-Require Export GrantGroupIsInvariant.
 Require Export RevokeGroupIsInvariant.
 Require Export WriteIsInvariant.
 Require Export StartActivityIsInvariant.
@@ -36,7 +35,6 @@ Proof.
     apply (UninstallIsInvariant s s' H i);auto.
     apply (GrantIsInvariant s s' H p i);auto.
     apply (RevokeIsInvariant s s' H p i);auto.
-    apply (GrantGroupIsInvariant s s' H i i0);auto.
     apply (RevokeGroupIsInvariant s s' H i i0);auto.
     unfold post_hasPermission in H4;rewrite<- H4;auto.
     unfold post_read in H4;rewrite<- H4;auto.

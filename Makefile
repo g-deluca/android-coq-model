@@ -112,8 +112,6 @@ VFILES:=AuxFunsCorrect.v\
   ErrorManagement.v\
   Estado.v\
   Exec.v\
-  GrantGroupIsInvariant.v\
-  GrantGroupIsSound.v\
   GrantIsInvariant.v\
   GrantIsSound.v\
   GrantPIsInvariant.v\

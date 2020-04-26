@@ -15,7 +15,6 @@ match act with
    | grant p c => pre_grant p c s
    | grantAuto p c => pre_grantAuto p c s
    | revoke p c => pre_revoke p c s
-   | grantPermGroup g c => pre_grantGroup g c s
    | revokePermGroup g c => pre_revokeGroup g c s
    | hasPermission p c => pre_hasPermission p c s
    | read ic cp u => pre_read ic cp u s
@@ -44,7 +43,6 @@ match act with
    | grant p c => post_grant p c s s'
    | grantAuto p c => post_grantAuto p c s s'
    | revoke p c => post_revoke p c s s'
-   | grantPermGroup g c => post_grantGroup g c s s'
    | revokePermGroup g c => post_revokeGroup g c s s'
    | hasPermission p c => post_hasPermission p c s s'
    | read ic cp u => post_read ic cp u s s'

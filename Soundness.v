@@ -15,7 +15,6 @@ Require Import InstallIsSound.
 Require Import UninstallIsSound.
 Require Import GrantIsSound.
 Require Import RevokeIsSound.
-Require Import GrantGroupIsSound.
 Require Import RevokeGroupIsSound.
 Require Import HasPermissionIsSound.
 Require Import ReadIsSound.
@@ -44,7 +43,6 @@ Proof.
     exact (uninstallIsSound s i H).
     exact (grantIsSound s i p H).
     exact (revokeIsSound s i p H).
-    exact (grantgroupIsSound s i0 i H).
     exact (revokegroupIsSound s i0 i H).
     exact (hasPermissionIsSound s p c H).
     exact (readIsSound s i c u H).

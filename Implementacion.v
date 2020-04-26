@@ -991,44 +991,6 @@ Definition revoke_safe (p:Perm) (app:idApp) (s:System) : Result :=
 
 End ImplRevoke.
 
-Section ImplGrantGroup.
-
-Definition grantgroup_pre (g:idGrp) (a:idApp) (s:System) : option ErrorCode :=
-    match map_apply idApp_eq (grantedPermGroups (state s)) a with
-    | Error _ _ => Some no_such_app
-    | Value _ lGrp => if InBool idGrp idGrp_eq g lGrp then Some group_already_granted else
-            let useIdPermsA := permsInUse a s in
-            let usePermsA := filter (fun p => InBool idPerm idPerm_eq (idP p) useIdPermsA) (getAllPerms s) in
-            let dangerousPermsUsedByA := filter (fun p => match pl p with | dangerous => true | _ => false end) usePermsA in
-            if existsb (fun p => match maybeGrp p with Some g' => If idGrp_eq g' g then true else false | None => false end) dangerousPermsUsedByA then None else Some group_not_in_use
-    end.
-
-Definition grantgroup_post (g:idGrp) (app:idApp) (s:System) : System :=
-    let oldstate := state s in
-    let oldenv := environment s in
-    sys (st
-            (apps oldstate)
-            (alreadyRun oldstate)
-            (grantPermissionGroup app g (grantedPermGroups oldstate))
-            (perms oldstate)
-            (running oldstate)
-            (delPPerms oldstate)
-            (delTPerms oldstate)
-            (resCont oldstate)
-            (sentIntents oldstate)
-        )
-        oldenv.
-
-
-Definition grantgroup_safe (g:idGrp) (app:idApp) (s:System) : Result :=
-    match grantgroup_pre g app s with
-    | Some ec => result (error ec) s
-    | None => result ok (grantgroup_post g app s)
-    end.
-
-End ImplGrantGroup.
-
-
 Section ImplRevokeGroup.
 
 Definition revokegroup_pre (g:idGrp) (app:idApp) (s:System) : option ErrorCode :=
@@ -1494,7 +1456,6 @@ Definition step (s:System) (a:Action) : Result :=
     | grant p app => grant_safe p app s
     | grantAuto p app => grantAuto_safe p app s
     | revoke p app => revoke_safe p app s
-    | grantPermGroup grp app => grantgroup_safe grp app s
     | revokePermGroup grp app => revokegroup_safe grp app s
     | hasPermission a p => result ok s
     | read ic cp u => read_safe ic cp u s

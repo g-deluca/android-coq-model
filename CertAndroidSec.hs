@@ -1078,7 +1078,6 @@ data Action =
  | Grant Perm0 IdApp
  | GrantAuto Perm0 IdApp
  | Revoke Perm0 IdApp
- | GrantPermGroup IdGrp IdApp
  | RevokePermGroup IdGrp IdApp
  | HasPermission Perm0 Cmp
  | Read0 ICmp CProvider Uri
@@ -2406,50 +2405,6 @@ revoke_safe p app0 s =
    Prelude.Just ec -> Result (Error0 ec) s;
    Prelude.Nothing -> Result Ok (revoke_post p app0 s)}
 
-grantgroup_pre :: IdGrp -> IdApp -> System -> Prelude.Maybe ErrorCode
-grantgroup_pre g a s =
-  case map_apply idApp_eq (grantedPermGroups (state s)) a of {
-   Value lGrp ->
-    case inBool idGrp_eq g lGrp of {
-     Prelude.True -> Prelude.Just Group_already_granted;
-     Prelude.False ->
-      let {useIdPermsA = permsInUse a s} in
-      let {
-       usePermsA = filter (\p -> inBool idPerm_eq (idP p) useIdPermsA)
-                     (getAllPerms s)}
-      in
-      let {
-       dangerousPermsUsedByA = filter (\p ->
-                                 case pl p of {
-                                  Dangerous -> Prelude.True;
-                                  _ -> Prelude.False}) usePermsA}
-      in
-      case existsb (\p ->
-             case maybeGrp p of {
-              Prelude.Just g' ->
-               case idGrp_eq g' g of {
-                Prelude.True -> Prelude.True;
-                Prelude.False -> Prelude.False};
-              Prelude.Nothing -> Prelude.False}) dangerousPermsUsedByA of {
-       Prelude.True -> Prelude.Nothing;
-       Prelude.False -> Prelude.Just Group_not_in_use}};
-   Error _ -> Prelude.Just No_such_app}
-
-grantgroup_post :: IdGrp -> IdApp -> System -> System
-grantgroup_post g app0 s =
-  let {oldstate = state s} in
-  let {oldenv = environment s} in
-  Sys (St (apps oldstate) (alreadyRun oldstate)
-  (grantPermissionGroup app0 g (grantedPermGroups oldstate)) (perms oldstate)
-  (running oldstate) (delPPerms oldstate) (delTPerms oldstate)
-  (resCont oldstate) (sentIntents oldstate)) oldenv
-
-grantgroup_safe :: IdGrp -> IdApp -> System -> Result0
-grantgroup_safe g app0 s =
-  case grantgroup_pre g app0 s of {
-   Prelude.Just ec -> Result (Error0 ec) s;
-   Prelude.Nothing -> Result Ok (grantgroup_post g app0 s)}
-
 revokegroup_pre :: IdGrp -> IdApp -> System -> Prelude.Maybe ErrorCode
 revokegroup_pre g app0 s =
   case map_apply idApp_eq (grantedPermGroups (state s)) app0 of {
@@ -2931,7 +2886,6 @@ step s a =
    Grant p app0 -> grant_safe p app0 s;
    GrantAuto p app0 -> grantAuto_safe p app0 s;
    Revoke p app0 -> revoke_safe p app0 s;
-   GrantPermGroup grp app0 -> grantgroup_safe grp app0 s;
    RevokePermGroup grp app0 -> revokegroup_safe grp app0 s;
    HasPermission _ _ -> Result Ok s;
    Read0 ic cp u -> read_safe ic cp u s;

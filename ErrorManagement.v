@@ -118,17 +118,6 @@ match action with
         | perm_wasnt_granted => ~pre_revoke p c s
         | _ => False
         end
-   | grantPermGroup g a => match ec with
-        (* Se quiere otorgar un grupo de permisos a una aplicación no instalada *)
-        | no_such_app => ~In a (apps (state s))
-        (* Se quiere reotorgar un grupo de permisos ya otorgado *)
-        | group_already_granted => exists lGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGrp /\ In g lGrp
-        (* Se quiere otorgar un grupo de permisos para el cual ninguno de sus miembros está marcado como usado *)
-        | group_not_in_use => ~(exists (m:Manifest) (p:Perm), map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In (idP p) (use m) /\
-                (isSystemPerm p \/ usrDefPerm p s)  /\ maybeGrp p = Some g /\
-                pl p = dangerous)
-        | _ => False
-        end
    | revokePermGroup g c => match ec with
         (* Se quiere revocar un grupo de permisos que no estaba otorgado *)
         | group_wasnt_granted => ~pre_revokeGroup g c s
