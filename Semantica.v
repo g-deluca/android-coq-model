@@ -974,8 +974,6 @@ In a (alreadyRun (state s)) \/
         (exists n: nat, targetSdk m = Some n /\ n > vulnerableSdk)).
         (* TODO: Qué pasa cuando no existe el targetSdk? *)
 
-
-
 (* Precondición de receive intent *)
 Definition pre_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s:System): Prop :=
 (* a puede recibir el intent si está en condiciones de ser ejecutada *)
@@ -1048,7 +1046,7 @@ map_apply deltpermsdomeq (delTPerms (state s)) (ic', cp', u') = Value (iCmp*CPro
 map_apply deltpermsdomeq (delTPerms (state s')) (ic, cp, u) = Value (iCmp*CProvider*uri) pt ) /\
 map_correct (delTPerms (state s')).
 
-Definition runApp (a: idApp) (s s': System): Prop :=
+Definition markAsRunned (a: idApp) (s s': System): Prop :=
 (* Mantenemos la información sobre las aplicaciones que no son a *)
 (forall a':idApp,
     In a' (alreadyRun (state s)) ->
@@ -1064,7 +1062,7 @@ In a (apps (state s')).
 (* Postcondición de receive intent *)
 Definition post_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s s':System):Prop :=
 (* Seteamos que la aplicación ya fue ejecutada al menos una vez*)
-runApp a s s' /\
+markAsRunned  a s s' /\
 (exists (ic':iCmp)(c:Cmp), intentForApp i a c ic s /\
 ~isCProvider c /\
 (* ic' no debe ser el id de una instancia ya en ejecución *)
@@ -1339,6 +1337,31 @@ Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
         (exists n: nat, targetSdk m = Some n /\ n < vulnerableSdk)
 ).
 
+Definition revokeGrantedPerms (a:idApp) (s s': System) : Prop :=
+(forall (a':idApp) (lPerm': list Perm),
+map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
+map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm') /\
+
+(forall (a':idApp)(lPerm: list Perm),
+map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
+map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm \/
+a = a')/\
+
+~is_Value (map_apply idApp_eq (perms (state s')) a) /\
+map_correct (perms (state s')).
+
+(* Revocar los permisos otorgados a la aplicación *)
+Definition revokeGrantedPermGroups (a:idApp) (s s': System) : Prop :=
+(forall (a':idApp)(lGrps: list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps ->
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps) /\
+(forall (a':idApp)(lGrps: list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps ->
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps \/
+a = a')/\
+~is_Value (map_apply idApp_eq (grantedPermGroups (state s')) a) /\
+map_correct (grantedPermGroups (state s')).
+
 Definition post_verifyOldApp (a: idApp) (s s': System) :=
 (**
  * Removemos todos los permisos que hayan sido otorgados a esta aplicación,
@@ -1346,15 +1369,12 @@ Definition post_verifyOldApp (a: idApp) (s s': System) :=
  * del popup que le sale al usuario para verificar los permisos con una
  * traza de 'grant's sucesivos.
  *)
-(forall (lPerm: list Perm) (p: Perm),
-    map_apply idApp_eq (perms (state s)) a = Value idApp lPerm ->
-        In p lPerm -> revokePerm a p s s') /\
-
+ revokeGrantedPerms a s s' /\
+ revokeGrantedPermGroups a s s' /\
 (**
  * Marcamos a la aplicación como que ya fue ejecutada alguna vez
- * TODO: Quizás queda un poco raro hacer esto.
  *)
-runApp a s s' /\
+markAsRunned a s s' /\
 (* Nada más cambia  *)
 (environment s = environment s') /\
 (apps (state s) = apps (state s')) /\
