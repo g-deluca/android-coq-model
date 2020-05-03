@@ -114,6 +114,7 @@ VFILES:=AuxFunsCorrect.v\
   Exec.v\
   GrantIsInvariant.v\
   GrantIsSound.v\
+  GrantAutoIsInvariant.v\
   GrantPIsInvariant.v\
   GrantPIsSound.v\
   HasPermAndNotGranted.v\
