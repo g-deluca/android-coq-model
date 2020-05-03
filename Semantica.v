@@ -1338,28 +1338,52 @@ Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
 ).
 
 Definition revokeGrantedPerms (a:idApp) (s s': System) : Prop :=
-(forall (a':idApp) (lPerm': list Perm),
+(* (forall (a':idApp) (lPerm': list Perm),
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
-map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm') /\
+map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm' \/
+a = a') /\ *)
 
-(forall (a':idApp)(lPerm: list Perm),
+(forall (a':idApp)(lPerm':list Perm),
+map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' ->
+exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm /\
+forall p':Perm, In p' lPerm' -> In p' lPerm) /\
+
+(* (forall (a':idApp)(lPerm: list Perm),
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm \/
-a = a')/\
+a = a')/\ *)
 
-~is_Value (map_apply idApp_eq (perms (state s')) a) /\
+(forall (a':idApp)(lPerm:list Perm),
+map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm ->
+exists lPerm':list Perm, map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm' /\
+forall p':Perm, In p' lPerm -> ~In p' lPerm' -> a=a') /\
+
+map_apply idApp_eq (perms (state s')) a = Value idApp nil /\
 map_correct (perms (state s')).
 
 (* Revocar los permisos otorgados a la aplicación *)
 Definition revokeGrantedPermGroups (a:idApp) (s s': System) : Prop :=
-(forall (a':idApp)(lGrps: list idGrp),
+(* (forall (a':idApp)(lGrps: list idGrp),
 map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps ->
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps) /\
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps \/
+a = a') /\
 (forall (a':idApp)(lGrps: list idGrp),
 map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps ->
 map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps \/
 a = a')/\
-~is_Value (map_apply idApp_eq (grantedPermGroups (state s')) a) /\
+ *)
+
+(forall (a':idApp)(lGrp':list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
+exists lGrp:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp /\
+forall g':idGrp, In g' lGrp' -> In g' lGrp) /\
+
+(forall (a':idApp)(lGrp:list idGrp),
+map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp ->
+exists lGrp':list idGrp, map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' /\
+forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> a=a') /\
+
+map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp nil /\
 map_correct (grantedPermGroups (state s')).
 
 Definition post_verifyOldApp (a: idApp) (s s': System) :=

@@ -21,6 +21,7 @@ Require Export ReceiveIntentIsInvariant.
 Require Export StopIsInvariant.
 Require Export GrantPIsInvariant.
 Require Export RevokeDelIsInvariant.
+Require Export VerifyOldAppIsInvariant.
 
 Section ValidityInvariance.
 (* Este lema certifica la invarianza de la validez de estados en el modelo *)
@@ -53,5 +54,6 @@ Proof.
     apply (GrantPIsInvariant s s' H i c i0 u p);auto.
     apply (RevokeDelIsInvariant s s' H i c u p);auto.
     unfold post_call in H4;rewrite<- H4;auto.
+    apply (VerifyOldAppIsInvariant s s' H i);auto.
 Qed.
 End ValidityInvariance.

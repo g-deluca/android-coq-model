@@ -164,6 +164,7 @@ VFILES:=AuxFunsCorrect.v\
   UninstallIsSound.v\
   ValidityInvariance.v\
   ValidStateLemmas.v\
+  VerifyOldAppIsInvariant.v\
   WitnessesFactory.v\
   WriteIsInvariant.v\
   WriteIsSound.v
