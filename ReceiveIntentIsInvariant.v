@@ -49,6 +49,7 @@ Proof.
     unfold validstate.
     unfold pre_receiveIntent in H.
     unfold post_receiveIntent in H0.
+    destruct H0 as [W H0].
     destruct_conj H0.
     
     unfold allCmpDifferent.
