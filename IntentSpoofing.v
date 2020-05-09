@@ -41,7 +41,7 @@ Proof.
 intros a1 a2 c1 c2 ic1 i s H_vs H_c1_in_a1 H_c2_in_a2
 H_a1_not_a2 H_not_canBeStarted_c2 H_running H_not_CP_c1 H_cmpName.
 unfold not; intro H_pre_receive.
-destruct H_pre_receive as [c2' H_conj].
+destruct H_pre_receive as [_ [c2' H_conj]].
 destruct H_conj as [H_intentForApp H_conj].
 destruct H_conj as [H_notCP_c2' H_exists].
 destruct H_exists as [c1' H_conj].
