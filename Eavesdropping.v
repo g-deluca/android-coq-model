@@ -57,7 +57,7 @@ destruct H_conj as [H_certOf_a' H_conj].
 destruct H_conj as [H_certNotDef_p H_notMan_c'].
 
 unfold not; intro H_pre_receive.
-destruct H_pre_receive as [cmp' H_conj].
+destruct H_pre_receive as [_[cmp' H_conj]].
 destruct H_conj as [H_intentForApp H_conj].
 destruct H_conj as [H_notCP_cmp' H_exists].
 destruct H_exists as [cmp2 H_conj].
