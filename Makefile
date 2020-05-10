@@ -102,7 +102,8 @@ endif
 #                    #
 ######################
 
-VFILES:=AuxFunsCorrect.v\
+VFILES:=AutoGrantProperties.v\
+  AuxFunsCorrect.v\
   CallIsSound.v\
   DangPermMissing.v\
   DefBasicas.v\

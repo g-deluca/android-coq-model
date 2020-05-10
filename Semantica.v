@@ -385,8 +385,9 @@ In (idP p) (use m)) /\
 ~(exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
 pl p = dangerous /\
 (* con la diferencia de que el permiso tiene que estar agrupado, y ese grupo ya debe haber sido 'otorgado' antes *)
-(exists (g: idGrp), maybeGrp p = Some g /\
-    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup)).
+(exists (g: idGrp) (lGroup: list idGrp), maybeGrp p = Some g /\
+    map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\
+    In g lGroup).
 
 Definition post_grantAuto (p:Perm) (a:idApp) (s s':System) : Prop :=
 (* Se otorga el permiso p a a *)
