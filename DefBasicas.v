@@ -212,5 +212,9 @@ Parameter Val : Set.
 (* Llamadas a APIs del sistema *)
 Parameter SACall : Set.
 
+(* TODO: Preguntar cómo representar esto. Sabemos el número del sdk a partir del
+cual no podría correrse, pero no sé si conviene dejarlo como parámetro o no *)
+Parameter vulnerableSdk : nat.
+
 End Misc.
 

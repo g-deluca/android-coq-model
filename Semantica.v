@@ -960,10 +960,6 @@ inApp (cmpCP cp) a s /\
 (* Dado un Intent, se necesita conocer el tipo de acceso que efectuará *)
 Parameter intentActionType: Intent -> PType. 
 
-(* TODO: Preguntar cómo representar esto. Sabemos el número del sdk a partir del
-cual no podría correrse, pero no sé si conviene dejarlo como parámetro o no *)
-Parameter vulnerableSdk : nat.
-
 (* Defino un predicado que establece las condiciones en las que una aplicación puede correr *)
 Definition canRun (a: idApp) (s: System) : Prop :=
 (* Puede ejecutarse si ya fue ejecutada previamente*)
