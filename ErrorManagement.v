@@ -93,8 +93,8 @@ match action with
         (* Se quiere otorgar un permiso que no es peligroso *)
         | perm_not_dangerous => pl p <> dangerous
         (* Se quiere pedir confirmación al usuario por un permiso que debería ser otorgado automáticamente *)
-        | perm_should_auto_grant => (exists (g: idGrp), maybeGrp p = Some g /\
-               (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> In g lGroup))
+        | perm_should_auto_grant => (exists (g: idGrp) (lGroup: list idGrp), maybeGrp p = Some g /\
+               map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\ In g lGroup)
         | _ => False
         end
    | grantAuto p a => match ec with

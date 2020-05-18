@@ -325,8 +325,8 @@ In (idP p) (use m)) /\ (* Solo permito grantear independientemente permisos decl
 pl p = dangerous /\ (* , sean peligrosos *)
 (*, el permiso no está agrupado *)
 (maybeGrp p = None \/
-  (exists (g: idGrp), maybeGrp p = Some g /\ (* o si el permiso está agrupado, ese grupo no debe haber sido 'otorgado' previamente *)
-    (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> ~(In g lGroup)))).
+  (exists (g: idGrp) (lGroup: list idGrp), maybeGrp p = Some g /\ (* o si el permiso está agrupado, ese grupo no debe haber sido 'otorgado' previamente *)
+    map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\ ~(In g lGroup))).
 
 (* Agrega los permisos otorgados a la aplicación *)
 Definition grantPerm (a:idApp)(p:Perm)(s s':System) : Prop :=
