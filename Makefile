@@ -116,6 +116,7 @@ VFILES:=AutoGrantProperties.v\
   GrantIsInvariant.v\
   GrantIsSound.v\
   GrantAutoIsInvariant.v\
+  GrantAutoIsSound.v\
   GrantPIsInvariant.v\
   GrantPIsSound.v\
   HasPermAndNotGranted.v\

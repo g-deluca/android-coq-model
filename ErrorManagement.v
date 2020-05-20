@@ -107,10 +107,10 @@ match action with
         (* Se quiere otorgar un permiso que no es peligroso *)
         | perm_not_dangerous => pl p <> dangerous
         (* Se quiere otorgar automáticamente un permiso que no está agrupado *)
-        | perm_not_grouped => maybeGrp p <> None
+        | perm_not_grouped => maybeGrp p = None
         (* Se quiere otorgar automáticamente un permiso que no pertenece a ningún grupo ya visitado *)
-        | cannot_auto_grant => (exists (g: idGrp), maybeGrp p = Some g /\
-               (forall (lGroup: list idGrp), map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup -> ~(In g lGroup)))
+        | cannot_auto_grant => (exists (g: idGrp) (lGroup: list idGrp), maybeGrp p = Some g /\
+                map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\ ~(In g lGroup))
         | _ => False
         end
    | revoke p c => match ec with
