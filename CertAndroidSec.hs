@@ -1496,22 +1496,6 @@ grantedPermsForApp app0 s =
    Value list -> list;
    Error _ -> ([])}
 
-permissionGroupsInUse :: IdApp -> System -> ([]) IdGrp
-permissionGroupsInUse app0 s =
-  let {permsForApp = grantedPermsForApp app0 s} in
-  let {
-   groupedPerms = filter (\perm ->
-                    Prelude.not (isSomethingBool (maybeGrp perm)))
-                    permsForApp}
-  in
-  let {
-   groups = map (\perm ->
-              case maybeGrp perm of {
-               Prelude.Just g -> (:) g ([]);
-               Prelude.Nothing -> ([])}) groupedPerms}
-  in
-  concat groups
-
 grantPermission :: IdApp -> Perm0 -> (Mapping IdApp (([]) Perm0)) -> Mapping
                    IdApp (([]) Perm0)
 grantPermission app0 p oldperms =
@@ -2377,24 +2361,16 @@ revoke_pre :: Perm0 -> IdApp -> System -> Prelude.Maybe ErrorCode
 revoke_pre p app0 s =
   case Prelude.not (inBool perm_eq p (grantedPermsForApp app0 s)) of {
    Prelude.True -> Prelude.Just Perm_wasnt_granted;
-   Prelude.False -> Prelude.Nothing}
+   Prelude.False ->
+    case isSomethingBool (maybeGrp p) of {
+     Prelude.True -> Prelude.Just Perm_is_grouped;
+     Prelude.False -> Prelude.Nothing}}
 
 revoke_post :: Perm0 -> IdApp -> System -> System
 revoke_post p app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  let {
-   newGrantedPermGroups = case maybeGrp p of {
-                           Prelude.Just g ->
-                            let {groups = permissionGroupsInUse app0 s} in
-                            case inBool idGrp_eq g groups of {
-                             Prelude.True -> grantedPermGroups oldstate;
-                             Prelude.False ->
-                              revokePermissionGroup app0 g
-                                (grantedPermGroups oldstate)};
-                           Prelude.Nothing -> grantedPermGroups oldstate}}
-  in
-  Sys (St (apps oldstate) (alreadyRun oldstate) newGrantedPermGroups
+  Sys (St (apps oldstate) (alreadyRun oldstate) (grantedPermGroups oldstate)
   (revokePermission app0 p (perms oldstate)) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
   (sentIntents oldstate)) oldenv

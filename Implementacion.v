@@ -954,13 +954,15 @@ Section ImplRevoke.
 
 Definition revoke_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
     if negb (InBool Perm Perm_eq p (grantedPermsForApp app s)) then Some perm_wasnt_granted else
+    if (isSomethingBool idGrp (maybeGrp p)) then Some perm_is_grouped else
     None.
 
 
 Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
-    let newGrantedPermGroups := 
+    (* TODO: Esto de acá abajo me parece que iba en el revokeGroup o al menos algo parecido *)
+    (* let newGrantedPermGroups := 
         match maybeGrp p with
           | None => grantedPermGroups oldstate
           | Some g => let groups := permissionGroupsInUse app s in
@@ -968,11 +970,11 @@ Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
                         then grantedPermGroups oldstate 
                         else (revokePermissionGroup app g (grantedPermGroups oldstate))
         end
-    in
+    in *)
     sys (st
             (apps oldstate)
             (alreadyRun oldstate)
-            newGrantedPermGroups
+            (grantedPermGroups oldstate)
             (revokePermission app p (perms oldstate))
             (running oldstate)
             (delPPerms oldstate)

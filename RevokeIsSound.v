@@ -23,57 +23,51 @@ Proof.
     simpl in H.
     unfold pre_revoke in H;simpl in H.
     destruct H.
-    
+    destruct H as [lPerm H2].
+    destruct H2.
+
     split.
-    destruct H.
     unfold revokePerm.
     unfold revoke_post;unfold revokePermission;simpl.
     rewrite H.
     split;intros.
     elim (classic (a=a'));intros.
-    exists x.
+    exists lPerm.
     
     split.
-    rewrite<- H3.
+    rewrite <- H4.
     auto.
     intros.
-    rewrite<- H3 in H2.
-    rewrite <-(addAndApply idApp_eq a (remove Perm_eq p x) (perms (state s))) in H2.
-    inversion H2.
-    rewrite<- H6 in H4.
-    assert (p'<>p /\ In p' x).
-    apply removeSthElse in H4.
-    auto.
+    rewrite <- H4 in H3.
+    rewrite <-(addAndApply idApp_eq a (remove Perm_eq p lPerm) (perms (state s))) in H3.
+    inversion H3.
+    rewrite <- H7 in H5.
+    apply removeSthElse in H5.
     destruct H5;auto.
-    
+
     exists lPerm'.
     split.
-    rewrite overrideNotEq in H2.
-    auto.
-    auto.
-    intros.
-    auto.
-    
-    
+    rewrite overrideNotEq in H3; auto.
+    intros;auto.
+
     split;intros.
     elim (classic (a=a'));intros.
-    exists (remove Perm_eq p x).
+    exists (remove Perm_eq p lPerm).
     split.
-    rewrite H3.
+    rewrite H4.
     symmetry.
     apply addAndApply.
     intros.
     split;auto.
     symmetry.
-    apply (notInRemove Perm x p' p Perm_eq ).
-    rewrite H3 in H.
-    rewrite H in H2.
-    inversion H2.
+    apply (notInRemove Perm lPerm p' p Perm_eq ).
+    rewrite H4 in H.
+    rewrite H in H3.
+    inversion H3.
     auto.
     auto.
-    
-    
-    exists lPerm.
+
+    exists lPerm0.
     split.
     rewrite overrideNotEq.
     auto.
@@ -81,17 +75,16 @@ Proof.
     intros.
     contradiction.
     split.
-    exists (remove Perm_eq p x).
+    exists (remove Perm_eq p lPerm).
     split.
     symmetry.
     apply addAndApply.
     rewrite <-removeSthElse.
     unfold not;intros.
-    destruct H2.
-    apply H2;auto.
+    destruct H3.
+    apply H3;auto.
     apply addPreservesCorrectness.
     apply permsCorrect;auto.
-    
     repeat (split;auto).
 Qed.
 
@@ -100,32 +93,33 @@ Proof.
     intros.
     simpl.
     simpl in H.
-    exists perm_wasnt_granted.
-    assert (revoke_pre p a s=Some perm_wasnt_granted).
-    unfold revoke_pre.
-    assert (negb (InBool Perm Perm_eq p (grantedPermsForApp a s))=true).
-    rewrite negb_true_iff.
-    rewrite<- not_true_iff_false.
-    unfold not;intros.
-    apply H.
+    unfold revoke_safe, revoke_pre.
+    case_eq (negb (InBool Perm Perm_eq p (grantedPermsForApp a s))); intros.
+    simpl. exists perm_wasnt_granted. auto.
+    case_eq (isSomethingBool idGrp (maybeGrp p)); intros.
+    simpl. exists perm_is_grouped. split; auto. split; auto.
+    unfold isSomethingBool in H2.
+    destruct (maybeGrp p).
+    exists i; auto. inversion H2.
+
+    destruct H.
+    unfold pre_revoke.
+    split.
+    rewrite negb_false_iff in H1.
     unfold InBool in H1.
     rewrite existsb_exists in H1.
-    destruct H1.
-    destruct H1.
+    destruct H1 as [p' [H1 H3]].
     unfold grantedPermsForApp in H1.
-    destruct Perm_eq in H2.
-    case_eq (map_apply idApp_eq (perms (state s)) a);intros;rewrite H3 in H1.
-    exists l.
-    rewrite e.
-    auto.
-    inversion H1.
-    discriminate H2.
-    rewrite H1;auto.
-    unfold revoke_safe.
-    rewrite H1.
-    simpl.
-    auto.
+    case_eq (map_apply idApp_eq (perms (state s)) a); intros.
+    rewrite H in H1. exists l.
+    destruct (Perm_eq p p'). rewrite e. auto.
+    inversion H3.
+    rewrite H in H1. inversion H1.
+    unfold isSomethingBool in H2.
+    destruct (maybeGrp p).
+    inversion H2. auto.
 Qed.
+
 Lemma revokeIsSound : forall (s:System) (a:idApp) (p:Perm),
         validstate s -> exec s (revoke p a) (system (step s (revoke p a))) (response (step s (revoke p a))).
 Proof.
@@ -138,6 +132,7 @@ Proof.
     assert(revoke_pre p a s = None).
     unfold revoke_pre.
     destruct H0.
+    destruct H0.
     
     assert (InBool Perm Perm_eq p (grantedPermsForApp a s) = true).
     unfold InBool.
@@ -148,15 +143,11 @@ Proof.
     unfold grantedPermsForApp.
     rewrite H0.
     auto.
-    destruct Perm_eq.
-    auto.
-    auto.
+    destruct Perm_eq; auto.
     rewrite H1.
-    assert (negb true=false).
-    rewrite negb_false_iff;auto.
-    rewrite H2.
+    rewrite H2. simpl.
     auto.
-    
+
     unfold step;simpl.
     unfold revoke_safe;simpl.
     rewrite H1;simpl.

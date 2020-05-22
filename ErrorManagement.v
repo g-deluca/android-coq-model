@@ -25,7 +25,7 @@ Inductive ErrorCode : Set :=
     | no_such_perm
     | perm_already_granted
     | perm_not_dangerous
-    | perm_is_grouped (* TODO: Delete*)
+    | perm_is_grouped
     | perm_not_grouped
     | perm_should_auto_grant
     | cannot_auto_grant
@@ -116,6 +116,8 @@ match action with
    | revoke p c => match ec with
         (* Se quiere revocar un permiso que no estaba otorgado *)
         | perm_wasnt_granted => ~pre_revoke p c s
+        (* Se quiere revocar un permiso agrupado de manera individual*)
+        | perm_is_grouped => exists g: idGrp, maybeGrp p = Some g
         | _ => False
         end
    | revokePermGroup g c => match ec with
