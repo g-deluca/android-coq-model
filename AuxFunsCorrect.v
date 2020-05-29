@@ -4130,4 +4130,27 @@ Proof.
   - destruct H. auto. 
 Qed.
 
+Lemma ifInPermsOfGroupThenSome : forall (p: Perm) (g: idGrp) (a: idApp) (s: System),
+  In p (getPermsOfGroup g a s) -> maybeGrp p = Some g.
+Proof.
+  intros.
+  unfold getPermsOfGroup in H.
+  generalize dependent p.
+  induction (grantedPermsForApp a s).
+  intros.
+  simpl in H. inversion H.
+  intros. simpl in H.
+
+  case_eq (maybeGrp a0); intros.
+  rewrite H0 in *.
+  destruct (idGrp_eq g i). simpl in H.
+  destruct H.
+  rewrite e, <- H. auto.  
+  apply IHl. auto.
+  apply IHl. auto.
+  rewrite H0 in H.
+  apply IHl. auto.
+Qed.
+
+
 End AuxLemmas.

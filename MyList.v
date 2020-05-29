@@ -73,6 +73,16 @@ Fixpoint concat (l : list (list A)) : list A :=
     Qed.
 End MyConcat.
 
+Section RemoveAll.
+Context `{A:Type}.
+Fixpoint removeAll (eq_dec : forall x y : A, {x = y}+{x <> y}) (toBeRemoved: list A) (fromList: list A) : list A :=
+    match toBeRemoved with
+    | nil => fromList
+    | cons x toBeRemoved' => remove eq_dec x (removeAll eq_dec toBeRemoved' fromList)
+    end.
+
+End RemoveAll.
+
 Theorem flat_map_concat_map : forall A B (f : A -> list B) l, flat_map f l = concat (map f l).
 Proof.
     intros.

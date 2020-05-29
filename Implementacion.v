@@ -293,6 +293,26 @@ Definition revokePermissionGroup (app:idApp) (g:idGrp) (oldpermGroups : mapping 
     | Value _ list => map_add idApp_eq oldpermGroups app (remove idGrp_eq g list)
     end.
 
+Definition getPermsOfGroup (g: idGrp) (app: idApp) (s: System) : list Perm :=
+    let allPerms := grantedPermsForApp app s in
+    filter (fun perm =>
+        match maybeGrp perm with
+          | None => false
+          | Some g' => if idGrp_eq g g' then true else false
+        end) allPerms.
+
+Definition revokeAllPermsOfGroup
+    (app: idApp)
+    (g: idGrp)
+    (s: System) : mapping idApp (list Perm) :=
+
+    let permsToBeRemoved := getPermsOfGroup g app s in
+    let oldperms := perms (state s) in
+    match map_apply idApp_eq oldperms app with
+    | Error _ _ => oldperms (* Nunca pasa *)
+    | Value _ list => map_add idApp_eq oldperms app (removeAll Perm_eq permsToBeRemoved list)
+    end.
+
 (* Retorna el id de la aplicación a la cual el componente pertenece; junto con su manifiesto *)
 Definition getManifestAndAppFromCmp (c:Cmp) (s:System) : (idApp*Manifest) :=
     let maybeinstalledPairs := map (fun a => (a, (map_apply idApp_eq (manifest (environment s)) a ))) (apps (state s)) in
@@ -961,16 +981,6 @@ Definition revoke_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
 Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
-    (* TODO: Esto de acá abajo me parece que iba en el revokeGroup o al menos algo parecido *)
-    (* let newGrantedPermGroups := 
-        match maybeGrp p with
-          | None => grantedPermGroups oldstate
-          | Some g => let groups := permissionGroupsInUse app s in
-                      if InBool idGrp idGrp_eq g groups
-                        then grantedPermGroups oldstate 
-                        else (revokePermissionGroup app g (grantedPermGroups oldstate))
-        end
-    in *)
     sys (st
             (apps oldstate)
             (alreadyRun oldstate)
@@ -1001,7 +1011,6 @@ Definition revokegroup_pre (g:idGrp) (app:idApp) (s:System) : option ErrorCode :
     | Value _ lGrp => if InBool idGrp idGrp_eq g lGrp then None else Some group_wasnt_granted
     end.
 
-
 Definition revokegroup_post (g:idGrp) (app:idApp) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
@@ -1009,7 +1018,7 @@ Definition revokegroup_post (g:idGrp) (app:idApp) (s:System) : System :=
             (apps oldstate)
             (alreadyRun oldstate)
             (revokePermissionGroup app g (grantedPermGroups oldstate))
-            (perms oldstate)
+            (revokeAllPermsOfGroup app g s)
             (running oldstate)
             (delPPerms oldstate)
             (delTPerms oldstate)

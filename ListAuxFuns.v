@@ -263,6 +263,38 @@ Proof.
     auto.
 Qed.
 
+Lemma notInRemoveAll : forall (A:Set) (toBeRemoved l:list A) (a:A) (aeq : forall x y:A, {x=y}+{x<>y}), In a l -> ~In a (removeAll aeq toBeRemoved l) -> In a toBeRemoved.
+Proof.
+  intros.
+  induction toBeRemoved.
+  simpl in H0. contradiction.
+  simpl in *.
+  destruct (aeq a a0).
+  left. auto.
+  rewrite <- removeSthElse in H0.
+  right. apply IHtoBeRemoved.
+  unfold not. intro.
+  apply H0. auto.
+Qed.
+
+Lemma inRemoveAll : forall (toBeRemoved l: list A) (a: A) (aeq : forall x y:A, {x=y}+{x<>y}),
+  In a (removeAll aeq toBeRemoved l) -> In a l /\ ~ In a toBeRemoved.
+Proof.
+  intros.
+  induction toBeRemoved.
+  simpl in *. split; auto.
+  simpl in *.
+  rewrite <- removeSthElse in H.
+  destruct H.
+  specialize (IHtoBeRemoved H0).
+  destruct IHtoBeRemoved as [H1 H2].
+  split; auto.
+  unfold not; intros.
+  destruct H3.
+  symmetry in H3. contradiction.
+  contradiction.
+Qed.
+
 Lemma lastConsLast : forall (A:Set) (l:list A) (a a1 a2:A), l<>nil -> last (a::l) a1 = last l a2.
 Proof.
     intros.

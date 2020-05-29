@@ -1195,6 +1195,13 @@ concat l =
    ([]) -> ([]);
    (:) x l0 -> app x (concat l0)}
 
+removeAll :: (a1 -> a1 -> Prelude.Bool) -> (([]) a1) -> (([]) a1) -> ([]) a1
+removeAll eq_dec toBeRemoved fromList =
+  case toBeRemoved of {
+   ([]) -> fromList;
+   (:) x toBeRemoved' ->
+    remove eq_dec x (removeAll eq_dec toBeRemoved' fromList)}
+
 data Result0 =
    Result Response System
 
@@ -1523,6 +1530,27 @@ revokePermissionGroup app0 g oldpermGroups =
   case map_apply idApp_eq oldpermGroups app0 of {
    Value list -> map_add idApp_eq oldpermGroups app0 (remove idGrp_eq g list);
    Error _ -> oldpermGroups}
+
+getPermsOfGroup :: IdGrp -> IdApp -> System -> ([]) Perm0
+getPermsOfGroup g app0 s =
+  let {allPerms = grantedPermsForApp app0 s} in
+  filter (\perm ->
+    case maybeGrp perm of {
+     Prelude.Just g' ->
+      case idGrp_eq g g' of {
+       Prelude.True -> Prelude.True;
+       Prelude.False -> Prelude.False};
+     Prelude.Nothing -> Prelude.False}) allPerms
+
+revokeAllPermsOfGroup :: IdApp -> IdGrp -> System -> Mapping IdApp
+                         (([]) Perm0)
+revokeAllPermsOfGroup app0 g s =
+  let {permsToBeRemoved = getPermsOfGroup g app0 s} in
+  let {oldperms = perms (state s)} in
+  case map_apply idApp_eq oldperms app0 of {
+   Value list ->
+    map_add idApp_eq oldperms app0 (removeAll perm_eq permsToBeRemoved list);
+   Error _ -> oldperms}
 
 getManifestAndAppFromCmp :: Cmp -> System -> (,) IdApp Manifest
 getManifestAndAppFromCmp c s =
@@ -2396,7 +2424,7 @@ revokegroup_post g app0 s =
   let {oldenv = environment s} in
   Sys (St (apps oldstate) (alreadyRun oldstate)
   (revokePermissionGroup app0 g (grantedPermGroups oldstate))
-  (perms oldstate) (running oldstate) (delPPerms oldstate)
+  (revokeAllPermsOfGroup app0 g s) (running oldstate) (delPPerms oldstate)
   (delTPerms oldstate) (resCont oldstate) (sentIntents oldstate)) oldenv
 
 revokegroup_safe :: IdGrp -> IdApp -> System -> Result0

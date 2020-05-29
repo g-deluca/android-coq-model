@@ -89,8 +89,97 @@ Proof.
     apply H2;auto.
     apply addPreservesCorrectness.
     apply grantedPermGroupsCorrect;auto.
-    
-    repeat (split;auto).
+
+    split.
+  - unfold revokegroup_post. unfold revokeGroupedPerms; simpl.
+    assert (exists l : list Perm,
+             map_apply idApp_eq (perms (state s)) a = Value idApp l).
+    destructVS H0.
+    destructSC statesConsistencyVS a.
+    destruct H.
+    destruct grantedPermGroupsSC. clear H1.
+    assert (exists l : list idGrp,
+        map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp l).
+    exists x; auto.
+    apply H2 in H1.
+    apply permsSC in H1. auto.
+    repeat split.
+ -- intros.
+    elim (classic (a=a'));intros.
+    rewrite <- H3. destruct H1 as [lPerm H1].
+    exists lPerm. split; auto.
+    intros. unfold revokeAllPermsOfGroup in H2; rewrite H1 in H2.
+    rewrite <- H3 in H2.
+    rewrite <- addAndApply in H2.
+    inversion H2. clear H2.
+    rewrite <- H6 in H4. clear H6.
+    induction (getPermsOfGroup p a s).
+    simpl in H4. auto.
+    simpl in H4. apply removeSthElse in H4.
+    destruct H4. apply IHl. auto.
+
+    (* Caso a <> a' *)
+    exists lPerm'. destruct H1 as [lPerm H1].
+    unfold revokeAllPermsOfGroup in H2. rewrite H1 in H2.
+    split.
+    apply (overrideNotEq idApp_eq (MyList.removeAll EqTheorems.Perm_eq (getPermsOfGroup p a s) lPerm) (perms (state s))) in H3.
+    rewrite <- H3. auto.
+    intros; auto.
+ -- intros.
+    elim (classic (a=a'));intros.
+    unfold revokeAllPermsOfGroup.
+    rewrite H3. clear H1. rewrite H2.
+    exists (MyList.removeAll EqTheorems.Perm_eq (getPermsOfGroup p a' s) lPerm).
+    split.
+    rewrite <- addAndApply. auto.
+    intros. split; auto.
+
+    assert (In p' (getPermsOfGroup p a' s)).
+    specialize (notInRemoveAll Perm (getPermsOfGroup p a' s) lPerm p' EqTheorems.Perm_eq H1 H4).
+    intros; auto.
+
+    apply (ifInPermsOfGroupThenSome p' p a' s).
+    auto.
+    exists lPerm. split.
+    destruct H1.
+    unfold revokeAllPermsOfGroup.
+    rewrite H1.
+    rewrite overrideNotEq.
+    auto. auto.
+    intros. contradiction.
+ -- destruct H1 as [lPerm H1].
+    unfold revokeAllPermsOfGroup. rewrite H1.
+    exists (MyList.removeAll EqTheorems.Perm_eq (getPermsOfGroup p a s) lPerm).
+    split.
+
+    rewrite <- addAndApply. auto.
+    intros. unfold not. intros.
+    apply inRemoveAll in H3.
+    destruct H3.
+
+    assert (In p0 (getPermsOfGroup p a s)).
+    unfold getPermsOfGroup. unfold grantedPermsForApp.
+    rewrite H1. clear H1.
+    induction lPerm.
+    intros. inversion H3.
+    simpl in *.
+    destruct H3.
+    rewrite <- H1 in H2. rewrite H2.
+    destruct (idGrp_eq p p).
+    simpl. left. auto.
+    contradiction.
+    apply IHlPerm in H1.
+    case_eq (maybeGrp a0); intros.
+    simpl. destruct (idGrp_eq p i).
+    simpl. right. auto. auto. auto.
+
+    contradiction.
+ -- unfold revokeAllPermsOfGroup.
+    destruct H1. rewrite H1.
+    apply addPreservesCorrectness.
+    apply permsCorrect;auto.
+
+  - repeat (split;auto).
 Qed.
 
 Lemma notPreRevokeGroupThenError : forall (s:System) (a:idApp) (p:idGrp), ~(pre (revokePermGroup p a) s) -> validstate s -> exists ec : ErrorCode, response (step s (revokePermGroup p a)) = error ec /\ ErrorMsg s (revokePermGroup p a) ec /\ s = system (step s (revokePermGroup p a)).
