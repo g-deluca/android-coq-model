@@ -43,8 +43,6 @@ Definition appHasPermission (idapp:idApp) (p:Perm) (s:System) : Prop :=
         In (idP p) (use m)) /\ (* Lo lista como usado y ademas *)
     ((exists lPerm:list Perm, map_apply idApp_eq (defPerms (environment s)) idapp = Value idApp lPerm /\ In p lPerm) \/ (* Lo define el mismo o *)
     pl p=normal \/ (* el permiso es de peligro normal o *)
-    (pl p=dangerous /\ (exists (group:idGrp) (listgrp:list idGrp), maybeGrp p = Some group /\ (* el permiso el peligroso pero *)
-            map_apply idApp_eq (grantedPermGroups (state s)) idapp = Value idApp listgrp /\ In group listgrp )) \/ (* pertenece a un grupo granteado o *)
     ((pl p=signature \/ pl p=signatureOrSys) /\ (* el permiso es de tipo signature o signatureorsys y *)
         (exists c:Cert, appCert idapp c s /\ certOfDefiner p c s)) \/ (* el certificado de la app solicitante coincide con el de quien la define o *)
     (pl p=signatureOrSys /\ (* El permiso es de tipo signatureorsys y *)

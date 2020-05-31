@@ -422,7 +422,7 @@ Definition appHasPermissionBool (idapp:idApp) (p:Perm) (s:System) : bool :=
                 else
                     match pl p with
                     | normal => true (* el permiso es normal o *)
-                    | dangerous => groupIsGranted idapp p s (* el permiso es peligroso y agrupado y su grupo fue otorgado o *)
+                    | dangerous => false (* encontramos un permiso peligroso que no esta otorgado individualmente *)
                     | signature => if (InBool Perm Perm_eq p (usrDefPerms s) && If Cert_eq (getAppCert idapp s) (getCertOfDefiner p s) then true else false) then true else false (* el permiso es de tipo signature y quien lo define fue firmada con el mismo certificado que la aplicación *)
                     | signatureOrSys => if ((InBool Perm Perm_eq p (usrDefPerms s) && (If Cert_eq (getAppCert idapp s) (getCertOfDefiner p s) then true else false)) || (If Cert_eq (getAppCert idapp s) manufacturerCert then true else false)) then true else false (* el permiso es de tipo signatureOrSys y quien lo define fue firmada con el mismo certificado que la aplicación o la aplicación es del fabricante *)
                     end

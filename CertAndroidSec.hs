@@ -1696,7 +1696,7 @@ appHasPermissionBool idapp p s =
           Prelude.True -> Prelude.True;
           Prelude.False ->
            case pl p of {
-            Dangerous -> groupIsGranted idapp p s;
+            Dangerous -> Prelude.False;
             Normal -> Prelude.True;
             Signature ->
              (Prelude.&&) (inBool perm_eq p (usrDefPerms s))

@@ -2173,20 +2173,7 @@ Proof.
     auto.
     destruct H1.
     destruct H1.
-    rewrite H1.
-    unfold groupIsGranted.
-    destruct H6.
-    destruct H6.
-    destruct_conj H6.
-    rewrite H7.
-    rewrite H6.
-    unfold InBool.
-    rewrite existsb_exists.
-    exists x0.
-    split;auto.
-    destruct idGrp_eq;auto.
-    destruct H1.
-    destruct H1.
+
     destruct H6.
     destruct H6.
     assert (getAppCert a s = x0).
@@ -2306,28 +2293,9 @@ Proof.
     right.
     
     destruct (pl p).
-    right.
-    left.
-    split;auto.
-    unfold groupIsGranted in H0.
-    destruct (maybeGrp p).
-    exists i.
-    destruct (map_apply idApp_eq (grantedPermGroups (state s)) a).
-    exists l.
-    unfold InBool in H0.
-    rewrite existsb_exists in H0.
-    destruct H0.
-    destruct H0.
-    case_eq (idGrp_eq i x);intros.
-    rewrite e.
-    auto.
-    rewrite H4 in H3.
-    discriminate H3.
-    discriminate H0.
     discriminate H0.
     left.
     auto.
-    right.
     right.
     left.
     split.
@@ -2352,7 +2320,6 @@ Proof.
     discriminate H0.
     rewrite andb_false_r in H0.
     discriminate H0.
-    right.
     right.
     case_eq (InBool Perm Perm_eq p (usrDefPerms s) && (if Cert_eq (getAppCert a s) (getCertOfDefiner p s) then true else false));intros;rewrite H3 in H0.
     left.
