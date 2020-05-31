@@ -630,6 +630,10 @@ type Val = Prelude.String
 
 type SACall = Prelude.String
 
+vulnerableSdk :: Nat
+vulnerableSdk =
+  Prelude.error "AXIOM TO BE REALIZED"
+
 permLevel_eq :: PermLevel -> PermLevel -> Prelude.Bool
 permLevel_eq id1 id2 =
   permLevel_rec (\id0 ->
@@ -2007,17 +2011,12 @@ canStartBool c1 c2 s =
               Prelude.Just p -> appHasPermissionBool a1 p s;
               Prelude.Nothing -> Prelude.True})}}}}
 
-vulnerableSdk :: Nat
-vulnerableSdk =
-  Prelude.error "AXIOM TO BE REALIZED"
-
 canRunBool :: IdApp -> System -> Prelude.Bool
 canRunBool app0 s =
-  case targetSdk (getManifestForApp app0 s) of {
-   Prelude.Just n ->
-    (Prelude.||) (inBool idApp_eq app0 (alreadyRun (state s)))
-      (ltb vulnerableSdk n);
-   Prelude.Nothing -> Prelude.False}
+  (Prelude.||) (inBool idApp_eq app0 (alreadyRun (state s)))
+    (case targetSdk (getManifestForApp app0 s) of {
+      Prelude.Just n -> ltb vulnerableSdk n;
+      Prelude.Nothing -> Prelude.False})
 
 getFilters :: Cmp -> ([]) IntentFilter
 getFilters c =

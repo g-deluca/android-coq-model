@@ -647,12 +647,11 @@ Definition canStartBool (c1 c2: Cmp)(s:System) : bool :=
             | Some p => appHasPermissionBool a1 p s (* Si requiere el permiso p, la aplicacioón a la cual c1 pertenece debe conter con él *)
         end.
 
-Parameter vulnerableSdk : nat.
-
 Definition canRunBool (app: idApp) (s: System) : bool :=
+    InBool idApp idApp_eq app (alreadyRun (state s)) ||
     match targetSdk (getManifestForApp app s) with
     | None => false
-    | Some n => (InBool idApp idApp_eq app (alreadyRun (state s))) || (vulnerableSdk <? n)
+    | Some n =>  vulnerableSdk <? n
     end.
 
 (* Retorna los intentFilters de un componente *)

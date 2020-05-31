@@ -15,6 +15,8 @@ Require Import RuntimePermissions.
 Require Import ListAuxFuns.
 Require Import ValidStateLemmas.
 Require Import Omega.
+Require Export Coq.Arith.PeanoNat.
+Import PeanoNat.Nat.
 
 Section AuxLemmas.
 
@@ -4150,6 +4152,137 @@ Proof.
   apply IHl. auto.
   rewrite H0 in H.
   apply IHl. auto.
+Qed.
+
+Lemma notInBoolNotIn : forall (A: Set) (aeq : forall x y:A, {x=y}+{x<>y}) (elem: A) (elemList: list A), InBool A aeq elem elemList = false -> ~In elem elemList.
+Proof.
+  intros.
+  unfold not. intros.
+  induction elemList.
+  inversion H0.
+  simpl in *.
+  destruct H0. destruct (aeq elem a).
+  inversion H.
+  symmetry in H0. contradiction.
+  destruct (aeq elem a).
+  inversion H.
+  simpl in H.
+  apply IHelemList; auto.
+Qed.
+
+Lemma In_InBool : forall (A: Set) (aeq : forall x y:A, {x=y}+{x<>y}) (elem: A) (elemList: list A), In elem elemList -> InBool A aeq elem elemList = true.
+Proof.
+  intros.
+  induction elemList.
+  inversion H.
+  simpl in *.
+  destruct H.
+  destruct (aeq elem a).
+  simpl. auto.
+  symmetry in H. contradiction.
+  destruct (aeq elem a).
+  simpl. auto.
+  simpl. apply IHelemList. auto.
+Qed.
+
+Lemma canRunBool_canRun : forall (s: System) (a: idApp), canRunBool a s = true -> canRun a s.
+Proof.
+  intros.
+  unfold canRunBool in H.
+  unfold canRun.
+  case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+- left. unfold InBool in H0.
+  rewrite existsb_exists in H0.
+  destruct H0 as [a' [H0 H1]].
+  destruct (idApp_eq a a').
+  rewrite e. auto.
+  inversion H1.
+- rewrite H0 in H. clear H0.
+  simpl in H.
+  unfold getManifestForApp in H.
+  case_eq (map_apply idApp_eq (manifest (environment s)) a); intros.
+  rewrite H0 in H.
+  case_eq (targetSdk m); intros.
+  rewrite H1 in H.
+  right. exists m, n. repeat split; auto.
+  unfold RuntimePermissions.isManifestOfApp.
+  left. auto.
+  rewrite ltb_lt in H. auto.
+  rewrite H1 in H. inversion H.
+
+  right. unfold RuntimePermissions.isManifestOfApp.
+  rewrite H0 in H.
+  induction (systemImage (environment s)).
+  simpl in H. inversion H.
+  simpl in H.
+  destruct (idApp_eq a (idSI a0)).
+  simpl in H.
+  case_eq (targetSdk (manifestSI a0)); intros.
+  rewrite H1 in H.
+  exists (manifestSI a0). exists n.
+  apply ltb_lt in H. repeat split;auto.
+  unfold RuntimePermissions.isManifestOfApp.
+  right. exists a0. repeat split;auto.
+  simpl. auto.
+  rewrite H1 in H. inversion H.
+  apply IHl in H. destruct H as [m [n' H]].
+  exists m, n'. destruct H. destruct H.
+  split; auto. split; auto.
+  right. destruct H as [sysapp [H [H2 H3]]].
+  exists sysapp. repeat split; auto.
+  simpl. right. auto.
+Qed.
+
+Lemma canRun_canRunBool : forall (s: System) (a: idApp) (vs: validstate s), canRun a s -> canRunBool a s = true.
+Proof.
+  unfold canRun, canRunBool. intros.
+  destruct H.
+  apply (In_InBool idApp idApp_eq) in H.
+  rewrite H. simpl. auto.
+  destruct H as [m [n [H1 [H2 H3]]]].
+  destruct (InBool idApp idApp_eq a (alreadyRun (state s))).
+  simpl. auto. simpl.
+  unfold isManifestOfApp in H1. unfold getManifestForApp.
+  destruct H1. rewrite H.
+  rewrite H2.
+  apply ltb_lt. auto.
+  destruct H as [sysapp [H4 [H5 H6]]].
+  case_eq (map_apply idApp_eq (manifest (environment s)) a); intros.
+
+  assert (exists m: Manifest,
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+  exists m0; auto.
+  assert (~(exists m: Manifest,
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m)).
+  apply (ifSysImgNoManifestInEnv s vs sysapp). auto.
+  contradiction.
+
+  clear H i.
+  destructVS vs.
+  unfold notDupSysApp in notDupSysAppVS.
+  induction (systemImage (environment s)).
+  inversion H4. destruct H4. simpl.
+  rewrite H. rewrite H5.
+  destruct (idApp_eq a a).
+  simpl. rewrite H6. rewrite H2.
+  apply ltb_lt. auto.
+  contradiction.
+  simpl. destruct (idApp_eq a (idSI a0)).
+  simpl.
+
+  assert (In sysapp (a0 :: l)). simpl. auto.
+  assert (In a0 (a0 :: l)). simpl. auto.
+  rewrite e in H5.
+  assert (a0 = sysapp).
+  apply notDupSysAppVS. auto.
+  rewrite H4. rewrite H6. rewrite H2.
+  apply ltb_lt. auto.
+
+  apply IHl. intros.
+  destruct H0 as [A1 [A2 A3]].
+  assert (In s1 (a0 :: l)). simpl. auto.
+  assert (In s2 (a0 :: l)). simpl. auto.
+  apply notDupSysAppVS. auto. auto.
 Qed.
 
 

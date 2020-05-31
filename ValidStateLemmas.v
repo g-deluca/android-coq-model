@@ -272,4 +272,27 @@ Proof.
     auto.
 Qed.
 
+Lemma ifSysImgNoManifestInEnv : forall (s : System) (sValid: validstate s) (sysapp: SysImgApp) (a: idApp), 
+In sysapp (systemImage (environment s)) /\ idSI sysapp = a ->
+    ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+Proof.
+  intros.
+  unfold not. intros.
+  destruct H0 as [m H3].
+  destruct H as [H1 H2].
+  destructVS sValid.
+  destructSC statesConsistencyVS a.
+
+  assert (exists m: Manifest,
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+  exists m; auto.
+  apply <- mfstSC in H.
+  apply notDupAppVS in H.
+
+  assert (exists sysapp: SysImgApp,
+    In sysapp (systemImage (environment s)) /\ idSI sysapp = a).
+  exists sysapp; auto.
+  contradiction.
+Qed.
+
 End VSLemmas.

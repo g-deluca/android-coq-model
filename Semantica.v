@@ -966,10 +966,8 @@ Definition canRun (a: idApp) (s: System) : Prop :=
 (* Puede ejecutarse si ya fue ejecutada previamente*)
 In a (alreadyRun (state s)) \/
 (* o si el targetSdk de la aplicación existe y es lo suficientemente alto *)
-(forall (m: Manifest),
-    map_apply idApp_eq (manifest (environment s)) a = Value idApp m ->
-        (exists n: nat, targetSdk m = Some n /\ n > vulnerableSdk)).
-        (* TODO: Qué pasa cuando no existe el targetSdk? *)
+(exists (m: Manifest) (n: nat),
+    isManifestOfApp a m s /\ targetSdk m = Some n /\ n > vulnerableSdk).
 
 (* Precondición de receive intent *)
 Definition pre_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s:System): Prop :=
@@ -1051,10 +1049,10 @@ Definition markAsRunned (a: idApp) (s s': System): Prop :=
 (* Todas las aplicaciones que ahora están marcadas como ejecutadas lo estaban desde antes 
    o es la aplicación en cuestión*)
 (forall a':idApp,
-    In a' (apps (state s')) ->
-        In a' (apps (state s)) \/ (a' = a)) /\
+    In a' (alreadyRun (state s')) ->
+        In a' (alreadyRun (state s)) \/ (a' = a)) /\
 (* La aplicación 'a' ahora quedó marcada como ya ejecutada *)
-In a (apps (state s')).
+In a (alreadyRun (state s')).
 
 (* Postcondición de receive intent *)
 Definition post_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s s':System):Prop :=

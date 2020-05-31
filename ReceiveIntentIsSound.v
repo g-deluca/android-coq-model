@@ -12,6 +12,8 @@ Require Import ErrorManagement.
 Require Import Maps.
 Require Import Tacticas.
 Require Import ValidStateLemmas.
+Require Export Coq.Arith.PeanoNat.
+Import PeanoNat.Nat.
 
 Section ReceiveIntent.
 
@@ -22,6 +24,7 @@ Proof.
     unfold post_receiveIntent.
     simpl in H.
     unfold pre_receiveIntent in H;simpl in H.
+    destruct H as [run H].
     destruct H.
     destruct_conj H.
     assert (maybeIntentForAppCmp i a ic s = Some x) as maybeintent.
@@ -30,12 +33,19 @@ Proof.
     destruct H2.
     destruct_conj H1.
     split.
+  - unfold markAsRunned.
+    unfold receiveIntent_post. rewrite maybeintent. simpl.
+    split. intros.
+    right. auto.
+    split. intros.
+    destruct H5.
+    right; auto. left; auto.
+    left;auto.
+  - split.
     exists theIC.
     exists x.
     split;auto.
     split;auto.
-    
-    
     assert (~In theIC (map_getKeys (running (state s)))).
     rewrite HeqtheIC.
     apply generatorWorksWell.
@@ -279,13 +289,93 @@ Proof.
     apply isCProviderBool_iff in H2.
     split;auto.
 
+    case_eq (negb (canRunBool a s)); intros.
+    exists should_verify_permissions.
+    split; auto.
+    clear H.
+    split.
+    rewrite negb_true_iff in H3.
+    unfold canRunBool in H3.
+    unfold not. intros. unfold canRun in H.
+    destruct H.
+    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    rewrite H4 in H3. simpl in H3. inversion H3.
+    apply notInBoolNotIn in H4. contradiction.
+
+    destruct H as [m [n [H4 [H5 H6]]]].
+    unfold getManifestForApp in H3.
+    unfold RuntimePermissions.isManifestOfApp in H4.
+    destruct H4.
+    rewrite H, H5 in H3.
+    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    rewrite H4 in H3. inversion H3.
+    rewrite H4 in H3. simpl in H3.
+
+    assert (vulnerableSdk < n). auto.
+    rewrite <- ltb_lt in H7. rewrite H3 in H7.
+    inversion H7.
+
+    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    rewrite H4 in H3. inversion H3.
+    rewrite H4 in H3. simpl in H3. clear H4.
+    destruct H as [sysapp [H7 [H8 H9]]].
+    case_eq (map_apply idApp_eq (manifest (environment s)) a); intros.
+
+    assert (exists m: Manifest,
+      map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+    exists m0; auto.
+
+    assert (In sysapp (systemImage (environment s)) /\ idSI sysapp = a).
+    auto.
+
+    apply (ifSysImgNoManifestInEnv s H0) in H10.
+    contradiction.
+
+    rewrite H in H3. clear H.
+    destructVS H0.
+    unfold notDupSysApp in notDupSysAppVS.
+
+    induction (systemImage (environment s)).
+    inversion H7.
+
+    simpl in H3.
+    destruct (idApp_eq a (idSI a0)).
+    simpl in H3.
+
+    assert (In a0 (a0::l)). simpl. left. auto.
+    rewrite e in H8.
+
+    assert (In sysapp (a0::l) /\
+      In a0 (a0::l) /\ idSI sysapp = idSI a0).
+    auto.
+    apply notDupSysAppVS in H0.
+    rewrite <- H0 in H3. rewrite H9 in H3.
+    rewrite H5 in H3.
+    assert (vulnerableSdk < n). auto.
+    rewrite <- ltb_lt in H4. rewrite H3 in H4.
+    inversion H4.
+
+    simpl in H7.
+    destruct H7. symmetry in H8.
+    rewrite H in n0. contradiction.
+    apply IHl. intros.
+    destruct H0. destruct H4.
+    assert (In s1 (a0 :: l)). simpl. right. auto.
+    assert (In s2 (a0 :: l)). simpl. right. auto.
+    apply notDupSysAppVS. auto.
+
+    auto. auto.
+
+
+    simpl. auto.
+
     case_eq (map_apply iCmp_eq (running (state s)) ic);intros.
     case_eq (isCProviderBool c0);intros.
     exists cmp_is_CProvider.
     split;auto.
     split;auto.
     exists c0.
-    apply isCProviderBool_iff in H4.
+    apply isCProviderBool_iff in H5.
     split;auto.
 
     case_eq (negb (canStartBool c0 c s));intros.
@@ -296,17 +386,20 @@ Proof.
     apply inttForAppMaybeInttBack in H1;auto.
     split;auto.
     split;auto.
-    rewrite negb_true_iff in H5.
-    invertBool H5.
+    rewrite negb_true_iff in H6.
+    invertBool H6.
     intro.
-    apply H5.
+    apply H6.
     apply canStartCorrect;auto.
 
     destruct (intType i).
     destruct (path (data i)).
     case_eq (existsb (receiveIntentCmpRequirements c0 u s (intentActionType i)) (getAllComponents s));intros.
     destruct H.
-    exists c.
+    split.
+  - rewrite negb_false_iff in H3.
+    apply canRunBool_canRun. auto.
+  - exists c.
 
     split.
     apply inttForAppMaybeInttBack in H1;auto.
@@ -321,59 +414,59 @@ Proof.
     split;auto.
 
     split.
-    invertBool H4.
+    invertBool H5.
     intro.
-    apply H4.
+    apply H5.
     apply isCProviderBool_iff;auto.
 
     split.
-    rewrite negb_false_iff in H5.
+    rewrite negb_false_iff in H6.
     apply canStartCorrect;auto.
     split;intros.
 
-    rewrite existsb_exists in H6.
-    destruct H6.
-    destruct H6.
-    unfold receiveIntentCmpRequirements in H8.
-    destruct x;try discriminate H8.
+    rewrite existsb_exists in H7.
+    destruct H7.
+    destruct H7.
+    unfold receiveIntentCmpRequirements in H9.
+    destruct x;try discriminate H9.
     exists c1.
-    rewrite andb_true_iff in H8.
-    destruct H8.
-    rewrite andb_true_iff in H8.
-    destruct H8.
-    inversion H7.
-    rewrite <- H12 in *.
+    rewrite andb_true_iff in H9.
+    destruct H9.
+    rewrite andb_true_iff in H9.
+    destruct H9.
+    inversion H8.
+    rewrite <- H13 in *.
     split.
     apply existsRes_iff;auto.
     split.
     apply canGrantCorrect;auto.
     unfold canRead.
     unfold canWrite.
-    unfold canReadBool in H9.
-    unfold canWriteBool in H9.
-    destruct (intentActionType i); try rewrite orb_true_iff in H9.
-    destruct H9.
+    unfold canReadBool in H10.
+    unfold canWriteBool in H10.
+    destruct (intentActionType i); try rewrite orb_true_iff in H10.
+    destruct H10.
     left.
     apply canDoThisBoolCorrect;auto.
     right.
     apply delPermsBoolCorrect;auto.
-    destruct H9.
+    destruct H10.
     left.
     apply canDoThisBoolCorrect;auto.
     right.
     apply delPermsBoolCorrect;auto.
 
-    rewrite andb_true_iff in H9.
-    destruct H9.
+    rewrite andb_true_iff in H10.
+    destruct H10.
     split.
-    rewrite orb_true_iff in H9.
-    destruct H9.
+    rewrite orb_true_iff in H10.
+    destruct H10.
     left.
     apply canDoThisBoolCorrect;auto.
     right.
     apply delPermsBoolCorrect;auto.
-    rewrite orb_true_iff in H11.
-    destruct H11.
+    rewrite orb_true_iff in H12.
+    destruct H12.
     left.
     apply canDoThisBoolCorrect;auto.
     right.
@@ -381,19 +474,18 @@ Proof.
     destruct H.
     discriminate H.
 
-    exists no_CProvider_fits.
+  - exists no_CProvider_fits.
     split;auto.
     split;auto.
     exists c0.
     split;auto.
     split;auto.
-    assert (H7:=True).
     intros.
     inversion H8.
     rewrite <-H10 in *.
-    invertBool H6.
+    invertBool H7.
     intro.
-    apply H6.
+    apply H7.
     destruct H9.
     destruct_conj H9.
     rewrite existsb_exists.
@@ -442,8 +534,11 @@ Proof.
     right.
     apply delPermsBoolCorrect;auto.
 
-    destruct H.
-    exists c.
+  - destruct H.
+    split.
+ -- rewrite negb_false_iff in H3.
+    apply canRunBool_canRun. auto.
+ -- exists c.
 
     split.
     apply inttForAppMaybeInttBack in H1;auto.
@@ -458,22 +553,24 @@ Proof.
     split;auto.
 
     split.
-    invertBool H4.
+    invertBool H5.
     intro.
-    apply H4.
+    apply H5.
     apply isCProviderBool_iff;auto.
 
     split.
-    rewrite negb_false_iff in H5.
+    rewrite negb_false_iff in H6.
     apply canStartCorrect;auto.
     split;intros.
-    discriminate H6.
+    discriminate H7.
     destruct H.
     discriminate H.
 
-
-    destruct H.
-    exists c.
+  - destruct H.
+    split.
+ -- rewrite negb_false_iff in H3.
+    apply canRunBool_canRun. auto.
+ -- exists c.
 
     split.
     apply inttForAppMaybeInttBack in H1;auto.
@@ -488,23 +585,26 @@ Proof.
     split;auto.
 
     split.
-    invertBool H4.
+    invertBool H5.
     intro.
-    apply H4.
+    apply H5.
     apply isCProviderBool_iff;auto.
 
     split.
-    rewrite negb_false_iff in H5.
+    rewrite negb_false_iff in H6.
     apply canStartCorrect;auto.
     split;intros.
     discriminate H.
     destruct H.
     discriminate H.
 
-    destruct (brperm i).
+  - destruct (brperm i).
     case_eq (appHasPermissionBool a p s);intro.
     destruct H.
-    exists c.
+    split.
+ -- rewrite negb_false_iff in H3.
+    apply canRunBool_canRun. auto.
+ -- exists c.
 
     split.
     apply inttForAppMaybeInttBack in H1;auto.
@@ -519,20 +619,20 @@ Proof.
     split;auto.
 
     split.
-    invertBool H4.
+    invertBool H5.
     intro.
-    apply H4.
+    apply H5.
     apply isCProviderBool_iff;auto.
 
     split.
-    rewrite negb_false_iff in H5.
+    rewrite negb_false_iff in H6.
     apply canStartCorrect;auto.
     split;intros.
     discriminate H.
     destruct H.
     exists p.
-    rewrite <-appHasPermissionCorrect in H6;auto.
-    exists not_enough_permissions.
+    rewrite <-appHasPermissionCorrect in H7;auto.
+ -- exists not_enough_permissions.
     split;auto.
     split;auto.
     split;auto.
@@ -540,14 +640,18 @@ Proof.
     unfold not.
     intros.
     inversion H7.
+    inversion H8.
     exists p.
     split;auto.
-    invertBool H6.
+    invertBool H7.
     intro.
-    apply H6.
+    apply H7.
     apply appHasPermissionCorrect;auto.
 
-    destruct H.
+ -- destruct H.
+    split.
+    rewrite negb_false_iff in H3.
+    apply canRunBool_canRun. auto.
     exists c.
 
     split.
@@ -563,21 +667,21 @@ Proof.
     split;auto.
 
     split.
-    invertBool H4.
+    invertBool H5.
     intro.
-    apply H4.
+    apply H5.
     apply isCProviderBool_iff;auto.
 
     split.
-    rewrite negb_false_iff in H5.
+    rewrite negb_false_iff in H6.
     apply canStartCorrect;auto.
     split;intros.
     discriminate H.
     destruct H.
-    destruct H6;auto.
-    exists instance_not_running.
+    destruct H7;auto.
+  - exists instance_not_running.
     split;auto.
-    exists no_such_intt.
+  - exists no_such_intt.
     split;auto.
     split;auto.
     intro.
@@ -599,6 +703,7 @@ Proof.
     simpl.
     assert(receiveIntent_pre i ic a s = None).
     unfold receiveIntent_pre.
+    destruct H as [CR H].
     destruct H.
     destruct_conj H.
     assert (maybeIntentForAppCmp i a ic s = Some x) as maybeintent.
@@ -723,11 +828,20 @@ Proof.
     rewrite H17;auto.
     rewrite orb_true_r.
     auto.
-    
+
+    apply canRun_canRunBool in CR.
+    rewrite CR. simpl.
+
     rewrite H10.
     auto.
     auto.
-    auto.
+    apply canRun_canRunBool in CR.
+    rewrite CR. simpl.
+    auto. auto.
+    apply canRun_canRunBool in CR.
+    rewrite CR. simpl. auto. auto.
+    apply canRun_canRunBool in CR.
+    rewrite CR. simpl.
     case_eq (brperm i);intros.
     assert (appHasPermissionBool a p s=true).
     assert (exists p : Perm, brperm i = Some p /\ RuntimePermissions.appHasPermission a p s).
@@ -743,7 +857,7 @@ Proof.
     rewrite H13 in H11.
     apply appHasPermissionCorrect;auto.
     rewrite H10;auto.
-    auto.
+    auto. auto.
     
     unfold receiveIntent_safe;simpl.
     rewrite H0;simpl.
@@ -752,6 +866,5 @@ Proof.
     apply receiveIntentCorrect;auto.
     right.
     apply notPreReceiveIntentThenError;auto.
-    
 Qed.
 End ReceiveIntent.
