@@ -1445,8 +1445,34 @@ End ImplCall.
 
 Section VerifyOldApp.
 
-Parameter verifyOldApp_pre : idApp -> System -> option ErrorCode.
-Parameter verifyOldApp_post : idApp -> System -> System.
+Definition isOldAppBool (app: idApp) (s: System) : bool :=
+    let m := getManifestForApp app s in
+    match targetSdk m with
+        | None => false
+        | Some n => n <? vulnerableSdk
+    end.
+
+Definition verifyOldApp_pre (app: idApp) (s: System) : option ErrorCode :=
+    if (negb (InBool idApp idApp_eq app (apps (state s)))) then Some no_such_app else
+    if (InBool idApp idApp_eq app (alreadyRun (state s))) then Some already_verified else
+    if (negb (isOldAppBool app s)) then Some no_verification_needed else None.
+
+
+Definition verifyOldApp_post (app: idApp) (s: System) : System := 
+    let oldstate := state s in
+    let oldenv := environment s in
+    sys (st
+            (apps oldstate)
+            (app :: (alreadyRun oldstate))
+            (map_add idApp_eq (grantedPermGroups oldstate) app nil)
+            (map_add idApp_eq (perms oldstate) app nil)
+            (running oldstate)
+            (delPPerms oldstate)
+            (delTPerms oldstate)
+            (resCont oldstate)
+            (sentIntents oldstate)
+        )
+        oldenv.
 
 Definition verifyOldApp_safe (a: idApp) (s: System) : Result :=
     match verifyOldApp_pre a s with

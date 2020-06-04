@@ -51,7 +51,10 @@ Inductive ErrorCode : Set :=
     | no_CProvider_fits
     | should_verify_permissions
 
-    | CProvider_not_grantable.
+    | CProvider_not_grantable
+
+    | no_verification_needed
+    | already_verified.
 
 End ErrorCodes.
 
@@ -286,7 +289,14 @@ match action with
         | _ => False
         end
     (* TODO: Revisar los errores para esta operación *)
-    | verifyOldApp idApp => False
+    | verifyOldApp a => match ec with
+        (* La aplicación que se quiere verificar no está instalada *)
+        | no_such_app => ~isAppInstalled a s
+        (* La aplicación ya ha sido ejecutada alguna vez *)
+        | already_verified => In a (alreadyRun (state s))
+        | no_verification_needed => ~ isOldApp a s
+        | _ => False
+        end
     end.
 
 End ErrorMessages.

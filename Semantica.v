@@ -1321,16 +1321,17 @@ End SemCall.
 
 Section SemVerifyOldApp.
 
+Definition isOldApp (a: idApp) (s: System) : Prop :=
+(exists (m:Manifest) (n: nat),
+    isManifestOfApp a m s /\ targetSdk m = Some n /\ n < vulnerableSdk).
+
 Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
 (* Chequeamos que la aplicación esté instalada ... *)
 (In a (apps (state s))) /\
 (* ... que no haya sido ejecutada nunca ... *)
 ~ (In a (alreadyRun (state s))) /\
 (* ... y que el targetSdk sea lo suficientemente viejo *)
-(forall (m:Manifest),
-    isManifestOfApp a m s ->
-        (exists n: nat, targetSdk m = Some n /\ n < vulnerableSdk)
-).
+isOldApp a s.
 
 Definition revokeGrantedPerms (a:idApp) (s s': System) : Prop :=
 (* (forall (a':idApp) (lPerm': list Perm),

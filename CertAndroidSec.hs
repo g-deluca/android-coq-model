@@ -1188,6 +1188,8 @@ data ErrorCode =
  | No_CProvider_fits
  | Should_verify_permissions
  | CProvider_not_grantable
+ | No_verification_needed
+ | Already_verified
 
 data Response =
    Ok
@@ -2867,13 +2869,34 @@ call_safe icmp sac s =
    Prelude.Just ec -> Result (Error0 ec) s;
    Prelude.Nothing -> Result Ok (call_post icmp sac s)}
 
+isOldAppBool :: IdApp -> System -> Prelude.Bool
+isOldAppBool app0 s =
+  let {m = getManifestForApp app0 s} in
+  case targetSdk m of {
+   Prelude.Just n -> ltb n vulnerableSdk;
+   Prelude.Nothing -> Prelude.False}
+
 verifyOldApp_pre :: IdApp -> System -> Prelude.Maybe ErrorCode
-verifyOldApp_pre =
-  Prelude.error "AXIOM TO BE REALIZED"
+verifyOldApp_pre app0 s =
+  case Prelude.not (inBool idApp_eq app0 (apps (state s))) of {
+   Prelude.True -> Prelude.Just No_such_app;
+   Prelude.False ->
+    case inBool idApp_eq app0 (alreadyRun (state s)) of {
+     Prelude.True -> Prelude.Just Already_verified;
+     Prelude.False ->
+      case Prelude.not (isOldAppBool app0 s) of {
+       Prelude.True -> Prelude.Just No_verification_needed;
+       Prelude.False -> Prelude.Nothing}}}
 
 verifyOldApp_post :: IdApp -> System -> System
-verifyOldApp_post =
-  Prelude.error "AXIOM TO BE REALIZED"
+verifyOldApp_post app0 s =
+  let {oldstate = state s} in
+  let {oldenv = environment s} in
+  Sys (St (apps oldstate) ((:) app0 (alreadyRun oldstate))
+  (map_add idApp_eq (grantedPermGroups oldstate) app0 ([]))
+  (map_add idApp_eq (perms oldstate) app0 ([])) (running oldstate)
+  (delPPerms oldstate) (delTPerms oldstate) (resCont oldstate)
+  (sentIntents oldstate)) oldenv
 
 verifyOldApp_safe :: IdApp -> System -> Result0
 verifyOldApp_safe a s =
