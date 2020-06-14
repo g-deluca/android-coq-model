@@ -34,19 +34,23 @@ Section RvkAndNotGrant.
     (a:idApp)
     (p:Perm)
     (pDangerous:pl p=dangerous)
-    (pUngrouped : maybeGrp p = None)
     (pNotSelfDefined : ~exists lPerm : list Perm, map_apply idApp_eq (defPerms (environment initState)) a = Value idApp lPerm /\ In p lPerm) 
     (sndStateStep: sndState = system (step initState (revoke p a)))
     (revokeWasOk : response (step initState (revoke p a))=ok)
     (l:list Action)
     (aIsTheSame :~In (uninstall a) l)
     (notRegranted : ~In (grant p a) l)
+    (notAutoRegranted : ~In (grantAuto p a) l)
     (fromSndToLast : last (trace sndState l) sndState = lastState),
     ~appHasPermission a p lastState.
 Proof.
     intros.
     unfold not;intros.
-    apply notRegranted.
+
+    assert (~(In (grant p a) l \/ In (grantAuto p a) l)) as notGrantedAtAll.
+    unfold not; intros.
+    destruct H0; contradiction.
+    apply notGrantedAtAll.
     rewrite sndStateStep in *.
     clear sndStateStep.
     case_eq (revoke_pre p a initState);intros.
@@ -101,7 +105,7 @@ Proof.
     rewrite H0 in H4.
     simpl in H4.
     contradiction.
-    rewrite pDangerous, pUngrouped in H4.
+    rewrite pDangerous in H4.
     destruct H4.
     inversion H4.
     destruct H4.
@@ -110,10 +114,9 @@ Proof.
     destruct H5.
     destruct H5.
     inversion H5.
-    destruct H4.
-    destruct H4.
-    destruct H4;inversion H4.
-    destruct H4;inversion H4.
+    destruct H4; inversion H4.
+    destruct H4; inversion H4.
+    destruct H4; inversion H4.
 Qed.
 
 End RvkAndNotGrant.
