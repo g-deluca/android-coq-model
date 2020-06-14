@@ -81,8 +81,8 @@ Proof.
     rewrite H0;auto.
     
     unfold grant_safe; case_eq (grant_pre p i s);intros;auto.
+    unfold grantAuto_safe; case_eq (grantAuto_pre p i s);intros;auto.
     unfold revoke_safe; case_eq (revoke_pre p i s);intros;auto.
-    unfold grantgroup_safe; case_eq (grantgroup_pre  i i0 s);intros;auto.
     unfold revokegroup_safe; case_eq (revokegroup_pre i i0 s);intros;auto.
     auto.
     unfold read_safe; case_eq (read_pre i c u s);intros;auto.
@@ -102,6 +102,7 @@ Proof.
     unfold grantP_safe; case_eq (grantP_pre i c i0 u p s);intros;auto.
     unfold revokeDel_safe; case_eq (revokeDel_pre i c u p s);intros;auto.
     unfold call_safe; case_eq (call_pre i s0 s);intros;auto.
+    unfold verifyOldApp_safe; case_eq (verifyOldApp_pre i s);intros;auto.
 Qed.
 
 Lemma permAIsTheSame : forall
@@ -114,6 +115,7 @@ Lemma permAIsTheSame : forall
 (aWasInstalled : In a (apps (state s)) \/ (exists x0, In x0 (systemImage (environment s)) /\ idSI x0 = a))
 (xNotUninstallA : x <> uninstall a)
 (xNotGrantPA : x <> grant p a)
+(xNotGrantAutoPA : x <> grantAuto p a)
 (permsAIsx0 : map_apply idApp_eq (perms (state (system (step s x)))) a = Value idApp x0)
 (pInx0 : In p x0),
 (exists l0 : list Perm,
@@ -137,8 +139,7 @@ Proof.
     inversion permsAIsx0.
     rewrite<- H2 in *.
     inversion pInx0.
-    
-    
+
     unfold uninstall_safe in permsAIsx0.
     case_eq (uninstall_pre i s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0.
     exists x0;auto.
@@ -202,8 +203,7 @@ Proof.
     rewrite filter_In in pInx0.
     destruct pInx0.
     auto.
-    
-    
+
     unfold grant_safe in permsAIsx0;
     case_eq (grant_pre p0 i s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0.
     exists x0;auto.
@@ -227,7 +227,31 @@ Proof.
     destruct (map_apply idApp_eq (perms (state s)) i).
     rewrite overrideNotEq in permsAIsx0;auto.
     auto.
-    
+
+    unfold grantAuto_safe in permsAIsx0;
+      case_eq (grantAuto_pre p0 i s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0.
+    exists x0. auto.
+    unfold grantPermission in permsAIsx0.
+    assert ( exists x, map_apply idApp_eq (perms (state s)) a=Value idApp x).
+    apply ifInAppsOrSysAppThenPerms;auto.
+    destruct H0 as [l H0].
+    destruct (idApp_eq i a).
+    rewrite e in *.
+    rewrite H0 in permsAIsx0.
+    exists l.
+    rewrite <-addAndApply in permsAIsx0.
+    inversion permsAIsx0.
+    rewrite <- H2 in pInx0.
+    inversion pInx0.
+    rewrite H1 in xNotGrantAutoPA.
+    destruct xNotGrantAutoPA.
+    auto.
+    split;auto.
+    exists x0.
+    destruct (map_apply idApp_eq (perms (state s)) i).
+    rewrite overrideNotEq in permsAIsx0;auto.
+    auto.
+
     unfold revoke_safe in permsAIsx0;
     case_eq (revoke_pre p0 i s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0.
     exists x0;auto.
@@ -249,13 +273,27 @@ Proof.
     rewrite overrideNotEq in permsAIsx0;auto.
     exists x0;auto.
     exists x0;auto.
-    
-    
-    unfold grantgroup_safe in permsAIsx0;
-    case_eq (grantgroup_pre i i0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;
-    exists x0;auto.
-    
-    unfold revokegroup_safe in permsAIsx0; case_eq (revokegroup_pre i i0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
+
+    unfold revokegroup_safe in permsAIsx0; case_eq (revokegroup_pre i i0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0.
+    exists x0; auto.
+    unfold revokeAllPermsOfGroup in permsAIsx0.
+    assert ( exists x, map_apply idApp_eq (perms (state s)) a=Value idApp x).
+    apply ifInAppsOrSysAppThenPerms;auto.
+    destruct H0 as [l H0].
+    destruct (idApp_eq i0 a).
+    rewrite e in *.
+    rewrite H0 in permsAIsx0.
+    rewrite <- addAndApply in permsAIsx0.
+    inversion permsAIsx0.
+    exists l. split; auto.
+    rewrite <- H2 in pInx0.
+    apply inRemoveAll in pInx0.
+    destruct pInx0. auto.
+    destruct (map_apply idApp_eq (perms (state s)) i0).
+    rewrite overrideNotEq in permsAIsx0.
+    exists x0; auto. auto.
+    exists x0; auto.
+
     exists x0;auto.
     unfold read_safe in permsAIsx0; case_eq (read_pre i c u s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
     unfold write_safe in permsAIsx0; case_eq (write_pre i c u v s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
@@ -273,6 +311,14 @@ Proof.
     unfold grantP_safe in permsAIsx0; case_eq (grantP_pre i c i0 u p0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
     unfold revokeDel_safe in permsAIsx0; case_eq (revokeDel_pre i c u p0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
     unfold call_safe in permsAIsx0; case_eq (call_pre i s0 s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
+
+    unfold verifyOldApp_safe in permsAIsx0; case_eq (verifyOldApp_pre i s);intros;rewrite H in permsAIsx0;simpl in permsAIsx0;exists x0;auto.
+    destruct (idApp_eq i a).
+    rewrite e in *.
+    rewrite <- addAndApply in permsAIsx0.
+    inversion permsAIsx0.
+    rewrite <- H1 in pInx0. inversion pInx0.
+    rewrite overrideNotEq in permsAIsx0; auto.
 Qed.
 
 Lemma manifestsSame : forall
@@ -288,7 +334,6 @@ map_apply idApp_eq (manifest (environment s)) a = Value idApp x1.
 Proof.
     intros.
     destruct x;simpl in manifestx1.
-    
     unfold install_safe in manifestx1.
     case_eq (install_pre i m c l s);intros;rewrite H in manifestx1;
     simpl in manifestx1;
@@ -317,8 +362,8 @@ Proof.
     rewrite<- dropSthElse in manifestx1;auto.
     
     unfold grant_safe in manifestx1; case_eq (grant_pre p i s);intros;rewrite H in manifestx1;auto.
+    unfold grantAuto_safe in manifestx1; case_eq (grantAuto_pre p i s);intros;rewrite H in manifestx1;auto.
     unfold revoke_safe in manifestx1; case_eq (revoke_pre p i s);intros;rewrite H in manifestx1;auto.
-    unfold grantgroup_safe in manifestx1; case_eq (grantgroup_pre  i i0 s);intros;rewrite H in manifestx1;auto.
     unfold revokegroup_safe in manifestx1; case_eq (revokegroup_pre i i0 s);intros;rewrite H in manifestx1;auto.
     auto.
     unfold read_safe in manifestx1; case_eq (read_pre i c u s);intros;rewrite H in manifestx1;auto.
@@ -337,7 +382,7 @@ Proof.
     unfold grantP_safe in manifestx1; case_eq (grantP_pre i c i0 u p s);intros;rewrite H in manifestx1;auto.
     unfold revokeDel_safe in manifestx1; case_eq (revokeDel_pre i c u p s);intros;rewrite H in manifestx1;auto.
     unfold call_safe in manifestx1; case_eq (call_pre i s0 s);intros;rewrite H in manifestx1;auto.
-    
+    unfold verifyOldApp_safe in manifestx1; case_eq (verifyOldApp_pre i s);intros;rewrite H in manifestx1;auto.
 Qed.
 
 Lemma defPermsSame : forall
@@ -382,8 +427,8 @@ Proof.
     rewrite<- dropSthElse in defpermsx1;auto.
     
     unfold grant_safe in defpermsx1; case_eq (grant_pre p i s);intros;rewrite H in defpermsx1;auto.
+    unfold grantAuto_safe in defpermsx1; case_eq (grantAuto_pre p i s);intros;rewrite H in defpermsx1;auto.
     unfold revoke_safe in defpermsx1; case_eq (revoke_pre p i s);intros;rewrite H in defpermsx1;auto.
-    unfold grantgroup_safe in defpermsx1; case_eq (grantgroup_pre  i i0 s);intros;rewrite H in defpermsx1;auto.
     unfold revokegroup_safe in defpermsx1; case_eq (revokegroup_pre i i0 s);intros;rewrite H in defpermsx1;auto.
     auto.
     unfold read_safe in defpermsx1; case_eq (read_pre i c u s);intros;rewrite H in defpermsx1;auto.
@@ -402,7 +447,7 @@ Proof.
     unfold grantP_safe in defpermsx1; case_eq (grantP_pre i c i0 u p s);intros;rewrite H in defpermsx1;auto.
     unfold revokeDel_safe in defpermsx1; case_eq (revokeDel_pre i c u p s);intros;rewrite H in defpermsx1;auto.
     unfold call_safe in defpermsx1; case_eq (call_pre i s0 s);intros;rewrite H in defpermsx1;auto.
-    
+    unfold verifyOldApp_safe in defpermsx1; case_eq (verifyOldApp_pre i s);intros;rewrite H in defpermsx1;auto.
 Qed.
 
 
@@ -419,8 +464,8 @@ Proof.
     unfold install_safe in sysAppNew; case_eq (install_pre i m c l s);intros;rewrite H in sysAppNew;auto.
     unfold uninstall_safe in sysAppNew; case_eq (uninstall_pre i s);intros;rewrite H in sysAppNew;auto.
     unfold grant_safe in sysAppNew; case_eq (grant_pre p i s);intros;rewrite H in sysAppNew;auto.
+    unfold grantAuto_safe in sysAppNew; case_eq (grantAuto_pre p i s);intros;rewrite H in sysAppNew;auto.
     unfold revoke_safe in sysAppNew; case_eq (revoke_pre p i s);intros;rewrite H in sysAppNew;auto.
-    unfold grantgroup_safe in sysAppNew; case_eq (grantgroup_pre  i i0 s);intros;rewrite H in sysAppNew;auto.
     unfold revokegroup_safe in sysAppNew; case_eq (revokegroup_pre i i0 s);intros;rewrite H in sysAppNew;auto.
     auto.
     unfold read_safe in sysAppNew; case_eq (read_pre i c u s);intros;rewrite H in sysAppNew;auto.
@@ -439,6 +484,7 @@ Proof.
     unfold grantP_safe in sysAppNew; case_eq (grantP_pre i c i0 u p s);intros;rewrite H in sysAppNew;auto.
     unfold revokeDel_safe in sysAppNew; case_eq (revokeDel_pre i c u p s);intros;rewrite H in sysAppNew;auto.
     unfold call_safe in sysAppNew; case_eq (call_pre i s0 s);intros;rewrite H in sysAppNew;auto.
+    unfold verifyOldApp_safe in sysAppNew; case_eq (verifyOldApp_pre i s);intros;rewrite H in sysAppNew;auto.
 Qed.
 
 
@@ -448,10 +494,10 @@ Lemma inductMe : forall
 (a : idApp)
 (p : Perm)
 (pDangerous:pl p = dangerous)
-(pUngrouped:maybeGrp p = None)
 (l : list Action)
 (aIsTheSame : ~ In (uninstall a) l)
 (notRegranted : ~ In (grant p a) l)
+(notRegrantedAuto : ~ In (grantAuto p a) l)
 (didntHavePerm : ~appHasPermission a p initState)
 (wasInstalled: In a (apps (state initState)) \/ (exists x0, In x0 (systemImage (environment initState)) /\ idSI x0 = a)),
 validstate ((last (trace initState l)) initState) /\ (In a (apps (state ((last (trace initState l)) initState))) \/ (exists x0, In x0 (systemImage (environment ((last (trace initState l)) initState))) /\ idSI x0 = a)) /\ (~appHasPermission a p ((last (trace initState l)) initState)).
@@ -472,6 +518,10 @@ Proof.
     left;auto.
     specialize (IHl H H0).
     destruct IHl.
+    unfold not. intros.
+    apply notRegrantedAuto.
+    rewrite in_app_iff.
+    left; auto.
     split.
     rewrite (lastTraceApp initState l x initState).
     apply stepIsInvariant.
@@ -506,8 +556,8 @@ Proof.
     unfold install_safe; case_eq (install_pre i m c l0 lastSys);intros;simpl;auto.
     unfold uninstall_safe; case_eq (uninstall_pre i lastSys);intros;simpl;auto.
     unfold grant_safe; case_eq (grant_pre p0 i lastSys);intros;simpl;auto.
+    unfold grantAuto_safe; case_eq (grantAuto_pre p0 i lastSys);intros;simpl;auto.
     unfold revoke_safe; case_eq (revoke_pre p0 i lastSys);intros;simpl;auto.
-    unfold grantgroup_safe; case_eq (grantgroup_pre  i i0 lastSys);intros;simpl;auto.
     unfold revokegroup_safe; case_eq (revokegroup_pre i i0 lastSys);intros;simpl;auto.
     auto.
     unfold read_safe; case_eq (read_pre i c u lastSys);intros;simpl;auto.
@@ -526,6 +576,7 @@ Proof.
     unfold grantP_safe; case_eq (grantP_pre i c i0 u p0 lastSys);intros;simpl;auto.
     unfold revokeDel_safe; case_eq (revokeDel_pre i c u p0 lastSys);intros;simpl;auto.
     unfold call_safe; case_eq (call_pre i s lastSys);intros;simpl;auto.
+    unfold verifyOldApp_safe; case_eq (verifyOldApp_pre i lastSys);intros;simpl;auto.
     rewrite H5;auto.
 
 
@@ -536,6 +587,15 @@ Proof.
     right.
     rewrite H4.
     apply in_eq.
+
+    assert (x<>grantAuto p a) as xNotGrantAutoPA.
+    unfold not; intros.
+    apply notRegrantedAuto.
+    rewrite in_app_iff.
+    right.
+    rewrite H4.
+    apply in_eq.
+
     unfold not;intros.
     apply H3.
     unfold appHasPermission in H4.
@@ -579,19 +639,12 @@ Proof.
     exists x1.
     auto.
     rewrite pDangerous in *.
-    rewrite pUngrouped in *.
     destruct H6.
     inversion H6.
     destruct H6.
     destruct H6.
-    destruct H7.
-    destruct H7.
-    destruct H7.
-    inversion H7.
-    destruct H6.
-    destruct H6.
-    destruct H6;inversion H6.
-    destruct H6;inversion H6.
+    destruct H6; inversion H6.
+    destruct H6. inversion H6.
 Qed.
 
 
@@ -603,13 +656,12 @@ Qed.
     (aInstalled:In a (apps (state initState)) \/ (exists x0, In x0 (systemImage (environment initState)) /\ idSI x0 = a))
     (p:Perm)
     (pDangerous:pl p = dangerous)
-    (pUngrouped:maybeGrp p = None)
     (aHasPerm : appHasPermission a p lastState)
     (aDidntHavePerm :~appHasPermission a p initState)
     (l:list Action)
     (aIsTheSame :~In (uninstall a) l)
     (fromInitToLast : last (trace initState l) initState = lastState),
-    In (grant p a) l.
+    In (grant p a) l \/ In (grantAuto p a) l.
 Proof.
     intros.
     apply NNPP.
