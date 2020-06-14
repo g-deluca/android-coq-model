@@ -14,6 +14,7 @@ Require Import Tacticas.
 Require Import InstallIsSound.
 Require Import UninstallIsSound.
 Require Import GrantIsSound.
+Require Import GrantAutoIsSound.
 Require Import RevokeIsSound.
 Require Import RevokeGroupIsSound.
 Require Import HasPermissionIsSound.
@@ -31,6 +32,7 @@ Require Import StopIsSound.
 Require Import GrantPIsSound.
 Require Import RevokeDelIsSound.
 Require Import CallIsSound.
+Require Import VerifyOldAppIsSound.
 
 Section Soundness.
 (* La demostración de este teorma certifica la corrección de la función step *)
@@ -42,6 +44,7 @@ Proof.
     exact (installIsSound s i m c l H).
     exact (uninstallIsSound s i H).
     exact (grantIsSound s i p H).
+    exact (grantAutoIsSound s i p H).
     exact (revokeIsSound s i p H).
     exact (revokegroupIsSound s i0 i H).
     exact (hasPermissionIsSound s p c H).
@@ -59,6 +62,7 @@ Proof.
     exact (grantPIsSound s i c i0 u p H).
     exact (revokeDelIsSound s i c u p H).
     exact (callIsSound s i s0 H).
+    exact (verifyOldAppIsSound s i H).
 Qed.
 End Soundness.
 

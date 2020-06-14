@@ -167,6 +167,7 @@ VFILES:=AutoGrantProperties.v\
   ValidityInvariance.v\
   ValidStateLemmas.v\
   VerifyOldAppIsInvariant.v\
+  VerifyOldAppIsSound.v\
   WitnessesFactory.v\
   WriteIsInvariant.v\
   WriteIsSound.v

@@ -2878,7 +2878,7 @@ isOldAppBool app0 s =
 
 verifyOldApp_pre :: IdApp -> System -> Prelude.Maybe ErrorCode
 verifyOldApp_pre app0 s =
-  case Prelude.not (inBool idApp_eq app0 (apps (state s))) of {
+  case Prelude.not (isAppInstalledBool app0 s) of {
    Prelude.True -> Prelude.Just No_such_app;
    Prelude.False ->
     case inBool idApp_eq app0 (alreadyRun (state s)) of {

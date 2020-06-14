@@ -1453,7 +1453,7 @@ Definition isOldAppBool (app: idApp) (s: System) : bool :=
     end.
 
 Definition verifyOldApp_pre (app: idApp) (s: System) : option ErrorCode :=
-    if (negb (InBool idApp idApp_eq app (apps (state s)))) then Some no_such_app else
+    if negb (isAppInstalledBool app s) then Some no_such_app else
     if (InBool idApp idApp_eq app (alreadyRun (state s))) then Some already_verified else
     if (negb (isOldAppBool app s)) then Some no_verification_needed else None.
 

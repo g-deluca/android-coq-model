@@ -1327,7 +1327,7 @@ Definition isOldApp (a: idApp) (s: System) : Prop :=
 
 Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
 (* Chequeamos que la aplicación esté instalada ... *)
-(In a (apps (state s))) /\
+isAppInstalled a s /\
 (* ... que no haya sido ejecutada nunca ... *)
 ~ (In a (alreadyRun (state s))) /\
 (* ... y que el targetSdk sea lo suficientemente viejo *)

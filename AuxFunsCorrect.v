@@ -4252,5 +4252,91 @@ Proof.
   apply notDupSysAppVS. auto. auto.
 Qed.
 
+Lemma isOld_isOldBool : forall (s: System) (a: idApp) (vs: validstate s), isOldApp a s -> isOldAppBool a s = true.
+Proof.
+  intros s a vs H.
+  unfold isOldApp in H.
+  destruct H as [m [n [H1 [H2 H3]]]].
+  unfold isOldAppBool.
+  unfold getManifestForApp. unfold isManifestOfApp in H1.
+  destruct H1.
+- rewrite H. rewrite H2.
+  apply ltb_lt. auto.
+- destruct H as [sysapp [H4 [H5 H6]]].
+  case_eq (map_apply idApp_eq (manifest (environment s)) a); intros.
+
+  assert (exists m: Manifest,
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+  exists m0; auto.
+  assert (~(exists m: Manifest,
+    map_apply idApp_eq (manifest (environment s)) a = Value idApp m)).
+  apply (ifSysImgNoManifestInEnv s vs sysapp). auto.
+  contradiction.
+
+  clear H i.
+  destructVS vs.
+  unfold notDupSysApp in notDupSysAppVS.
+  induction (systemImage (environment s)).
+  inversion H4. destruct H4. simpl.
+  rewrite H. rewrite H5.
+  destruct (idApp_eq a a).
+  simpl. rewrite H6. rewrite H2.
+  apply ltb_lt. auto.
+  contradiction.
+  simpl. destruct (idApp_eq a (idSI a0)).
+  simpl.
+
+  assert (In sysapp (a0 :: l)). simpl. auto.
+  assert (In a0 (a0 :: l)). simpl. auto.
+  rewrite e in H5.
+  assert (a0 = sysapp).
+  apply notDupSysAppVS. auto.
+  rewrite H4. rewrite H6. rewrite H2.
+  apply ltb_lt. auto.
+
+  apply IHl. intros.
+  destruct H0 as [A1 [A2 A3]].
+  assert (In s1 (a0 :: l)). simpl. auto.
+  assert (In s2 (a0 :: l)). simpl. auto.
+  apply notDupSysAppVS. auto. auto.
+Qed.
+
+Lemma isOldBool_isOld : forall (s: System) (a: idApp) (vs: validstate s), isOldAppBool a s = true -> isOldApp a s.
+Proof.
+    intros s a vs H.
+    unfold isOldApp.
+    unfold isOldAppBool in H.
+    unfold getManifestForApp in H.
+    case_eq (map_apply idApp_eq (manifest (environment s)) a); intros.
+  - rewrite H0 in H.
+    case_eq (targetSdk m); intros.
+    rewrite H1 in H.
+    apply ltb_lt in H.
+    exists m, n. repeat split;auto.
+    unfold RuntimePermissions.isManifestOfApp.
+    left. auto.
+    rewrite H1 in H. inversion H.
+  - unfold RuntimePermissions.isManifestOfApp.
+    rewrite H0 in H.
+    induction (systemImage (environment s)).
+    simpl in H. inversion H.
+    simpl in H.
+    destruct (idApp_eq a (idSI a0)).
+    simpl in H.
+    case_eq (targetSdk (manifestSI a0)); intros.
+    rewrite H1 in H.
+    exists (manifestSI a0). exists n.
+    apply ltb_lt in H. repeat split;auto.
+    unfold RuntimePermissions.isManifestOfApp.
+    right. exists a0. repeat split;auto.
+    simpl. auto.
+    rewrite H1 in H. inversion H.
+    apply IHl in H. destruct H as [m [n' H]].
+    exists m, n'. destruct H. destruct H.
+    split; auto. split; auto.
+    right. destruct H as [sysapp [H [H2 H3]]].
+    exists sysapp. repeat split; auto.
+    simpl. right. auto.
+Qed.
 
 End AuxLemmas.
