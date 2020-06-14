@@ -33,16 +33,7 @@ Proof.
     destruct H2.
     destruct_conj H1.
     split.
-  - unfold markAsRunned.
-    unfold receiveIntent_post. rewrite maybeintent. simpl.
-    split. intros.
-    right. auto.
-    split. intros.
-    destruct H5.
-    right; auto. left; auto.
-    left;auto.
-  - split.
-    exists theIC.
+  - exists theIC.
     exists x.
     split;auto.
     split;auto.
@@ -243,7 +234,7 @@ Proof.
     rewrite H7.
     auto.
     
-    split.
+  - split.
     unfold removeIntent.
     unfold receiveIntent_post.
     rewrite maybeintent.

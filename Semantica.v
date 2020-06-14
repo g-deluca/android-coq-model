@@ -1041,23 +1041,8 @@ map_apply deltpermsdomeq (delTPerms (state s)) (ic', cp', u') = Value (iCmp*CPro
 map_apply deltpermsdomeq (delTPerms (state s')) (ic, cp, u) = Value (iCmp*CProvider*uri) pt ) /\
 map_correct (delTPerms (state s')).
 
-Definition markAsRunned (a: idApp) (s s': System): Prop :=
-(* Mantenemos la información sobre las aplicaciones que no son a *)
-(forall a':idApp,
-    In a' (alreadyRun (state s)) ->
-        In a' (alreadyRun (state s'))) /\
-(* Todas las aplicaciones que ahora están marcadas como ejecutadas lo estaban desde antes 
-   o es la aplicación en cuestión*)
-(forall a':idApp,
-    In a' (alreadyRun (state s')) ->
-        In a' (alreadyRun (state s)) \/ (a' = a)) /\
-(* La aplicación 'a' ahora quedó marcada como ya ejecutada *)
-In a (alreadyRun (state s')).
-
 (* Postcondición de receive intent *)
 Definition post_receiveIntent (i:Intent)(ic:iCmp)(a:idApp)(s s':System):Prop :=
-(* Seteamos que la aplicación ya fue ejecutada al menos una vez*)
-markAsRunned  a s s' /\
 (exists (ic':iCmp)(c:Cmp), intentForApp i a c ic s /\
 ~isCProvider c /\
 (* ic' no debe ser el id de una instancia ya en ejecución *)
@@ -1359,15 +1344,6 @@ map_correct (perms (state s')).
 
 (* Revocar los permisos otorgados a la aplicación *)
 Definition revokeGrantedPermGroups (a:idApp) (s s': System) : Prop :=
-(* (forall (a':idApp)(lGrps: list idGrp),
-map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps ->
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps \/
-a = a') /\
-(forall (a':idApp)(lGrps: list idGrp),
-map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrps ->
-map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrps \/
-a = a')/\
- *)
 
 (forall (a':idApp)(lGrp':list idGrp),
 map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp' ->
@@ -1381,6 +1357,20 @@ forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> a=a') /\
 
 map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp nil /\
 map_correct (grantedPermGroups (state s')).
+
+Definition markAsRunned (a: idApp) (s s': System): Prop :=
+(* Mantenemos la información sobre las aplicaciones que no son a *)
+(forall a':idApp,
+    In a' (alreadyRun (state s)) ->
+        In a' (alreadyRun (state s'))) /\
+(* Todas las aplicaciones que ahora están marcadas como ejecutadas lo estaban desde antes 
+   o es la aplicación en cuestión*)
+(forall a':idApp,
+    In a' (alreadyRun (state s')) ->
+        In a' (alreadyRun (state s)) \/ (a' = a)) /\
+(* La aplicación 'a' ahora quedó marcada como ya ejecutada *)
+In a (alreadyRun (state s')).
+
 
 Definition post_verifyOldApp (a: idApp) (s s': System) :=
 (**
