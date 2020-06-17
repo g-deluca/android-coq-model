@@ -295,4 +295,31 @@ Proof.
   contradiction.
 Qed.
 
+Lemma sameAppSameManifest: forall
+  (s: System) (sValid: validstate s) (a: idApp) (m m': Manifest),
+  isManifestOfApp a m s -> isManifestOfApp a m' s -> m = m'.
+Proof.
+  unfold isManifestOfApp;intros.
+  destruct H, H0.
+- rewrite H in H0. inversion H0. auto.
+- destruct H0 as [sysapp [H0 [H1 H2]]].
+  assert (~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m)).
+  apply (ifSysImgNoManifestInEnv s sValid sysapp a); auto.
+  assert (exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+  exists m. auto.
+  contradiction.
+- destruct H as [sysapp [H [H1 H2]]].
+  assert (~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m)).
+  apply (ifSysImgNoManifestInEnv s sValid sysapp a); auto.
+  assert (exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m).
+  exists m'. auto.
+  contradiction.
+- destruct H as [sysapp [H1 [H2 H3]]].
+  destruct H0 as [sysapp' [H4 [H5 H6]]].
+  assert (sysapp = sysapp').
+  apply (notDupSysAppVS s); auto.
+  rewrite H5, H2. auto.
+  rewrite H in H3.
+  rewrite <- H3, <- H6. auto.
+Qed.
 End VSLemmas.

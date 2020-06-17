@@ -162,6 +162,7 @@ VFILES:=AutoGrantProperties.v\
   StopIsSound.v\
   Tacticas.v\
   Trace.v\
+  TraceRelatedLemmas.v\
   UninstallIsInvariant.v\
   UninstallIsSound.v\
   ValidityInvariance.v\
