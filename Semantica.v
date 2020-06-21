@@ -964,7 +964,7 @@ Parameter intentActionType: Intent -> PType.
 (* Defino un predicado que establece las condiciones en las que una aplicación puede correr *)
 Definition canRun (a: idApp) (s: System) : Prop :=
 (* Puede ejecutarse si ya fue ejecutada previamente*)
-In a (alreadyRun (state s)) \/
+In a (alreadyVerified (state s)) \/
 (* o si el targetSdk de la aplicación existe y es lo suficientemente alto *)
 (exists (m: Manifest) (n: nat),
     isManifestOfApp a m s /\ targetSdk m = Some n /\ n > vulnerableSdk).
@@ -1314,7 +1314,7 @@ Definition pre_verifyOldApp (a: idApp) (s: System) : Prop :=
 (* Chequeamos que la aplicación esté instalada ... *)
 isAppInstalled a s /\
 (* ... que no haya sido ejecutada nunca ... *)
-~ (In a (alreadyRun (state s))) /\
+~ (In a (alreadyVerified (state s))) /\
 (* ... y que el targetSdk sea lo suficientemente viejo *)
 isOldApp a s.
 
@@ -1361,15 +1361,15 @@ map_correct (grantedPermGroups (state s')).
 Definition markAsRunned (a: idApp) (s s': System): Prop :=
 (* Mantenemos la información sobre las aplicaciones que no son a *)
 (forall a':idApp,
-    In a' (alreadyRun (state s)) ->
-        In a' (alreadyRun (state s'))) /\
+    In a' (alreadyVerified (state s)) ->
+        In a' (alreadyVerified (state s'))) /\
 (* Todas las aplicaciones que ahora están marcadas como ejecutadas lo estaban desde antes 
    o es la aplicación en cuestión*)
 (forall a':idApp,
-    In a' (alreadyRun (state s')) ->
-        In a' (alreadyRun (state s)) \/ (a' = a)) /\
+    In a' (alreadyVerified (state s')) ->
+        In a' (alreadyVerified (state s)) \/ (a' = a)) /\
 (* La aplicación 'a' ahora quedó marcada como ya ejecutada *)
-In a (alreadyRun (state s')).
+In a (alreadyVerified (state s')).
 
 
 Definition post_verifyOldApp (a: idApp) (s s': System) :=

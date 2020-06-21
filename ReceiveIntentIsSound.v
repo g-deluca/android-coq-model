@@ -289,7 +289,7 @@ Proof.
     unfold canRunBool in H3.
     unfold not. intros. unfold canRun in H.
     destruct H.
-    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros.
     rewrite H4 in H3. simpl in H3. inversion H3.
     apply notInBoolNotIn in H4. contradiction.
 
@@ -298,7 +298,7 @@ Proof.
     unfold RuntimePermissions.isManifestOfApp in H4.
     destruct H4.
     rewrite H, H5 in H3.
-    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros.
     rewrite H4 in H3. inversion H3.
     rewrite H4 in H3. simpl in H3.
 
@@ -306,7 +306,7 @@ Proof.
     rewrite <- ltb_lt in H7. rewrite H3 in H7.
     inversion H7.
 
-    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros.
     rewrite H4 in H3. inversion H3.
     rewrite H4 in H3. simpl in H3. clear H4.
     destruct H as [sysapp [H7 [H8 H9]]].

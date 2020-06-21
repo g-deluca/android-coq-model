@@ -26,8 +26,8 @@ Record State := st {
                     (* La lista de aplicaciones instaladas por el usuario *)
                      apps: list idApp;
                      (* Las aplicaciones que ya fueron ejecutadas alguna vez *)
-                     (* NOTE: alreadyRun \subset apps podría ser un invariante nuevo *)
-                     alreadyRun: list idApp;
+                     (* NOTE: alreadyVerified \subset apps podría ser un invariante nuevo *)
+                     alreadyVerified: list idApp;
                     (* Para cada aplicación instalada, retorna la lista de grupos de permisos para los cuales 
                      * la aplicación posee algùn permiso otorgado *)
                      grantedPermGroups : mapping idApp (list idGrp);

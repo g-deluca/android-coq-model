@@ -648,7 +648,7 @@ Definition canStartBool (c1 c2: Cmp)(s:System) : bool :=
         end.
 
 Definition canRunBool (app: idApp) (s: System) : bool :=
-    InBool idApp idApp_eq app (alreadyRun (state s)) ||
+    InBool idApp idApp_eq app (alreadyVerified (state s)) ||
     match targetSdk (getManifestForApp app s) with
     | None => false
     | Some n =>  vulnerableSdk <? n
@@ -831,7 +831,7 @@ Definition install_post (app:idApp) (m:Manifest) (c:Cert) (lRes : list res) (s:S
     let oldenv := environment s in
     sys (st
             (app :: (apps oldstate))
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (map_add idApp_eq (grantedPermGroups oldstate) app nil)
             (map_add idApp_eq (perms oldstate) app nil)
             (running oldstate)
@@ -869,7 +869,7 @@ Definition uninstall_post (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (remove idApp_eq app (apps oldstate))
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (map_drop idApp_eq (grantedPermGroups oldstate) app)
             (dropAppPerms s app)
             (running oldstate)
@@ -913,7 +913,7 @@ Definition grant_post (p:Perm) (app:idApp) (s:System) : System :=
     in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             newGrantedPermGroups
             (grantPermission app p (perms oldstate))
             (running oldstate)
@@ -951,7 +951,7 @@ Definition grantAuto_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (grantPermission app p (perms oldstate))
             (running oldstate)
@@ -982,7 +982,7 @@ Definition revoke_post (p:Perm) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (revokePermission app p (perms oldstate))
             (running oldstate)
@@ -1015,7 +1015,7 @@ Definition revokegroup_post (g:idGrp) (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (revokePermissionGroup app g (grantedPermGroups oldstate))
             (revokeAllPermsOfGroup app g s)
             (running oldstate)
@@ -1070,7 +1070,7 @@ Definition write_post (icmp:iCmp) (cp:CProvider) (u:uri) (v:Val) (s:System) : Sy
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1103,7 +1103,7 @@ Definition startActivity_post (intt:Intent) (icmp:iCmp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1157,7 +1157,7 @@ Definition sendBroadcast_post (intt:Intent) (icmp:iCmp) (p:option Perm) (s:Syste
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1223,7 +1223,7 @@ Definition resolveIntent_post (intt:Intent) (a:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1278,7 +1278,7 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
         let oldstate := state s in
         let oldenv := environment s in
         let runningicmps := map_getKeys (running oldstate) in
-        let newAlreadyRun := cons a (alreadyRun oldstate) in
+        let newAlreadyVerified := cons a (alreadyVerified oldstate) in
         let ic' := iCmpGenerator runningicmps in
         let newTPerms := match intType intt with
             | intActivity => match path (data intt) with
@@ -1290,7 +1290,7 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
             end in
         sys (st
                 (apps oldstate)
-                newAlreadyRun
+                newAlreadyVerified
                 (grantedPermGroups oldstate)
                 (perms oldstate)
                 (performRunCmp intt ic' c s)
@@ -1321,7 +1321,7 @@ Definition stop_post (icmp:iCmp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (map_drop iCmp_eq (running oldstate) icmp)
@@ -1363,7 +1363,7 @@ Definition grantP_post (icmp:iCmp) (cp:CProvider) (a:idApp) (u:uri) (pt:PType) (
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1403,7 +1403,7 @@ Definition revokeDel_post (icmp:iCmp) (cp:CProvider) (u:uri) (pt:PType) (s:Syste
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (alreadyRun oldstate)
+            (alreadyVerified oldstate)
             (grantedPermGroups oldstate)
             (perms oldstate)
             (running oldstate)
@@ -1454,7 +1454,7 @@ Definition isOldAppBool (app: idApp) (s: System) : bool :=
 
 Definition verifyOldApp_pre (app: idApp) (s: System) : option ErrorCode :=
     if negb (isAppInstalledBool app s) then Some no_such_app else
-    if (InBool idApp idApp_eq app (alreadyRun (state s))) then Some already_verified else
+    if (InBool idApp idApp_eq app (alreadyVerified (state s))) then Some already_verified else
     if (negb (isOldAppBool app s)) then Some no_verification_needed else None.
 
 
@@ -1463,7 +1463,7 @@ Definition verifyOldApp_post (app: idApp) (s: System) : System :=
     let oldenv := environment s in
     sys (st
             (apps oldstate)
-            (app :: (alreadyRun oldstate))
+            (app :: (alreadyVerified oldstate))
             (map_add idApp_eq (grantedPermGroups oldstate) app nil)
             (map_add idApp_eq (perms oldstate) app nil)
             (running oldstate)

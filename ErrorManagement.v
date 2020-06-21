@@ -293,7 +293,7 @@ match action with
         (* La aplicación que se quiere verificar no está instalada *)
         | no_such_app => ~isAppInstalled a s
         (* La aplicación ya ha sido ejecutada alguna vez *)
-        | already_verified => In a (alreadyRun (state s))
+        | already_verified => In a (alreadyVerified (state s))
         | no_verification_needed => ~ isOldApp a s
         | _ => False
         end

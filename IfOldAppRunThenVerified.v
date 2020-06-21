@@ -122,7 +122,7 @@ Proof.
     unfold canRun in H4.
     unfold canRun.
     destruct H4. left.
- (* Caso alreadyRunIsTheSame*)
+ (* Caso alreadyVerifiedIsTheSame*)
  -- apply (alreadyVerifiedSame x a); auto.
  (* Caso manifestIsTheSame *)
  -- destruct H4 as [m [n [H4 [H5 H6]]]].
@@ -148,7 +148,7 @@ Theorem ifOldAppRunThenWasVerified :
     (aInstalled:In a (apps (state initState)) \/ (exists x0, In x0 (systemImage (environment initState)) /\ idSI x0 = a))
     (vsInit: validstate initState)
     (oldApp: isOldApp a initState)
-    (notVerified: ~(In a (alreadyRun (state initState))))
+    (notVerified: ~(In a (alreadyVerified (state initState))))
     (canRunLastState: canRun a lastState)
     (aIsTheSame : ~ In (uninstall a) l)
     (fromInitToLast: last (trace initState l) initState  = lastState),

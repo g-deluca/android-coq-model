@@ -4157,7 +4157,7 @@ Proof.
   intros.
   unfold canRunBool in H.
   unfold canRun.
-  case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+  case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros.
 - left. unfold InBool in H0.
   rewrite existsb_exists in H0.
   destruct H0 as [a' [H0 H1]].
@@ -4207,7 +4207,7 @@ Proof.
   apply (In_InBool idApp idApp_eq) in H.
   rewrite H. simpl. auto.
   destruct H as [m [n [H1 [H2 H3]]]].
-  destruct (InBool idApp idApp_eq a (alreadyRun (state s))).
+  destruct (InBool idApp idApp_eq a (alreadyVerified (state s))).
   simpl. auto. simpl.
   unfold isManifestOfApp in H1. unfold getManifestForApp.
   destruct H1. rewrite H.

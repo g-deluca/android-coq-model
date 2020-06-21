@@ -123,7 +123,7 @@ Proof.
     apply isAppInstalled_iff in H2.
     rewrite H1 in H2. inversion H2.
 
-    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros; simpl.
+    case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros; simpl.
 
     exists already_verified.
     repeat split;auto.
@@ -171,7 +171,7 @@ Proof.
     rewrite isAppInstalled_iff in H.
     rewrite <- negb_false_iff in H.
     rewrite H.
-    case_eq (InBool idApp idApp_eq a (alreadyRun (state s))); intros.
+    case_eq (InBool idApp idApp_eq a (alreadyVerified (state s))); intros.
     unfold InBool in H2.
     apply existsb_exists in H2. destruct H2 as [a' [H2 H3]].
     destruct (idApp_eq a a').

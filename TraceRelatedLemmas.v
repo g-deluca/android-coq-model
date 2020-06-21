@@ -92,9 +92,9 @@ Lemma alreadyVerifiedSame : forall
     (a:idApp)
     (s:System)
     (sValid : validstate s)
-    ( aInStep: In a (alreadyRun (state (system (step s x)))))
+    ( aInStep: In a (alreadyVerified (state (system (step s x)))))
     (xNotUninstallA : x <> uninstall a),
-    In a (alreadyRun (state s)).
+    In a (alreadyVerified (state s)).
 Proof.
     intros.
     destruct x; simpl in *.
