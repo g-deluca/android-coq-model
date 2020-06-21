@@ -156,6 +156,8 @@ map_correct (perms (state s')).
 
 (* Postcondición de install *)
 Definition post_install (a:idApp) (m:Manifest) (c:Cert) (lRes: (list res)) (s s':System) : Prop := 
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Agregar manifesto, certificado, lista de recursos y permisos definidos al estado estático del sistema *)
 addManifest m a s s' /\
 addCert c a s s' /\
@@ -214,6 +216,11 @@ Definition removeApp (a:idApp)(s s':System) : Prop :=
 ~ In a (apps (state s'))/\
 removeManifest a s s' /\
 removeCert a s s'.
+
+Definition removeFromVerified (a:idApp)(s s':System) : Prop :=
+(forall a':idApp, In a' (alreadyVerified (state s')) -> In a' (alreadyVerified (state s))) /\
+(forall a':idApp, In a' (alreadyVerified (state s)) -> In a' (alreadyVerified (state s')) \/ a' = a) /\
+~ In a (alreadyVerified (state s')).
 
 (* Revocar los permisos otorgados a la aplicación *)
 Definition revokePerms (a:idApp) (s s': System) : Prop := 
@@ -291,7 +298,9 @@ inApp (cmpCP cp) a s->
 map_correct (delPPerms (state s')).
 
 (* Postcondición de uninstall *)
-Definition post_uninstall (a:idApp)(s s':System) : Prop := 
+Definition post_uninstall (a:idApp)(s s':System) : Prop :=
+(* Se quita la aplciación de la lista de apps verificadas *)
+removeFromVerified a s s' /\
 (* Se quita la aplicación de la lista de apps instaladas, *)
 removeApp a  s s' /\
 (* Se quitan los permisos otorgados a ella *)
@@ -358,6 +367,8 @@ map_correct (grantedPermGroups (state s')).
 
 (* Postcondición grant *)
 Definition post_grant (p:Perm)(a:idApp)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Se otorga el permiso p a a *)
 grantPerm a p s s' /\
 (* y si el permiso está agrupado, marcamos al grupo como otorgado *)
@@ -390,6 +401,8 @@ pl p = dangerous /\
     In g lGroup).
 
 Definition post_grantAuto (p:Perm) (a:idApp) (s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Se otorga el permiso p a a *)
 grantPerm a p s s' /\
 (* nada más cambia *)
@@ -431,6 +444,8 @@ map_correct (perms (state s')).
 
 (* Postcondición revoke *)
 Definition post_revoke (p:Perm)(a:idApp)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Se revoca el permiso p a a *)
 revokePerm a p s s' /\
 
@@ -485,6 +500,8 @@ map_correct (perms (state s')).
 
 (* Postcondición revoke *)
 Definition post_revokeGroup (g:idGrp)(a:idApp)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Quitamos el grupo g*)
 revokePermGroup a g s s' /\
 
@@ -601,6 +618,8 @@ map_apply iCmp_eq (running (state s)) ic = Value iCmp c /\
 
 (* Postcondición de write *)
 Definition post_write (ic:iCmp)(cp:CProvider)(u:uri)(val:Val)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Actualizamos el contendo del recurso que se escribió *)
 (forall (a':idApp)(r:res)(v:Val),
 map_apply rescontdomeq (resCont (state s)) (a', r) = Value (idApp*res) v -> map_apply rescontdomeq (resCont (state s')) (a', r) = Value (idApp*res) v \/ 
@@ -712,7 +731,8 @@ Definition onlyIntentsChanged (s s':System) : Prop :=
 (running (state s)) = (running (state s')) /\
 (delPPerms (state s)) = (delPPerms (state s')) /\
 (delTPerms (state s)) = (delTPerms (state s')) /\
-(resCont (state s)) = (resCont (state s')).
+(resCont (state s)) = (resCont (state s')) /\
+(alreadyVerified (state s)) = (alreadyVerified (state s')).
 
 (* Postcondición de start activity *)
 Definition post_startActivity (i:Intent)(ic:iCmp)(s s':System) : Prop := 
@@ -924,6 +944,8 @@ brperm i' = brperm i)
 
 (* Postcondición de resolve intent *)
 Definition post_resolveIntent (i:Intent)(a:idApp)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Se explicita el intent *)
 implicitToExplicitIntent (idI i) a s s' /\
 (* el resto de los componentes del estado se mantienen iguales *)
@@ -1072,7 +1094,8 @@ removeIntent i ic s s' /\
 (grantedPermGroups (state s)) = (grantedPermGroups (state s')) /\
 (perms (state s)) = (perms (state s')) /\
 (delPPerms (state s)) = (delPPerms (state s')) /\
-(resCont (state s)) = (resCont (state s')).
+(resCont (state s)) = (resCont (state s')) /\
+alreadyVerified (state s) = alreadyVerified (state s').
 
 End SemReceiveIntent.
 
@@ -1086,6 +1109,8 @@ exists (c:Cmp), map_apply iCmp_eq (running (state s)) ic = Value iCmp c.
 
 (* Postcondición de stop *)
 Definition post_stop (ic:iCmp)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* stopIns: Borrar la instancia en ejecución *)
 (forall (ic':iCmp)(c':Cmp), 
 map_apply iCmp_eq (running (state s')) ic' = Value iCmp c' ->
@@ -1151,6 +1176,8 @@ end.
 
 (* Postcondición de grantp *)
 Definition post_grantP (ic:iCmp)(cp:CProvider)(a:idApp)(u:uri)(pt:PType)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Todo otorgamiento que no sea el que estamos pisando, permanece igual *)
 (forall (a':idApp)(cp':CProvider)(u':uri)(pt':PType),
 map_apply delppermsdomeq (delPPerms (state s)) (a', cp', u') = Value (idApp*CProvider*uri) pt' -> 
@@ -1222,6 +1249,8 @@ end.
 
 (* Postcondición de revokedel *)
 Definition post_revokeDel (ic:iCmp)(cp:CProvider)(u:uri)(pt:PType)(s s':System) : Prop :=
+(* Already runned apps remain the same *)
+alreadyVerified (state s) = alreadyVerified (state s') /\
 (* Todo otorgamiento que no sea el que estamos pisando, permanece igual *)
 (forall (ic':iCmp)(cp':CProvider)(u':uri)(pt':PType),
 map_apply deltpermsdomeq (delTPerms (state s')) (ic', cp', u') = Value (iCmp*CProvider*uri) pt' -> 
@@ -1358,7 +1387,7 @@ forall g':idGrp, In g' lGrp -> ~In g' lGrp' -> a=a') /\
 map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp nil /\
 map_correct (grantedPermGroups (state s')).
 
-Definition markAsRunned (a: idApp) (s s': System): Prop :=
+Definition markAsVerified (a: idApp) (s s': System): Prop :=
 (* Mantenemos la información sobre las aplicaciones que no son a *)
 (forall a':idApp,
     In a' (alreadyVerified (state s)) ->
@@ -1384,7 +1413,7 @@ Definition post_verifyOldApp (a: idApp) (s s': System) :=
 (**
  * Marcamos a la aplicación como que ya fue ejecutada alguna vez
  *)
-markAsRunned a s s' /\
+markAsVerified a s s' /\
 (* Nada más cambia  *)
 (environment s = environment s') /\
 (apps (state s) = apps (state s')) /\

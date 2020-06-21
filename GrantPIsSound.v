@@ -21,6 +21,7 @@ Lemma grantPCorrect : forall (s:System) (ic:iCmp) (cp:CProvider) (a:idApp) (u:ur
 Proof.
     intros.
     unfold post_grantP.
+    split. simpl; auto.
     simpl in H.
     unfold pre_grantP in H;simpl in H.
     unfold grantP_post; simpl.

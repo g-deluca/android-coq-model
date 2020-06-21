@@ -27,6 +27,7 @@ Proof.
     unfold validstate.
     unfold pre_resolveIntent in H.
     unfold post_resolveIntent in H0.
+    destruct H0 as [verified H0].
     destruct_conj H0.
     
     unfold allCmpDifferent.

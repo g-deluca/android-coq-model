@@ -26,6 +26,7 @@ Proof.
     unfold validstate.
     unfold pre_grantP in H.
     unfold post_grantP in H0.
+    destruct H0 as [verifeid H0].
     destruct_conj H0.
     
     unfold allCmpDifferent.

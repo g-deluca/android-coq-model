@@ -24,6 +24,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_grant in H0.
+    destruct H0 as [verified H0].
     unfold pre_grant in H.
     destruct H.
     destruct_conj H0.

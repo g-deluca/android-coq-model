@@ -20,6 +20,7 @@ Lemma postRevokeCorrect : forall (s:System) (a:idApp) (p:Perm), (pre (revoke p a
 Proof.
     intros.
     unfold post_revoke.
+    split. simpl; auto.
     simpl in H.
     unfold pre_revoke in H;simpl in H.
     destruct H.

@@ -2296,7 +2296,8 @@ uninstall_post :: IdApp -> System -> System
 uninstall_post app0 s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
-  Sys (St (remove idApp_eq app0 (apps oldstate)) (alreadyVerified oldstate)
+  Sys (St (remove idApp_eq app0 (apps oldstate))
+  (remove idApp_eq app0 (alreadyVerified oldstate))
   (map_drop idApp_eq (grantedPermGroups oldstate) app0) (dropAppPerms s app0)
   (running oldstate) (dropAllPPerms s app0) (dropAllTPerms s app0)
   (dropAllRes (resCont oldstate) app0) (sentIntents oldstate)) (Env
@@ -2701,7 +2702,6 @@ receiveIntent_post intt ic a s =
     let {oldstate = state s} in
     let {oldenv = environment s} in
     let {runningicmps = map_getKeys (running oldstate)} in
-    let {newAlreadyVerified = (:) a (alreadyVerified oldstate)} in
     let {ic' = iCmpGenerator runningicmps} in
     let {
      newTPerms = case intType intt of {
@@ -2713,9 +2713,10 @@ receiveIntent_post intt ic a s =
                     Prelude.Nothing -> delTPerms oldstate};
                   _ -> delTPerms oldstate}}
     in
-    Sys (St (apps oldstate) newAlreadyVerified (grantedPermGroups oldstate)
-    (perms oldstate) (performRunCmp intt ic' c s) (delPPerms oldstate)
-    newTPerms (resCont oldstate)
+    Sys (St (apps oldstate) (alreadyVerified oldstate)
+    (grantedPermGroups oldstate) (perms oldstate)
+    (performRunCmp intt ic' c s) (delPPerms oldstate) newTPerms
+    (resCont oldstate)
     (remove sentIntentsElems_eq ((,) ic intt) (sentIntents oldstate))) oldenv;
    Prelude.Nothing -> s}
 

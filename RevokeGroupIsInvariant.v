@@ -25,6 +25,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_revokeGroup in H0.
+    destruct H0 as [verified H0].
     unfold pre_revokeGroup in H.
     destruct_conj H0.
     

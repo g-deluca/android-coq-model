@@ -50,6 +50,8 @@ Proof.
     unfold pre_receiveIntent in H.
     unfold post_receiveIntent in H0.
     destruct_conj H0.
+    assert (verified := H9). clear H9.
+    assert (H8 := H7). clear H7.
     
     unfold allCmpDifferent.
     split.

@@ -21,6 +21,7 @@ Lemma stopCorrect : forall (s:System) (ic:iCmp) (sValid: validstate s),
 Proof.
     intros.
     unfold post_stop.
+    split. simpl; auto.
     simpl in H.
     unfold pre_stop in H;simpl in H.
     destruct H.

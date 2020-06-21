@@ -28,6 +28,7 @@ Proof.
     unfold validstate.
     unfold pre_stop in H.
     unfold post_stop in H0.
+    destruct H0 as [verifeid H0].
     destruct_conj H0.
     
     unfold allCmpDifferent.

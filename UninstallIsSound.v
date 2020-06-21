@@ -26,7 +26,18 @@ Proof.
     unfold pre_uninstall in H;simpl in H.
     destruct H.
     unfold uninstall_post;simpl.
-    
+
+    split.
+    unfold removeFromVerified. simpl.
+    split. intros.
+    rewrite <- removeSthElse in H2.
+    destruct H2; auto.
+    split. intros.
+    destruct (idApp_eq a a').
+    auto.
+    left. rewrite <- removeSthElse. auto.
+    apply remove_In.
+
     split.
     unfold removeApp.
     unfold removeManifest.

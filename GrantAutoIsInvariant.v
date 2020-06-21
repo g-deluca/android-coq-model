@@ -13,6 +13,7 @@ Proof.
   unfold validstate.
   unfold pre_grantAuto in H.
   unfold post_grantAuto in H0.
+  destruct H0 as [verified H0].
   destruct_conj H.
   destruct_conj H0.
   split.

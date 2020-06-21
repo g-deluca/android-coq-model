@@ -20,6 +20,7 @@ Proof.
     intros.
     unfold post_write.
     unfold write_post.
+    split. simpl; auto.
     simpl.
     unfold writeResCont.
     destruct H.

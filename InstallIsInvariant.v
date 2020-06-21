@@ -256,6 +256,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_install in H0.
+    destruct H0 as [verified H0].
     unfold pre_install in H.
     destruct H.
     destruct H1.

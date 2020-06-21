@@ -20,6 +20,7 @@ Lemma resolveIntentCorrect : forall (s:System) (i:Intent) (a:idApp) (sValid: val
 Proof.
     intros.
     unfold post_resolveIntent.
+    split. simpl; auto.
     simpl in H.
     unfold pre_resolveIntent in H;simpl in H.
     destruct H.

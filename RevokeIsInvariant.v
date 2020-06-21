@@ -24,6 +24,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_revoke in H0.
+    destruct H0 as [verified H0].
     unfold pre_revoke in H.
     destruct H as [H maybeGrp].
     destruct_conj H0.

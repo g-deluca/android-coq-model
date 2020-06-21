@@ -22,6 +22,7 @@ Lemma postGrantCorrect : forall (s:System) (a:idApp) (p:Perm), (pre (grant p a) 
 Proof.
     intros.
     unfold post_grant.
+    split. simpl; auto.
     simpl in H.
     unfold pre_grant in H;simpl in H.
     destruct H.

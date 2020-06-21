@@ -869,7 +869,7 @@ Definition uninstall_post (app:idApp) (s:System) : System :=
     let oldenv := environment s in
     sys (st
             (remove idApp_eq app (apps oldstate))
-            (alreadyVerified oldstate)
+            (remove idApp_eq app (alreadyVerified oldstate))
             (map_drop idApp_eq (grantedPermGroups oldstate) app)
             (dropAppPerms s app)
             (running oldstate)
@@ -1278,7 +1278,6 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
         let oldstate := state s in
         let oldenv := environment s in
         let runningicmps := map_getKeys (running oldstate) in
-        let newAlreadyVerified := cons a (alreadyVerified oldstate) in
         let ic' := iCmpGenerator runningicmps in
         let newTPerms := match intType intt with
             | intActivity => match path (data intt) with
@@ -1290,7 +1289,7 @@ Definition receiveIntent_post (intt:Intent) (ic:iCmp) (a:idApp) (s:System) : Sys
             end in
         sys (st
                 (apps oldstate)
-                newAlreadyVerified
+                (alreadyVerified oldstate)
                 (grantedPermGroups oldstate)
                 (perms oldstate)
                 (performRunCmp intt ic' c s)

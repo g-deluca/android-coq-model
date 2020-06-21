@@ -34,6 +34,8 @@ Proof.
     destruct H.
     unfold onlyIntentsChanged in H0.
     destruct_conj H0.
+    assert (verified:= H9). clear H9.
+    assert (H8 := H7). clear H7.
     
     unfold allCmpDifferent.
     split.

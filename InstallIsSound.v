@@ -28,8 +28,10 @@ Proof.
     unfold isAppInstalled in H.
     apply notOrAndNot.
     auto.
-    destruct H1 as (H1, notExistsSysapp).
     
+    split. simpl. auto.
+
+    destruct H1 as (H1, notExistsSysapp).
     split.
     unfold addManifest; split;intros.
     unfold install_post;simpl.

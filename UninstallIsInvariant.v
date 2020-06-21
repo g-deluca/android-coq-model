@@ -128,6 +128,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_uninstall in H0.
+    destruct H0 as [verified H0].
     unfold pre_uninstall in H.
     destruct H.
     destruct_conj H0.

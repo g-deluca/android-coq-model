@@ -19,6 +19,7 @@ Lemma postRevokeGroupCorrect : forall (s:System) (a:idApp) (p:idGrp), (pre (revo
 Proof.
     intros.
     unfold post_revokeGroup.
+    split. simpl; auto.
     simpl in H.
     unfold pre_revokeGroup in H;simpl in H.
     destruct H.

@@ -25,6 +25,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_write in H0.
+    destruct H0 as [verified H0].
     unfold pre_write in H.
     destruct_conj H0.
     
