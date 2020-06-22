@@ -70,6 +70,15 @@ Proof.
     rewrite H4.
     apply in_eq.
 
+    assert (x<>verifyOldApp a) as xNotVerifyA.
+    unfold not; intros.
+    apply notVerified.
+    rewrite in_app_iff.
+    right.
+    rewrite H4.
+    apply in_eq.
+
+
     split.
     destruct H2.
     left.

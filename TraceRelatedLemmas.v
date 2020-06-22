@@ -93,15 +93,107 @@ Lemma alreadyVerifiedSame : forall
     (s:System)
     (sValid : validstate s)
     ( aInStep: In a (alreadyVerified (state (system (step s x)))))
+    (xNotVerifyA : x <> verifyOldApp a)
     (xNotUninstallA : x <> uninstall a),
     In a (alreadyVerified (state s)).
 Proof.
     intros.
     destruct x; simpl in *.
+
     unfold install_safe in *.
     case_eq (install_pre i m c l s);intros;rewrite H in aInStep;
       simpl in aInStep; auto.
-Admitted.
+
+    unfold uninstall_safe in *.
+    case_eq (uninstall_pre i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+    rewrite <- removeSthElse in aInStep.
+    destruct aInStep. auto.
+
+    (* @TODO: Create a tactic that encapsulates this steps *)
+    unfold grant_safe in *.
+    case_eq (grant_pre p i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold grantAuto_safe in *.
+    case_eq (grantAuto_pre p i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold revoke_safe in *.
+    case_eq (revoke_pre p i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold revokegroup_safe in *.
+    case_eq (revokegroup_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    auto.
+
+    unfold read_safe in *.
+    case_eq (read_pre i c u s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold write_safe in *.
+    case_eq (write_pre i c u v s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold startActivity_safe in *.
+    case_eq (startActivity_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold startActivity_safe in *.
+    case_eq (startActivity_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold startService_safe in *.
+    case_eq (startService_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold sendBroadcast_safe in *.
+    case_eq (sendBroadcast_pre i i0 o s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold sendBroadcast_safe in *.
+    case_eq (sendBroadcast_pre i i0 o s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold sendStickyBroadcast_safe in *.
+    case_eq (sendStickyBroadcast_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold resolveIntent_safe in *.
+    case_eq (resolveIntent_pre i i0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold receiveIntent_safe in *.
+    case_eq (receiveIntent_pre i i0 i1 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+    unfold receiveIntent_post in *.
+    destruct (maybeIntentForAppCmp i i1 i0 s); auto.
+
+    unfold stop_safe in *.
+    case_eq (stop_pre i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold grantP_safe in *.
+    case_eq (grantP_pre i c i0 u p s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold revokeDel_safe in *.
+    case_eq (revokeDel_pre i c u p s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold call_safe in *.
+    case_eq (call_pre i s0 s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+
+    unfold verifyOldApp_safe in *.
+    case_eq (verifyOldApp_pre i s);intros;rewrite H in aInStep;
+      simpl in aInStep; auto.
+    destruct aInStep.
+    rewrite H0 in xNotVerifyA.
+    contradiction. auto.
+Qed.
 
 Lemma manifestsSame : forall
         (x:Action)
