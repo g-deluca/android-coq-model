@@ -31,6 +31,7 @@ Definition witnessPerm :=
 
 Definition witnessState : State :=
     st (a1::a2::nil)
+       (a1::a2::nil)
        (addAppValue (list idGrp) a2 nil (addAppValue (list idGrp) a1 nil emptyPermGroups))
        (addAppValue (list Perm) a2 nil (addAppValue (list Perm) a1 nil emptyPerms))
        emptyRunning
@@ -352,7 +353,7 @@ Proof.
     destruct H2.
     inversion H2.
     destruct H1.
-    destruct H1.
+    inversion H1. inversion H1.
     destruct H1; inversion H1.
     destruct H1; inversion H1.
 Qed.
