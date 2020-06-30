@@ -7,6 +7,7 @@ Require Import ValidStateLemmas.
 Require Import EqTheorems.
 Require Import Tacticas.
 Require Import Classical.
+Require Import FunInd.
 
 Section TraceRelatedProperties.
 Lemma lastTraceApp : forall (initState:System) l x y, last (trace initState (l ++ x :: nil)) y = system (step (last (trace initState l) initState) x).
