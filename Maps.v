@@ -4,6 +4,8 @@
 
 Require Import List.
 Require Import Classical.
+Require Import FunInd.
+
 
 Set Implicit Arguments.
 

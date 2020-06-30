@@ -15,6 +15,7 @@ Require Import RuntimePermissions.
 Require Import ListAuxFuns.
 Require Import ValidStateLemmas.
 Require Import Omega.
+Require Import FunInd.
 Require Export Coq.Arith.PeanoNat.
 Import PeanoNat.Nat.
 
