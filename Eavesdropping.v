@@ -144,26 +144,64 @@ intro H_or.
 elim H_or;
 clear H_or.
 
-(*caso 4: pl p = dangerous /\ ... *)
-intro H_conj.
-destruct H_conj as [H_pl H_exists].
-rewrite H_pl in H_pl_p.
-elim H_pl_p;
-intro H_dan;
-[absurd (dangerous = signature); [discriminate | ] | absurd (dangerous = signatureOrSys); [discriminate | ]];
-assumption.
 
-intro H_or.
-elim H_or;
-clear H_or.
-
-(*caso 5: (pl p = signature \/ pl p = signatureOrSys) /\ ...*)
+(*caso 4: (pl p = signature \/ pl p = signatureOrSys) /\ ...*)
 intro H_conj.
 destruct H_conj as [H_or H_exists].
 destruct H_exists as [c'' H_conj].
 destruct H_conj as [H_certOf_a'_2 H_certDef_p_2].
 replace c'' with c' in *.
 absurd (RuntimePermissions.certOfDefiner p c' s); assumption.
+elim H_certOf_a'_2; elim H_certOf_a'; intros.
+
+(*caso 4.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
+map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
+rewrite H in H0.
+inversion_clear H0.
+reflexivity.
+
+(*caso 4.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+	    idSI sysapp = a' /\ certSI sysapp = c' y
+	    map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
+elim H.
+intros sysapp H_conj.
+destruct H_conj as [H_sysapp_env H_conj].
+destruct H_conj as [H_sysapp_a' H_cert_sysapp].
+assert (idSI sysapp <> a') as H_not_sysapp_a'.
+apply (H_forall sysapp H_sysapp_env).
+absurd (idSI sysapp = a'); assumption.
+
+(*caso 4.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
+	    exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+	    idSI sysapp = a' /\ certSI sysapp = c''*)
+elim H0.
+intros sysapp H_conj.
+destruct H_conj as [H_sysapp_env H_conj].
+destruct H_conj as [H_sysapp_a' H_cert_sysapp].
+assert (idSI sysapp <> a') as H_not_sysapp_a'.
+apply (H_forall sysapp H_sysapp_env).
+absurd (idSI sysapp = a'); assumption.
+
+(*caso 4.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+            idSI sysapp = a' /\ certSI sysapp = c' y 
+            exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+            idSI sysapp = a' /\ certSI sysapp = c*)
+elim H0.
+intros sysapp H_conj.
+destruct H_conj as [H_sysapp_env H_conj].
+destruct H_conj as [H_sysapp_a' H_cert_sysapp].
+assert (idSI sysapp <> a') as H_not_sysapp_a'.
+apply (H_forall sysapp H_sysapp_env).
+absurd (idSI sysapp = a'); assumption.
+
+
+(*caso 5: pl p = signatureOrSys /\ ... *)
+intro H_conj.
+destruct H_conj as [H_pl_p_2 H_exists].
+destruct H_exists as [c'' H_conj].
+destruct H_conj as [H_certOf_a'_2 H_manufacturerCert_c''].
+replace c'' with c' in *.
+absurd (c' = RuntimePermissions.manufacturerCert); assumption.
 elim H_certOf_a'_2; elim H_certOf_a'; intros.
 
 (*caso 5.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
@@ -205,63 +243,4 @@ destruct H_conj as [H_sysapp_a' H_cert_sysapp].
 assert (idSI sysapp <> a') as H_not_sysapp_a'.
 apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
-
-
-(*caso 6: pl p = signatureOrSys /\ ... *)
-intro H_conj.
-destruct H_conj as [H_pl_p_2 H_exists].
-destruct H_exists as [c'' H_conj].
-destruct H_conj as [H_certOf_a'_2 H_manufacturerCert_c''].
-replace c'' with c' in *.
-absurd (c' = RuntimePermissions.manufacturerCert); assumption.
-elim H_certOf_a'_2; elim H_certOf_a'; intros.
-
-(*caso 6.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
-map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
-rewrite H in H0.
-inversion_clear H0.
-reflexivity.
-
-(*caso 6.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
-	    idSI sysapp = a' /\ certSI sysapp = c' y
-	    map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
-elim H.
-intros sysapp H_conj.
-destruct H_conj as [H_sysapp_env H_conj].
-destruct H_conj as [H_sysapp_a' H_cert_sysapp].
-assert (idSI sysapp <> a') as H_not_sysapp_a'.
-apply (H_forall sysapp H_sysapp_env).
-absurd (idSI sysapp = a'); assumption.
-
-(*caso 6.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
-	    exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
-	    idSI sysapp = a' /\ certSI sysapp = c''*)
-elim H0.
-intros sysapp H_conj.
-destruct H_conj as [H_sysapp_env H_conj].
-destruct H_conj as [H_sysapp_a' H_cert_sysapp].
-assert (idSI sysapp <> a') as H_not_sysapp_a'.
-apply (H_forall sysapp H_sysapp_env).
-absurd (idSI sysapp = a'); assumption.
-
-(*caso 6.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
-            idSI sysapp = a' /\ certSI sysapp = c' y 
-            exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
-            idSI sysapp = a' /\ certSI sysapp = c*)
-elim H0.
-intros sysapp H_conj.
-destruct H_conj as [H_sysapp_env H_conj].
-destruct H_conj as [H_sysapp_a' H_cert_sysapp].
-assert (idSI sysapp <> a') as H_not_sysapp_a'.
-apply (H_forall sysapp H_sysapp_env).
-absurd (idSI sysapp = a'); assumption.
 Qed.
-
-
-
-
-
-
-
-
-
