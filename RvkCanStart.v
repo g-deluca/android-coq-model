@@ -106,7 +106,8 @@ Proof.
     rewrite existsb_exists.
     exists p.
     destruct Perm_eq;auto.
-    rewrite H8.
+    rewrite H8. simpl.
+    rewrite pUngrouped.
     auto.
     assert (~appHasPermission a1 p (system (step initState (revoke p a1)))).
     apply revokeAndNotGrantProof with (initState:=initState) (sndState := (system (step initState (revoke p a1)))) (l:=nil);auto.
@@ -161,13 +162,6 @@ Proof.
     inversion H8.
     destruct H8.
     destruct H8.
-    destruct H9.
-    destruct H9.
-    destruct H9.
-    rewrite pUngrouped in H9.
-    inversion H9.
-    destruct H8.
-    destruct H8.
-    destruct H8;inversion H8.
-    destruct H8;inversion H8.
+    destruct H8; inversion H8.
+    destruct H8; inversion H8.
 Qed.

@@ -22,59 +22,17 @@ Require Import Trace.
 Require Import DelegateGrantPRevoke.
 Require Import RvkAndNotGrant.
 Require Import IfPermThenGranted.
-Require Import HasPermAndNotGranted.
 Require Import DangPermMissing.
 Require Import RvkCanStart.
+Require Import IfOldAppRunThenVerified.
 
 Section ModelProperties.
 
     (* Permission Groups *)
-    (* Prueba 1 *)
-
-(* En un estado valido,no puede otorgarse individualmente un permiso peligroso peligroso agrupado *)
-    Theorem noGranularityForIndividualPerms : forall 
-        (s s':System)
-        (p:Perm)
-        (g:idGrp)
-        (a:idApp)
-        ,maybeGrp p = Some g -> ~ exec s (grant p a) s' ok.
-Proof.
-    intro.
-    intro.
-    intro.
-    intro.
-    intro.
-    intro pGrouped.
-    unfold not;intros.
-    destruct H.
-    destruct H0.
-    destruct_conj H0.
-    simpl in H0.
-    unfold pre_grant in H0.
-    destruct_conj H0.
-    rewrite pGrouped in H7.
-    discriminate H7.
-    destruct H0.
-    destruct_conj H0.
-    discriminate H1.
-Qed.
-
-    (* Prueba 2*)
-
-(* Existe un estado válido en el cual una app tiene un permiso peligroso ajeno sin tenerlo individualmente otorgado *)
-    Theorem hasPermissionAndNotGranted : exists 
-        (s:System)
-        (p:Perm)
-        (a:idApp)
-        (permsA : list Perm)
-        , validstate s /\ pl p = dangerous /\ map_apply idApp_eq (perms (state s)) a = Value idApp permsA /\ ~In p permsA /\ ~In p (getDefPermsForApp a s) /\ appHasPermission a p s.
-Proof.
-    apply hasPermissionAndNotGrantedProof.
-Qed.
-
     (*Internet access irrestricted*)
 
-(* En un estado válido, si una llamada al sistema requiere sólo permisos normales, entonces cualquier instancia en ejecución cuya aplicación liste los permisos correspondientes como usados puede ejecutar la llamada *)
+(* En un estado válido, si una llamada al sistema requiere sólo permisos normales, entonces cualquier instancia en ejecución cuya aplicación liste los permisos
+ * correspondientes como usados puede ejecutar la llamada *)
     Theorem sacProtectedWithNormalPerms : forall
         (s:System)
         (access_internet:SACall)
@@ -124,7 +82,7 @@ Qed.
 
     (* Missing permissions *)
     
-    (* Existe un estado válido en el que una aplicación instalada no tiene un permiso peligroso existente a pesar de que lo lista como usado *)
+    (* Existe un estado válido en el que una aplicación instalada no tiene un permiso peligroso existente a pesar de que lo lista como usado. *)
     Theorem dangerousPermMissing : exists 
     (s:System)
     (p:Perm)
@@ -136,7 +94,10 @@ Qed.
 
     (* Delegated permissions *)
 
-(* En todo estado válido, si se le otorga correctamente un permiso p a una aplicación a que tiene uno de sus componentes ejecutándose con identificador ic; quien luego delega un permiso de lectura a una aplicación a' sobre un uri de un contentProvider de lectura protegida por p, y más tarde se le quita el permiso p a a, posteriormente si una instancia en ejecución de un componente de a' intenta leer dicho uri de cp, podrá hacerlo correctamente *)
+(* En todo estado válido, si se le otorga correctamente un permiso p a una aplicación a que tiene uno de sus componentes ejecutándose
+ * con identificador ic; quien luego delega un permiso de lectura a una aplicación a' sobre un uri de un contentProvider de lectura protegida
+ * por p, y más tarde se le quita el permiso p a a, posteriormente si una instancia en ejecución de un componente de a' intenta leer dicho uri
+ * de cp, podrá hacerlo correctamente *)
 
     Theorem delegateGrantPRevoke : forall 
         (s:System)
@@ -164,8 +125,8 @@ Proof.
 Qed.
 
 
-    (* Others *)
-(* Para todo estado inicial válido en el cual una aplicación a no tiene un permiso peligroso no agrupado p, si al final de una serie de operaciones a pasa a contar con tal permiso a pesar de nunca haber sido desinstalada, entonces en algún momento le fue otorgado *)
+(* Para todo estado inicial válido en el cual una aplicación A no tiene un permiso peligroso  P, si al final de una serie de operaciones en
+ * la que A no es desinstalada, A pasa a contar con tal permiso; entonces en algún momento el permiso P le fue otorgado *)
     Theorem ifPermThenGranted : forall
         (initState lastState:System)
         (a:idApp)
@@ -179,13 +140,14 @@ Qed.
         ~appHasPermission a p initState->
         ~In (uninstall a) l->
          last (trace initState l) initState = lastState->
-        In (grant p a) l.
+        In (grant p a) l \/ In (grantAuto p a) l.
 Proof.
     intros.
     apply (ifPermThenGrantedProof initState lastState);auto.
 Qed.
 
-(* Si en un estado inicial válido se le revoca correctamente un permiso p a una aplicación a, mientras la aplicación no sea desinstalada ni el permiso reotorgado, la aplicación no contará con él *)
+(* Si en un estado inicial válido se le revoca correctamente un permiso p a una aplicación a, mientras la aplicación no sea desinstalada
+ * ni el permiso reotorgado, la aplicación no contará con él *)
     Theorem revokeAndNotGrant : forall
         (initState sndState lastState:System)
         (a:idApp)
@@ -193,20 +155,22 @@ Qed.
         (l:list Action),
         validstate initState->
         pl p=dangerous->
-        maybeGrp p = None->
         (~exists lPerm : list Perm, map_apply idApp_eq (defPerms (environment initState)) a = Value idApp lPerm /\ In p lPerm) ->
         sndState = system (step initState (revoke p a))->
         response (step initState (revoke p a))=ok->
         ~In (uninstall a) l->
         ~In (grant p a) l->
+        ~In (grantAuto p a) l ->
         last (trace sndState l) sndState = lastState->
         ~appHasPermission a p lastState.
 Proof.
     intros.
-    apply (revokeAndNotGrantProof initState sndState lastState H a p H0 H1 H2 H3 H4 l);auto.
+    apply (revokeAndNotGrantProof initState sndState lastState H a p H0 H1 H2 H3 l);auto.
 Qed.
 
-(* En todo estado válido en donde un componente c1 tiene la potestad de iniciar a una actividad c2 de otra aplicación protegida por un permiso peligroso no agrupado p que no es definido por la aplicación en donde se encuentra c1, existen ciertas acciones que hacen que pierda la posibilidad de hacerlo a pesar de que ninguna de las dos aplicaciones haya sido desinstalada *)
+(* En todo estado válido en donde un componente c1 tiene la potestad de iniciar a una actividad c2 de otra aplicación protegida por
+ * un permiso peligroso no agrupado p que no es definido por la aplicación en donde se encuentra c1, existen ciertas acciones que hacen
+ * que pierda la posibilidad de hacerlo a pesar de que ninguna de las dos aplicaciones haya sido desinstalada *)
     Theorem revokeCanStart : forall
         (initState:System)
         (l:list Action)
@@ -229,6 +193,56 @@ Qed.
         ~canStart c1 (cmpAct act) (last (trace initState l) initState).
 Proof.
     apply revokeCanStartProof.
+Qed.
+
+
+(* Para todo estado inicial válido en el que existe una aplicación 'a' vieja y no verificada, si luego de una serie de operaciones
+ * 'a' en la que 'a' no se desinstala, 'a' está en condiciones de ser ejecutada; entonces alguna de esas operaciones fue la que la
+ * verificó *)
+    Theorem ifOldAppRunThenVerified : forall 
+        (initState lastState: System)
+        (a: idApp)
+        (l: list Action)
+        (aInstalled:In a (apps (state initState)) \/ (exists x0, In x0 (systemImage (environment initState)) /\ idSI x0 = a))
+        (vsInit: validstate initState)
+        (oldApp: isOldApp a initState)
+        (notVerified: ~(In a (alreadyVerified (state initState))))
+        (canRunLastState: canRun a lastState)
+        (aIsTheSame : ~ In (uninstall a) l)
+        (fromInitToLast: last (trace initState l) initState  = lastState),
+        In (verifyOldApp a) l.
+Proof.
+    apply ifOldAppRunThenWasVerifiedProof.
+Qed.
+
+(*
+ * Este teorema establece que el sistema no puede otorgar automáticamente un permiso (peligroso) 
+ * agrupado si el grupo del mismo no ha sido previamente otorgado a través de un grant de usuario.
+ *)
+Theorem cannotAutoGrantWithoutGroup :
+  forall (s s': System) (p: Perm) (g: idGrp) (a: idApp),
+    pl p = dangerous ->
+    maybeGrp p = Some g ->
+    ~ (exists (lGroup: list idGrp),
+      map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp lGroup /\ In g lGroup) ->
+    ~ exec s (grantAuto p a) s' ok.
+Proof.
+  intros s s' p g a dangerousPerm groupedPerm notInGrantedGroups.
+  unfold not; intro execGrantAuto.
+  unfold exec in execGrantAuto.
+  destruct execGrantAuto as [_ [ok | notOk]].
+- destruct ok as [_ [preGrantAuto _]].
+  unfold pre, pre_grantAuto in preGrantAuto.
+  destruct preGrantAuto as [_ [_ [_ [_ existsPermGroup]]]].
+  destruct existsPermGroup as [g' [lGroup H]].
+  destruct H as [groupedPerm' [groupListOfA gInList]].
+  rewrite groupedPerm in groupedPerm'.
+  inversion groupedPerm' as [gEquals].
+  rewrite <- gEquals in gInList.
+  destruct notInGrantedGroups.
+  exists lGroup. auto.
+- destruct notOk as [ec [absurd _]].
+  inversion absurd.
 Qed.
 
 
