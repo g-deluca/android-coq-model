@@ -246,6 +246,9 @@ Proof.
   inversion absurd.
 Qed.
 
+
+(* Este teorema postula que una aplicación vieja que no ha sido verificada por el usuario
+ * no puede recibir intents. *)
 Theorem notVerifiedOldAppCantReceive :
   forall (s s' : System) (i: Intent) (ic: iCmp) (a: idApp),
     validstate s ->
@@ -279,6 +282,34 @@ Proof.
   inversion H.
 Qed.
 
+(* Este teorema demuestra que la operación de borrar un grupo respeta la política
+ * de granularidad de Android y elimina todos los permisos correspondientes a ese
+ * grupo que han sido otorgados individualmente. *)
+Theorem revokeGroupRevokesIndividualPerms :
+  forall (s s': System) (g: idGrp) (a: idApp),
+    validstate s ->
+    exec s (Operaciones.revokePermGroup g a) s' ok ->
+    ~ (exists (p: Perm) (permsA: list Perm),
+        map_apply idApp_eq (perms (state s')) a = Value idApp permsA /\ In p permsA /\ maybeGrp p = Some g).
+Proof.
+  intros s s' g a vs revoke.
+  unfold not; intro H.
+  destruct H as [p [permsA [H1 [H2 H3]]]].
+  unfold exec in revoke.
+  destruct revoke as [_ H].
+  destruct H.
+- destruct H as [_ [pre post]].
+  simpl in post. unfold post_revokeGroup in post.
+  destruct post as [_ [_ [postPerms _]]].
+  unfold revokeGroupedPerms in postPerms.
+  destruct postPerms as [_ [_ [H _]]].
+  destruct H as [permsA' [H4 H]].
+  rewrite H4 in H1. inversion H1.
+  rewrite H5 in H. apply H in H3.
+  contradiction.
+- destruct H as [ec [H _]].
+  inversion H.
+Qed.
 
 
 
