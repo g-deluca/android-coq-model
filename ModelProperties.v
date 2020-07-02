@@ -1,5 +1,6 @@
 (* En este archivo se postulan y demuestran propiedades sobre
 *  el modelo y sobre la implementación desarrollada de él *)
+Require Import Coq.Arith.Lt.
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.
@@ -244,6 +245,41 @@ Proof.
 - destruct notOk as [ec [absurd _]].
   inversion absurd.
 Qed.
+
+Theorem notVerifiedOldAppCantReceive :
+  forall (s s' : System) (i: Intent) (ic: iCmp) (a: idApp),
+    validstate s ->
+    isOldApp a s -> (* La aplicación es vieja *)
+    ~ (In a (alreadyVerified (state s))) -> (* y no está verificada*)
+    ~ exec s (receiveIntent i ic a) s' ok.
+Proof.
+  intros s s' i ic a vs oldApp notVerified.
+  unfold not; intro receiveIntent.
+  unfold exec in receiveIntent.
+  destruct receiveIntent as [_ H].
+  destruct H.
+- destruct H as [_ [pre _]].
+  simpl in pre. unfold pre_receiveIntent in pre.
+  destruct pre as [H _].
+  unfold canRun, isOldApp in *.
+  destruct H.
+* contradiction.
+* destruct oldApp as [m [n [isM [target H1]]]]. 
+  destruct H as [m' [n' [isM' [target' H2]]]].
+  assert (m=m').
+  apply (sameAppSameManifest s vs a); auto.
+  rewrite H in target.
+  rewrite target' in target.
+  inversion target.
+  rewrite H3 in H2.
+  assert (n<n).
+  apply (lt_trans n vulnerableSdk); auto.
+  apply lt_irrefl in H0; auto.
+- destruct H as [ec [H _]].
+  inversion H.
+Qed.
+
+
 
 
 End ModelProperties.
