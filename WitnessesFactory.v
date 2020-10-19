@@ -55,6 +55,6 @@ Definition emptyManifests:= map_empty idApp Manifest.
 Definition emptyCerts:= map_empty idApp Cert.
 Definition emptyDefPerms:= map_empty idApp (list Perm).
 
-Definition simpleManifest (hisCmps : list Cmp) (permsUsed : list idPerm) (permsDeclared : list Perm) :=
+Definition simpleManifest (hisCmps : list Cmp) (permsUsed : list Perm) (permsDeclared : list Perm) :=
     mf hisCmps (Some 23) (Some 23) permsUsed permsDeclared None.
 

@@ -40,7 +40,7 @@ Definition appHasPermission (idapp:idApp) (p:Perm) (s:System) : Prop :=
     permExists p s /\
     (exists m:Manifest,
         isManifestOfApp idapp m s /\
-        In (idP p) (use m)) /\ (* Lo lista como usado y ademas *)
+        In p (use m)) /\ (* Lo lista como usado y ademas *)
     ((exists lPerm:list Perm, map_apply idApp_eq (defPerms (environment s)) idapp = Value idApp lPerm /\ In p lPerm) \/ (* Lo define el mismo o *)
     pl p=normal \/ (* el permiso es de peligro normal o *)
     ((pl p=signature \/ pl p=signatureOrSys) /\ (* el permiso es de tipo signature o signatureorsys y *)

@@ -2139,12 +2139,12 @@ Proof.
     assert (getManifestForApp a s=x).
     apply getMfstForAppCorrect;auto.
     rewrite H3.
-    assert (InBool idPerm idPerm_eq (idP p) (use x)=true).
+    assert (InBool Perm Perm_eq p (use x)=true).
     unfold InBool.
     rewrite existsb_exists.
-    exists (idP p).
+    exists p.
     split;auto.
-    destruct idPerm_eq;auto.
+    destruct Perm_eq;auto.
     rewrite H4.
     destruct H1.
     destruct H1.
@@ -2253,14 +2253,14 @@ Proof.
     apply inUsrDefPermsIff;auto.
     discriminate H2.
     
-    case_eq (InBool idPerm idPerm_eq (idP p) (use (getManifestForApp a s)));intros;rewrite H1 in H0.
+    case_eq (InBool Perm Perm_eq p (use (getManifestForApp a s)));intros;rewrite H1 in H0.
     rewrite <-isAppInstalled_iff in H.
     split.
     unfold InBool in H1.
     rewrite existsb_exists in H1.
     destruct H1.
     destruct H1.
-    destruct idPerm_eq in H2.
+    destruct Perm_eq in H2.
     rewrite e.
     exists (getManifestForApp a s).
     split;auto.

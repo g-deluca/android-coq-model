@@ -39,7 +39,7 @@ Section ModelProperties.
         (access_internet:SACall)
         (c:Cmp)
         (ic:iCmp)
-        , validstate s -> (forall (p:Perm) (pIsSystem : isSystemPerm p) (pIsRequired : permSAC p pIsSystem access_internet), pl p = normal) -> (forall (p:Perm) (pIsSystem : isSystemPerm p) (pIsRequired : permSAC p pIsSystem access_internet), In (idP p) (use (getManifestForApp (getAppFromCmp c s) s))) -> (map_apply iCmp_eq (running (state s)) ic = Value iCmp c) -> exec s (call ic access_internet) s ok.
+        , validstate s -> (forall (p:Perm) (pIsSystem : isSystemPerm p) (pIsRequired : permSAC p pIsSystem access_internet), pl p = normal) -> (forall (p:Perm) (pIsSystem : isSystemPerm p) (pIsRequired : permSAC p pIsSystem access_internet), In p (use (getManifestForApp (getAppFromCmp c s) s))) -> (map_apply iCmp_eq (running (state s)) ic = Value iCmp c) -> exec s (call ic access_internet) s ok.
 Proof.
     intro.
     intro.
@@ -88,7 +88,7 @@ Qed.
     (s:System)
     (p:Perm)
     (a:idApp)
-    , validstate s /\ pl p=dangerous /\ permExists p s /\ In a (apps (state s)) /\ In (idP p) (use (getManifestForApp a s)) /\ ~appHasPermission a p s.
+    , validstate s /\ pl p=dangerous /\ permExists p s /\ In a (apps (state s)) /\ In p (use (getManifestForApp a s)) /\ ~appHasPermission a p s.
 Proof.
     apply dangerousPermMissingProof.
 Qed.

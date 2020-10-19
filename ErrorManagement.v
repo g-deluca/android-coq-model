@@ -88,7 +88,7 @@ match action with
         end
    | grant p a => match ec with
         (* Se quiere otorgar un permiso no marcado como usado *)
-        | perm_not_in_use => ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In (idP p) (use m))
+        | perm_not_in_use => ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In p (use m))
         (* Se quiere otorgar un permiso inexistente *)
         | no_such_perm => ~(isSystemPerm p \/ usrDefPerm p s)
         (* Se quiere reotorgar un permiso ya otorgado *)
@@ -102,7 +102,7 @@ match action with
         end
    | grantAuto p a => match ec with
         (* Se quiere otorgar un permiso no marcado como usado *)
-        | perm_not_in_use => ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In (idP p) (use m))
+        | perm_not_in_use => ~(exists m:Manifest, map_apply idApp_eq (manifest (environment s)) a = Value idApp m /\ In p (use m))
         (* Se quiere otorgar un permiso inexistente *)
         | no_such_perm => ~(isSystemPerm p \/ usrDefPerm p s)
         (* Se quiere reotorgar un permiso ya otorgado *)

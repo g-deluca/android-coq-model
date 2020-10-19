@@ -243,7 +243,7 @@ Definition dropAllRes (resCont : mapping (idApp*res) Val) (app:idApp) : mapping 
         dropAll (idApp * res) Val rescontdomeq filteredkeys resCont.
 
 (* Retorna la lista de permisos que la aplicación lista como usados *)
-Definition permsInUse (app:idApp) (s:System) : list idPerm :=
+Definition permsInUse (app:idApp) (s:System) : list Perm :=
     match map_apply idApp_eq (manifest (environment s)) app with
     | Error _ _ => hd nil (map (fun sysapp => use (manifestSI sysapp)) (filter (fun sysapp => If idApp_eq app (idSI sysapp) then true else false) (systemImage (environment s))))
     | Value _ m => use m
@@ -415,7 +415,7 @@ Definition appHasPermissionBool (idapp:idApp) (p:Perm) (s:System) : bool :=
     (InBool Perm Perm_eq p (grantedPermsForApp idapp s) ||
     let mfst := getManifestForApp idapp s in
         (* la app lo lista como usado y además *)
-        if InBool idPerm idPerm_eq (idP p) (use mfst) then
+        if InBool Perm Perm_eq p (use mfst) then
            let defPerms := getDefPermsForApp idapp s in
                 (* El permiso es definido por ella o *)
                 if InBool idApp idApp_eq idapp (apps (state s)) && InBool Perm Perm_eq p defPerms then true
@@ -826,13 +826,44 @@ Definition install_pre (app:idApp) (m:Manifest) (c:Cert) (lRes : list res) (s:Sy
     if (anyDefinesIntentFilterIncorrectly (cmp m)) then (Some faulty_intent_filter) else
     None.
 
+Definition isPermNormal (p: Perm) : bool :=
+  match pl p with
+    | normal => true
+    | _ => false
+  end.
+
+Definition getGroupFromPermAsList (p: Perm) : list idGrp :=
+  match maybeGrp p with
+    | Some g => (g::nil)
+    | None => nil
+  end.
+
+Parameter defaultGroup : idGrp.
+
+Definition getGroupFromPerm (p: Perm) : idGrp :=
+  match maybeGrp p with
+    | Some g => g
+    | None => defaultGroup (* No pasa nunca *)
+  end.
+
+
+
 Definition install_post (app:idApp) (m:Manifest) (c:Cert) (lRes : list res) (s:System) : System :=
     let oldstate := state s in
     let oldenv := environment s in
-    sys (st
+    let normalAndGroupedPerms := 
+      filter (fun p => (isPermNormal p) && (isSomethingBool idGrp (maybeGrp p))) (use m) in
+    let groupsToAdd := map getGroupFromPerm normalAndGroupedPerms in
+(*
+    let groupsToAddWithRepetition := 
+      fold_left (fun accum elem => accum ++ (getGroupFromPerm elem)) normalAndGroupedPerms nil in 
+    let groupsToAdd := 
+      fold_left (fun accum elem => if (InBool idGrp idGrp_eq elem accum) then accum else elem::accum) groupsToAddWithRepetition nil in
+*) 
+   sys (st
             (app :: (apps oldstate))
             (alreadyVerified oldstate)
-            (map_add idApp_eq (grantedPermGroups oldstate) app nil)
+            (map_add idApp_eq (grantedPermGroups oldstate) app groupsToAdd)
             (map_add idApp_eq (perms oldstate) app nil)
             (running oldstate)
             (delPPerms oldstate)
@@ -895,7 +926,7 @@ End ImplUninstall.
 Section ImplGrant.
 
 Definition grant_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
-    if (negb (InBool idPerm idPerm_eq (idP p) (permsInUse app s))) then Some perm_not_in_use else
+    if (negb (InBool Perm Perm_eq p (permsInUse app s))) then Some perm_not_in_use else
     if (negb (InBool Perm Perm_eq p (getAllPerms s))) then Some no_such_perm else
     if (InBool Perm Perm_eq p (grantedPermsForApp app s)) then Some perm_already_granted else
     if (If permLevel_eq (pl p) (dangerous) then false else true) then Some perm_not_dangerous else
@@ -935,7 +966,7 @@ End ImplGrant.
 Section ImplGrantAuto.
 
 Definition grantAuto_pre (p:Perm) (app:idApp) (s:System) : option ErrorCode :=
-    if (negb (InBool idPerm idPerm_eq (idP p) (permsInUse app s))) then Some perm_not_in_use else
+    if (negb (InBool Perm Perm_eq p (permsInUse app s))) then Some perm_not_in_use else
     if (negb (InBool Perm Perm_eq p (getAllPerms s))) then Some no_such_perm else
     if (InBool Perm Perm_eq p (grantedPermsForApp app s)) then Some perm_already_granted else
     if (If permLevel_eq (pl p) (dangerous) then false else true) then Some perm_not_dangerous else

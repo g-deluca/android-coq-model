@@ -41,7 +41,7 @@ Definition witnessState : State :=
        nil.
 
 Definition a1Mfst :=
-    simpleManifest nil (witnessPermId :: nil) nil.
+    simpleManifest nil (witnessPerm :: nil) nil.
 
 Definition a2Mfst :=
     simpleManifest nil nil (witnessPerm::nil).
@@ -133,7 +133,7 @@ Qed.
     (s:System)
     (p:Perm)
     (a:idApp)
-    , validstate s /\ pl p=dangerous /\ permExists p s /\ In a (apps (state s)) /\ In (idP p) (use (getManifestForApp a s)) /\ ~appHasPermission a p s.
+    , validstate s /\ pl p=dangerous /\ permExists p s /\ In a (apps (state s)) /\ In p (use (getManifestForApp a s)) /\ ~appHasPermission a p s.
 Proof.
     exists witnessSys, witnessPerm, a1.
     assert (idappa12:=idAppa1a2Right).

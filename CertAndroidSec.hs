@@ -483,7 +483,7 @@ cert_eq :: Cert -> Cert -> Prelude.Bool
 cert_eq = \x y -> x Prelude.== y
 
 data Manifest =
-   Mf (([]) Cmp) (Prelude.Maybe Nat) (Prelude.Maybe Nat) (([]) IdPerm) 
+   Mf (([]) Cmp) (Prelude.Maybe Nat) (Prelude.Maybe Nat) (([]) Perm0) 
  (([]) Perm0) (Prelude.Maybe Perm0)
 
 cmp :: Manifest -> ([]) Cmp
@@ -501,7 +501,7 @@ targetSdk m =
   case m of {
    Mf _ _ targetSdk0 _ _ _ -> targetSdk0}
 
-use :: Manifest -> ([]) IdPerm
+use :: Manifest -> ([]) Perm0
 use m =
   case m of {
    Mf _ _ _ use0 _ _ -> use0}
@@ -1486,7 +1486,7 @@ dropAllRes resCont0 app0 =
   in
   dropAll rescontdomeq filteredkeys resCont0
 
-permsInUse :: IdApp -> System -> ([]) IdPerm
+permsInUse :: IdApp -> System -> ([]) Perm0
 permsInUse app0 s =
   case map_apply idApp_eq (manifest (environment s)) app0 of {
    Value m -> use m;
@@ -1684,7 +1684,7 @@ appHasPermissionBool idapp p s =
       (isAppInstalledBool idapp s))
     ((Prelude.||) (inBool perm_eq p (grantedPermsForApp idapp s))
       (let {mfst = getManifestForApp idapp s} in
-       case inBool idPerm_eq (idP p) (use mfst) of {
+       case inBool perm_eq p (use mfst) of {
         Prelude.True ->
          let {defPerms0 = getDefPermsForApp idapp s} in
          case (Prelude.&&) (inBool idApp_eq idapp (apps (state s)))
@@ -2249,12 +2249,34 @@ install_pre app0 m _ _ s =
              Prelude.True -> Prelude.Just Faulty_intent_filter;
              Prelude.False -> Prelude.Nothing}}}}}}
 
+isPermNormal :: Perm0 -> Prelude.Bool
+isPermNormal p =
+  case pl p of {
+   Normal -> Prelude.True;
+   _ -> Prelude.False}
+
+defaultGroup :: IdGrp
+defaultGroup =
+  Prelude.error "AXIOM TO BE REALIZED"
+
+getGroupFromPerm :: Perm0 -> IdGrp
+getGroupFromPerm p =
+  case maybeGrp p of {
+   Prelude.Just g -> g;
+   Prelude.Nothing -> defaultGroup}
+
 install_post :: IdApp -> Manifest -> Cert -> (([]) Res) -> System -> System
 install_post app0 m c lRes s =
   let {oldstate = state s} in
   let {oldenv = environment s} in
+  let {
+   normalAndGroupedPerms = filter (\p ->
+                             (Prelude.&&) (isPermNormal p)
+                               (isSomethingBool (maybeGrp p))) (use m)}
+  in
+  let {groupsToAdd = map getGroupFromPerm normalAndGroupedPerms} in
   Sys (St ((:) app0 (apps oldstate)) (alreadyVerified oldstate)
-  (map_add idApp_eq (grantedPermGroups oldstate) app0 ([]))
+  (map_add idApp_eq (grantedPermGroups oldstate) app0 groupsToAdd)
   (map_add idApp_eq (perms oldstate) app0 ([])) (running oldstate)
   (delPPerms oldstate) (delTPerms oldstate)
   (addNewResCont app0 (resCont oldstate) lRes) (sentIntents oldstate)) (Env
@@ -2299,7 +2321,7 @@ uninstall_safe app0 s =
 
 grant_pre :: Perm0 -> IdApp -> System -> Prelude.Maybe ErrorCode
 grant_pre p app0 s =
-  case Prelude.not (inBool idPerm_eq (idP p) (permsInUse app0 s)) of {
+  case Prelude.not (inBool perm_eq p (permsInUse app0 s)) of {
    Prelude.True -> Prelude.Just Perm_not_in_use;
    Prelude.False ->
     case Prelude.not (inBool perm_eq p (getAllPerms s)) of {
@@ -2339,7 +2361,7 @@ grant_safe p app0 s =
 
 grantAuto_pre :: Perm0 -> IdApp -> System -> Prelude.Maybe ErrorCode
 grantAuto_pre p app0 s =
-  case Prelude.not (inBool idPerm_eq (idP p) (permsInUse app0 s)) of {
+  case Prelude.not (inBool perm_eq p (permsInUse app0 s)) of {
    Prelude.True -> Prelude.Just Perm_not_in_use;
    Prelude.False ->
     case Prelude.not (inBool perm_eq p (getAllPerms s)) of {

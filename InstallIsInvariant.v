@@ -256,7 +256,7 @@ Proof.
     intros.
     unfold validstate.
     unfold post_install in H0.
-    destruct H0 as [verified H0].
+    destruct H0 as [verified [groups H0]].
     unfold pre_install in H.
     destruct H.
     destruct H1.
@@ -427,23 +427,27 @@ Proof.
     destructVS sValid.
     destructSC statesConsistencyVS a0.
     apply (stateConsGen s s' Environment (list Perm) a x);auto.
-    
+    split.
+
     unfold initializePermLists in H9.
     destruct_conj H9.
-    clear H20 H22.
     destructVS sValid.
     destructSC statesConsistencyVS a0.
-split.
 
     apply (stateConsGen2 s s' State (list Perm) a nil);auto.
     intros.
-    specialize (H9 a' m' H20).
+    specialize (H9 a' m' H17).
     destruct H9;try destruct H9;auto.
+
+    unfold initializeGroups in groups.
+    clear H4 H0 H6 H8 H10 H11 H12 H15.
+    destruct_conj groups.
+    destruct H4 as [lGrp' H4].
+    destruct H4.
+    destructVS sValid.
+    destructSC statesConsistencyVS a0.
     
-    apply (stateConsGen2 s s' State (list idGrp) a nil);auto.
-    intros.
-    specialize (H18 a' m' H20).
-    destruct H18;try destruct H18;auto.
+    apply (stateConsGen2 s s' State (list idGrp) a lGrp');auto.
     
     
     unfold notDupApp.
@@ -529,26 +533,29 @@ split.
     mapcorrect sValid.
     rewrite H10, H11,H12 in *.
     repeat (split;auto).
+    unfold initializeGroups in groups.
+    destruct groups as [_ [_ [_ groups]]].
+    auto.
     
     unfold grantedPermsExist.
     split.
     destruct H9.
     destruct_conj H14.
     intros.
-    specialize (H16 a0 l H21).
+    specialize (H16 a0 l H17).
     destruct H16.
     assert (permExists p s).
     apply (grantedPermsExistVS s sValid a0 p l);auto.
     unfold permExists.
-    destruct H24.
+    destruct H20.
     left;auto.
     right.
     unfold usrDefPerm.
-    destruct H24.
+    destruct H20.
     left.
-    destruct H24.
-    destruct H24.
-    destruct H24.
+    destruct H20.
+    destruct H20.
+    destruct H20.
     exists x, x0.
     split;auto.
     destruct H6.

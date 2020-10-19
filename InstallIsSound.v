@@ -31,7 +31,63 @@ Proof.
     
     split. simpl. auto.
 
-    destruct H1 as (H1, notExistsSysapp).
+    split. 
+ -  unfold initializePermLists;(repeat (split;intros));
+    unfold install_post;simpl.
+    destruct H1 as [noInApp H1].
+    assert (a<>a').
+    simpl in H.
+    assert (statesConsistency s).
+    destruct H0.
+    destruct_conj H3.
+    auto.
+    destruct (H3 a).
+    destruct H5.
+    destruct H5.
+    destruct H6.
+    destruct H8.
+    destruct H9.
+    assert (~(exists l : list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp l)).
+    intro.
+    specialize (H10 H11).
+    destruct H10; contradiction.
+    intro.
+    apply H11.
+    rewrite H12.
+    exists lGrp.
+    auto.
+-- rewrite <- H2.
+   apply overrideNotEq. auto.
+-- elim (classic (a=a'));intros.
+   right; auto.
+   left. simpl in H2.
+   rewrite overrideNotEq in H2. auto. auto.
+-- exists (map getGroupFromPerm
+            (filter
+              (fun p : Perm =>
+                isPermNormal p && isSomethingBool idGrp (maybeGrp p))
+             (use m))).
+    split.
+    rewrite <- addAndApply. auto.
+    intros. destruct_conj H2.
+    induction (use m).
+    simpl in H3. destruct H3.
+    assert (isPermNormal p && isSomethingBool idGrp (maybeGrp p) = true).
+    unfold isPermNormal. rewrite H2.
+    unfold isSomethingBool. rewrite H5. auto.
+    destruct H3. rewrite H3.
+    simpl. rewrite H4. simpl.
+    left.
+    unfold getGroupFromPerm.
+    rewrite H5. auto.
+    simpl.
+    case_eq (isPermNormal a0 && isSomethingBool idGrp (maybeGrp a0)); intros.
+    simpl. right. apply IHl. auto.
+    apply IHl. auto.
+--  apply addPreservesCorrectness.
+    mapcorrect H0.
+
+ -  destruct H1 as (H1, notExistsSysapp).
     split.
     unfold addManifest; split;intros.
     unfold install_post;simpl.
@@ -330,9 +386,11 @@ Proof.
     auto.
     rewrite<-(addAndApply).
     auto.
+
+    apply addPreservesCorrectness.
+    mapcorrect H0.
     
-    
-    assert (a<>a').
+(*
     simpl in H.
     assert (statesConsistency s).
     destruct H0.
@@ -380,7 +438,7 @@ Proof.
     mapcorrect H0.
     apply addPreservesCorrectness.
     mapcorrect H0.
-    
+*)
     repeat (split; unfold install_post;simpl;auto).
     
 Qed.

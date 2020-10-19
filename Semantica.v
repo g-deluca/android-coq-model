@@ -133,7 +133,7 @@ In p lPerm)) /\
 map_correct (defPerms (environment s')).
 
 Definition initializePermLists (a:idApp) (s s':System) : Prop :=
-(* Se inicializan permisos y grupos otorgados a la aplicación como vacíos *)
+(* Se inicializan permisos otorgados a la aplicación como vacíos *)
 (forall (a':idApp)(lPerm: list Perm),
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm -> 
 map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm) /\
@@ -142,22 +142,33 @@ map_apply idApp_eq (perms (state s')) a' = Value idApp lPerm ->
 map_apply idApp_eq (perms (state s)) a' = Value idApp lPerm \/
 (a=a' /\ lPerm=nil)) /\
 (map_apply idApp_eq (perms (state s')) a = Value idApp nil) /\
+map_correct (perms (state s')).
+
+Definition initializeGroups (a:idApp) (m: Manifest) (s s': System) : Prop :=
+(* Inicializamos los grupos autorizados. Si hay algún permiso normal que esté agrupado, el grupo se autoriza. *)
 (forall (a':idApp)(lGrp: list idGrp),
 map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp -> 
 map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp) /\
 (forall (a':idApp)(lGrp:list idGrp),
 map_apply idApp_eq (grantedPermGroups (state s')) a' = Value idApp lGrp -> 
 map_apply idApp_eq (grantedPermGroups (state s)) a' = Value idApp lGrp \/
-(a=a' /\ lGrp=nil)) /\
-(map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp nil) /\
-map_correct (grantedPermGroups (state s'))/\
-map_correct (perms (state s')).
+a=a') /\
+
+(exists (lGrp: list idGrp),
+  map_apply idApp_eq (grantedPermGroups (state s')) a = Value idApp lGrp /\
+  (forall (p: Perm) (g: idGrp), In p (use m) /\ pl p = normal /\ maybeGrp p = Some g
+    -> In g lGrp)) /\
+
+map_correct (grantedPermGroups (state s')).
+
 
 
 (* Postcondición de install *)
 Definition post_install (a:idApp) (m:Manifest) (c:Cert) (lRes: (list res)) (s s':System) : Prop := 
 (* Already runned apps remain the same *)
 alreadyVerified (state s) = alreadyVerified (state s') /\
+(* Inicializo los grupos, lo hago acá arriba para no tener que modificar tanto en la prueba*)
+initializeGroups a m s s' /\
 (* Agregar manifesto, certificado, lista de recursos y permisos definidos al estado estático del sistema *)
 addManifest m a s s' /\
 addCert c a s s' /\
@@ -328,7 +339,7 @@ Parameter usrAuth : Perm -> Prop. (* no entiendo que significa *)
 (* Precondición grant *)
 Definition pre_grant (p:Perm)(a:idApp)(s:System) : Prop :=
 (exists m:Manifest, isManifestOfApp a m s /\
-In (idP p) (use m)) /\ (* Solo permito grantear independientemente permisos declarados en el Manifest *)
+In p (use m)) /\ (* Solo permito grantear independientemente permisos declarados en el Manifest *)
 (isSystemPerm p \/ usrDefPerm p s) /\ (* , que existan *)
 ~(exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\ (* No hayan sido ya granteados *)
 pl p = dangerous /\ (* , sean peligrosos *)
@@ -391,7 +402,7 @@ Section SemGrantAuto.
 Definition pre_grantAuto (p: Perm) (a: idApp) (s: System) : Prop :=
 (* La precondición es casi la misma que la de grant *)
 (exists m:Manifest, isManifestOfApp a m s /\
-In (idP p) (use m)) /\
+In p (use m)) /\
 (isSystemPerm p \/ usrDefPerm p s) /\
 ~(exists lPerm:list Perm, map_apply idApp_eq (perms (state s)) a = Value idApp lPerm /\ In p lPerm) /\
 pl p = dangerous /\

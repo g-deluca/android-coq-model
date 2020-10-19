@@ -236,8 +236,8 @@ Proof.
     simpl.
     unfold grantPermission.
     unfold grant_pre in H12.
-    assert (In (idP p) (permsInUse a s)).
-    assert (InBool idPerm idPerm_eq (idP p) (permsInUse a s)=true).
+    assert (In p (permsInUse a s)).
+    assert (InBool Perm Perm_eq p (permsInUse a s)=true).
     rewrite <-not_false_iff_true.
     unfold not;intros.
     rewrite H14 in H12.
@@ -247,7 +247,7 @@ Proof.
     rewrite existsb_exists in H14.
     destruct H14.
     destruct H14.
-    destruct idPerm_eq in H15.
+    destruct Perm_eq in H15.
     rewrite e.
     auto.
     inversion H15.

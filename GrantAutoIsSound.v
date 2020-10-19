@@ -103,8 +103,8 @@ Proof.
 Qed.
 
 Lemma existsManifest : forall (a: idApp) (s: System) (p: Perm),
-  negb (InBool idPerm idPerm_eq (idP p) (permsInUse a s)) = false ->
-    exists m : Manifest, isManifestOfApp a m s /\ In (idP p) (use m).
+  negb (InBool Perm Perm_eq p (permsInUse a s)) = false ->
+    exists m : Manifest, isManifestOfApp a m s /\ In p (use m).
 Proof.
   intros a s p H.
   rewrite negb_false_iff in H.
@@ -117,7 +117,7 @@ Proof.
   unfold isManifestOfApp.
   case_eq (map_apply idApp_eq (manifest (environment s)) a); intros m H1; rewrite H1 in *.
   exists m.
-  destruct idPerm_eq in H0.
+  destruct Perm_eq in H0.
   rewrite e.
   split;auto.
   discriminate H0.
@@ -139,7 +139,7 @@ Proof.
   destruct idApp_eq in H5.
   rewrite e;auto.
   discriminate H5.
-  destruct idPerm_eq in H0.
+  destruct Perm_eq in H0.
   rewrite e.
   rewrite H3 in *.
   auto.
@@ -155,7 +155,7 @@ Proof.
     unfold grantAuto_safe.
     unfold grantAuto_pre.
     
-    case_eq (negb (InBool idPerm idPerm_eq (idP p) (permsInUse a s)));intros.
+    case_eq (negb (InBool Perm Perm_eq p (permsInUse a s)));intros.
     exists perm_not_in_use.
     split;auto.
     split;auto.
@@ -166,11 +166,11 @@ Proof.
     destruct H2.
     unfold InBool.
     rewrite existsb_exists.
-    exists (idP p).
+    exists p.
     unfold permsInUse.
     destruct H2.
     rewrite H2.
-    destruct idPerm_eq;auto.
+    destruct Perm_eq;auto.
 
 
     case_eq (negb (InBool Perm Perm_eq p (getAllPerms s)));intros.
@@ -329,10 +329,10 @@ Proof.
     unfold grantAuto_pre.
     destruct H0.
 
-    assert (InBool idPerm idPerm_eq (idP p) (permsInUse a s) = true).
+    assert (InBool Perm Perm_eq p (permsInUse a s) = true).
     unfold InBool.
     rewrite existsb_exists.
-    exists (idP p).
+    exists p.
     split.
     destruct H0.
     destruct H0.
@@ -379,7 +379,7 @@ Proof.
 
 
 
-    destruct idPerm_eq.
+    destruct Perm_eq.
     auto.
     auto.
     rewrite H2.

@@ -146,7 +146,7 @@ Axiom Cert_eq : forall (id1 id2 : Cert), {id1 = id2} + {id1 <> id2}.
 Record Manifest : Set := mf {  cmp: list Cmp;
                                minSdk: option nat;
                                targetSdk: option nat;
-                               use: list idPerm;
+                               use: list Perm;
                                usrP: list Perm; 
                                appE: option Perm }.
 
