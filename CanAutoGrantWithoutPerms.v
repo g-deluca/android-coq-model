@@ -20,7 +20,7 @@ Definition witnessState : State :=
        nil.
 
 Definition a1Mfst :=
-    simpleManifest nil (witnessPermId :: nil) nil.
+    simpleManifest nil (witnessPerm :: nil) nil.
 
 Definition a2Mfst :=
     simpleManifest nil nil (witnessPerm::nil).

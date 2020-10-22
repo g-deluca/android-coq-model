@@ -26,6 +26,7 @@ Require Import IfPermThenGranted.
 Require Import DangPermMissing.
 Require Import RvkCanStart.
 Require Import IfOldAppRunThenVerified.
+Require Import DangPermAutoGranted.
 
 Section ModelProperties.
 
@@ -311,6 +312,28 @@ Proof.
   inversion H.
 Qed.
 
+(* Este teorema demuestra que cuando un permiso normal y uno peligroso comparten grupo, luego de instalar una aplcicación que usa ambos,
+ * el sistema queda en un estado en donde puede automáticamente otorgar el permiso peligroso, sin informar al usuario. *)
+Theorem DangerousPermissionAutoGranted : forall
+  (s s': System)
+  (a: idApp)
+  (m: Manifest)
+  (c: Cert)
+  (resources: list res)
+  (pDang pNorm : Perm)
+  (g: idGrp),
+  permExists pDang s'->
+  pl pDang = dangerous ->
+  pl pNorm = normal ->
+  In pNorm (use m) ->
+  In pDang (use m) ->
+  maybeGrp pNorm = Some g ->
+  maybeGrp pDang = Some g ->
+  exec s (install a m c resources) s' ok -> 
+  pre_grantAuto pDang a s'.
+Proof.
+  apply DangerousPermissionAutoGrantedProof.
+Qed.
 
 
 End ModelProperties.
