@@ -1,7 +1,6 @@
-(* En este archivo se demuestra que si el sistema parte de un estado inicial válido en el que existe
- * una aplicación A que es considerada vieja y no ha sido verificada, y luego de una serie de operaciones
- * dicha aplicación está en condiciones de ser ejecutada; es porque alguna de todas esas operaciones fue
- * la que verificó a la aplicación A. *)
+ (* In this file we show that if we start in a valid initial state where an application A is
+ considered to be old and unverified, and after executing a bunch of actions the that app is able to
+ execute, then on of those actions was the one that verified A *)
 
 Require Export Exec.
 Require Export Implementacion.

@@ -1,8 +1,6 @@
-(* En este archivo se demuestra la propiedad que postula que 
-*  para todo estado inicial válido en el cual una aplicación a no
-*  tiene un permiso peligroso no agrupado p, si al final de una serie
-*  de operaciones a pasa a contar con tal permiso a pesar de nunca haber
-*  sido desinstalada, entonces en algún momento le fue otorgado *)
+(* In this file we prove that if at some initial state an application doesn't have a permission and
+after executing some actions it ends up having it, then one of those actions was the one that granted
+that permission to that application *)
 
 Require Export Exec.
 Require Export Implementacion.

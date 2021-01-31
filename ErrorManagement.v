@@ -252,7 +252,6 @@ match action with
         (* The instance that wants to grant the permission is not running *)
         | instance_not_running => ~is_Value (map_apply iCmp_eq (running (state s)) ic)
         (* The instance that wants to grant the permission doesn't have it *)
-        | instance_not_running => ~is_Value (map_apply iCmp_eq (running (state s)) ic)
         | not_enough_permissions => exists (c:Cmp), map_apply iCmp_eq (running (state s)) ic = Value iCmp c /\
                 ~(match pt with
                 | Read => canRead c cp s \/ delPerms c cp u Read s

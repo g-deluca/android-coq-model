@@ -1,6 +1,5 @@
-(* En este archivo se incluye la representación del sistema de seguridad de
- * Android y la definición de las propiedades que debe cumplir
- * para ser considerado válido *)
+(* In this file we define our representation of an Android state (from the permission model
+perspective) and we define the properties that we consider it has to satisfy to be a valid state *)
 Require Import DefBasicas.
 Require Import EqTheorems.
 Require Import Maps.
@@ -9,47 +8,43 @@ Require Export List.
 
 Section Estado.
 
-(* Parte estática del estado del sistema *)
+(* Static part of the system *)
 Record Environment := env {
-                            (* Para cada aplicación instalada por el usuario, retorna su manifiesto *)
+                            (* For each app installed by the user, it returns its manifest *)
                             manifest: mapping idApp Manifest;
-                            (* Para cada aplicación instalada por el usuario, retorna el certificado con el que fue firmada *)
+                            (* For each app installed by the user, it returns the certificate that was used to sign it*)
                             cert: mapping idApp Cert;
-                            (* Para cada aplicación instalada por el usuario, retorna la lista de permisos que ella define *)
+                            (* For each app installed by the user, it returns the list of permissions it defines *)
                             defPerms: mapping idApp (list Perm);
-                            (* Reúne la lista de aplicaciones preinstaldas de fábrica *)
+                            (* Pre-installed apps *)
                             systemImage: list SysImgApp
                            }.
 
-(* Parte dinámica del estado del sistema *)
+(* Dynamic part of the system *)
 Record State := st { 
-                    (* La lista de aplicaciones instaladas por el usuario *)
+                    (* A list of the applications installed by the user *)
                      apps: list idApp;
-                     (* Las aplicaciones que ya fueron ejecutadas alguna vez *)
-                     (* NOTE: alreadyVerified \subset apps podría ser un invariante nuevo *)
+                     (* A list of the old apps that have already been verified by the user *)
                      alreadyVerified: list idApp;
-                    (* Para cada aplicación instalada, retorna la lista de grupos de permisos para los cuales 
-                     * la aplicación posee algùn permiso otorgado *)
+                     (* For each installed app, it returns a list of the permission groups that it has*)
                      grantedPermGroups : mapping idApp (list idGrp);
-                    (* Para cada aplicación instalada, retorna la lista de permisos a ella individualmente otorgados *)
+                     (* For each installed app, it returns a list of the permission that it has*)
                      perms: mapping idApp (list Perm);
-                     (* Mapa que indica de qué componente es una instancia cada módulo en ejecución *)
+                     (* Mapping between components and instances of that component *)
                      running: mapping iCmp Cmp;
-                     (* Mapa que indica a qué recursos tiene qué tipo de derecho permanentemente otorgados cada aplicación *)
+                     (* Mapping the indicates the resources with permanent permissions that each application has *)
                      delPPerms: mapping (idApp * CProvider * uri) PType;
-                     (* Mapa que indica a qué recursos tiene qué tipo de derecho temporalmente otorgados cada módulo en ejecución *)
+                     (* Mapping the indicates the resources with temporary permissions that each application has *)
                      delTPerms: mapping (iCmp * CProvider * uri) PType;
-                     (* Mapa que indica, dado un recurso de una aplicación, qué valor posee *)
+                     (* Mapping that indicates the value of an app's resource *)
                      resCont: mapping (idApp * res) Val;
-                    (* La lista de intents que han sido enviados, junto con su remitente *)
+                    (* A list of already sent intents with its sender *)
                      sentIntents: list (iCmp*Intent) 
                     }.
 
-(* Estado del sistema *)
+(* The complete state of the system*)
 Record System := sys {
-                       (* Conformado por una parte estática *)
                        state: State;
-                       (* y una dinámica *)
                        environment: Environment 
                      }.
 
@@ -59,46 +54,42 @@ End Estado.
 
 Section EstadoValido.
 
-(* La aplicación a forma parte del sistema *)
+(* The application is part of the system if ...*)
 Definition isAppInstalled (a:idApp) (s:System) : Prop :=
-    (* si fue instalada por el usuario *)
+    (* if it was installed by the user *)
     In a (apps (state s)) \/
-    (* o estaba preinstalada de fábrica *)
+    (* or if it was pre installed in the system *)
     (exists sysapp:SysImgApp,
     In sysapp (systemImage (environment s)) /\
     idSI sysapp = a).
 
-(* Predicado para verificar si un componente pertence a una aplicación instalada *)
+(* A component belongs to an installed app if ...*)
 Definition inApp (c:Cmp)(a:idApp)(s:System) : Prop := 
 exists (m:Manifest),
-(* si existe una aplicación instalada por el usuario *)
+(* that component is declared in a manifest of an app installed by the user *)
 (map_apply idApp_eq (manifest (environment s)) a = Value idApp m \/
-(* o una preinstalada de fábrica con id a *)
+(* or it's declared in the manifest of a pre installed app*)
 (exists sysapp:SysImgApp,
     In sysapp (systemImage (environment s)) /\
     idSI sysapp = a /\
     manifestSI sysapp=m)
 ) /\
-(* y c pertenece a ella *)
 In c (cmp m).
 
-(* Predicado para verificar si el componente que toma como parámetro es un
- * content provider *)
+ (* Returns true if the component is a content provider *)
 Definition isCProvider (c : Cmp) : Prop :=
 match c with
    | cmpCP _ => True
    | _ => False
 end.
 
-(* Predicado para verificar si en s existe el recurso apuntado por el URI u en
- * el content provider cp *)
+ (* Predicate that verifies if a resource exists in some state of the system *)
 Definition existsRes (cp : CProvider)(u:uri)(s:System) : Prop := 
 exists (a:idApp),
 inApp (cmpCP cp) a s /\
 exists r:res, map_apply uri_eq (map_res cp) u = Value uri r /\
 exists v:Val, (map_apply rescontdomeq (resCont (state s))) (a, r) = Value (idApp*res) v.
 
-(* Función que devuelve el id de un componente *)
 Definition getCmpId (c:Cmp) : idCmp :=
 match c with
    | cmpAct a => idA a
@@ -107,47 +98,46 @@ match c with
    | cmpCP cp => idC cp
 end.
 
-(* Predicado que indica si un permiso es de sistema *)
+(* Parameter used to recognize the permissions declared by the system *)
 Parameter isSystemPerm : Perm -> Prop.
 
-(* Predicado para verificar si un permiso fue definido por el usuario en un estado *)
+(* Predicate used to check if a permission was declared by some app *)
 Definition usrDefPerm (p:Perm)(s:System) : Prop := 
 (exists (a:idApp) (l: list Perm),
 map_apply idApp_eq (defPerms (environment s)) a = Value idApp l /\
-In p l) \/ (* Si es definido por una app instalada o *)
+In p l) \/ (* The app that defines it can be user installed*)
 (exists sysapp:SysImgApp, In sysapp (systemImage (environment s)) /\ 
-In p (defPermsSI sysapp)). (* es definido por una app de sistema *)
+In p (defPermsSI sysapp)). (* or pre installed *)
 
 
-(* Predicado que indica si un permiso existe en el sistema *)
+(* We consider that a permission exists if it was defined by the system or by some application*)
 Definition permExists (p:Perm)(s:System) : Prop := 
-    isSystemPerm p \/ usrDefPerm p s. (* Un permiso existe si es de sistema o lo define alguna app *)
+    isSystemPerm p \/ usrDefPerm p s.
 
 Variable s:System.
 
-(* No hay dos componentes pertenecientes a aplicaciones instaladas que tengan el mismo identificador *)
+(* Two components from different apps can't have the same identifier *)
 Definition allCmpDifferent : Prop := 
 forall (c1 c2:Cmp)(a1 a2:idApp),
 inApp c1 a1 s -> 
 inApp c2 a2 s ->
 getCmpId c1 = getCmpId c2 -> c1 = c2.
 
-(* Un mismo componente no está asociado a dos aplicaciones distintas *)
+(* One component cannot be associated to more than one application *)
 Definition notRepeatedCmps : Prop := 
 forall (c:Cmp)(a1 a2:idApp),
 inApp c a1 s ->
 inApp c a2 s ->
 a1 = a2.
 
-(* Si un componente está corriendo, éste no puede ser un content provider *)
+(* If a component is running, it can't be a Contet Provider *)
 Definition notCPrunning : Prop := 
 forall (ic:iCmp)(c:Cmp),
 map_apply iCmp_eq (running (state s)) ic = Value iCmp c ->  
 ~isCProvider c.
 
-(* Si una delegación sobre un content provider que se realizó a través de intents
- * está vigente, entonces la instancia que recibió dicha delegación está ejecutándose 
- * y el content provider en cuestión está instalado *)
+ (* If a delegation over a content provider that was done via Intents is currently valid, then the
+ instance that received that permission is running and the content provider is available *)
 Definition delTmpRun : Prop := 
 forall (ic:iCmp)(cp:CProvider)(u:uri)(pt:PType),
 map_apply deltpermsdomeq (delTPerms (state s)) (ic, cp, u) = Value (iCmp*CProvider*uri) pt ->
@@ -155,26 +145,25 @@ map_apply deltpermsdomeq (delTPerms (state s)) (ic, cp, u) = Value (iCmp*CProvid
 exists c:Cmp, exists a:idApp, inApp c a s /\ 
 map_apply iCmp_eq (running (state s)) ic = Value iCmp c.
 
-(* Si una instancia está corriendo, el componente del cual es una
- * instancia, está instalado *)
+(* Every instance of a component belongs to an installed app *)
 Definition cmpRunAppIns : Prop := 
 forall (ic:iCmp)(c:Cmp), 
 map_apply iCmp_eq (running (state s)) ic = Value iCmp c -> 
 exists a:idApp, inApp c a s.
 
-(* Todo recurso en el sistema pertenece a una aplicación instalada *)
+(* Every resource in the system belongs to an installed app *)
 Definition resContAppInst : Prop := 
 forall (a:idApp)(r:res)(v:Val),
 map_apply rescontdomeq (resCont (state s)) (a, r) = Value (idApp*res) v -> 
 isAppInstalled a s.
 
-(* Dada una aplicación y una lista de permisos, indica si esta lista es la de los permisos
- * definidos por la aplicación *)
+(* Given an app and a permission list, this predicate indicates if this is list of permission is the
+one defined by that app *)
 Definition defPermsForApp (a:idApp) (l:list Perm) : Prop :=
     map_apply idApp_eq (defPerms (environment s)) a = Value idApp l \/
     (exists sysapp:SysImgApp, In sysapp (systemImage (environment s)) /\ defPermsSI sysapp = l /\ idSI sysapp = a).
 
-(* Si dos recursos definidos tienen igual id, son el mismo de la misma aplicación *)
+(* There are no duplicated permissions *)
 Definition notDupPerm : Prop :=
 forall (a a':idApp) (p p':Perm) (l l':list Perm),
 defPermsForApp a l ->
@@ -184,12 +173,11 @@ In p' l' ->
 idP p = idP p' ->
 (p=p' /\ a=a').
 
-(* Los permisos individualmente otorgados existen *)
+(* Every permission that has been granted to an app, exist.*)
 Definition grantedPermsExist : Prop:=
     forall (a:idApp) (p:Perm) (l:list Perm), map_apply idApp_eq (perms (state s)) a = Value idApp l -> In p l -> permExists p s.
 
-(* Solo las aplicaciones instalada tienen definido un manifesto, un certificado 
- * y un conjunto de recursos *)
+ (* Only installed apps have a manifest, a certificate and a set of resources *)
 Definition statesConsistency : Prop :=
 forall (a:idApp),
 (In a (apps (state s)) <->
@@ -203,22 +191,21 @@ forall (a:idApp),
 (In a (apps (state s)) \/ (exists sysapp:SysImgApp, In sysapp (systemImage (environment s)) /\ idSI sysapp = a) <->
 (exists l:list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp l)).
 
-(* Si una aplicación figura como instalada por el usuario, no existe una aplicación
- * preinstalada con el mismo identificador *)
+(* If an application was installed by the user, it cannot have the same identifier than a pre installed app *)
 Definition notDupApp : Prop :=
     forall (a:idApp),
     (In a (apps (state s)) -> ~(exists sysapp:SysImgApp,
     In sysapp (systemImage (environment s)) /\
     idSI sysapp = a)).
 
-(* Todas las aplicaciones instaladas tienen identificadores diferentes *)
+(* Pre installed applications' indentifiers are unique *)
 Definition notDupSysApp : Prop :=
     forall (s1 s2 : SysImgApp),
     In s1 (systemImage (environment s)) /\
     In s2 (systemImage (environment s)) /\
     idSI s1 = idSI s2 -> s1 = s2.
 
-(* Todos los maps representan funciones parciales *)
+(* Every map is a partial function (they are well defined) *)
 Definition allMapsCorrect : Prop :=
     map_correct (manifest (environment s)) /\
     map_correct (cert (environment s)) /\
@@ -230,7 +217,7 @@ Definition allMapsCorrect : Prop :=
     map_correct (delTPerms (state s)) /\
     map_correct (resCont (state s)).
 
-(* No existen intents distintos con igual identificador *)
+(* If two intents have the same id, they are exactly the same intent *)
 Definition noDupSentIntents : Prop :=
     forall (i i': Intent) (ic ic' : iCmp),
         In (ic,i) (sentIntents (state s)) ->
@@ -238,7 +225,7 @@ Definition noDupSentIntents : Prop :=
         idI i = idI i' ->
         ic=ic' /\ i=i'.
 
-(* Esta proposición vale si y sólo si el estado es válido *)
+(* Valid state definition*)
 Definition validstate  : Prop := allCmpDifferent /\
                                  notRepeatedCmps /\
                                  notCPrunning /\

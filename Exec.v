@@ -1,5 +1,4 @@
-(* En este archivo se define la relación de transición entre dos sistemas
-* cuando se solicita la ejecución de una acción *)
+(* In this file we define the transition between to states of the system when we execute an action *)
 Require Import Semantica.
 Require Import Operaciones.
 Require Import ErrorManagement.
@@ -7,7 +6,7 @@ Require Import Estado.
 
 Section EjecucionDeOps.
 
-(* Indica si la precondición de una acción se cumple en un sistema *)
+(* Indicates whether the precondition of an action holds *)
 Definition pre (act:Action) (s:System) : Prop :=
 match act with
    | install a m c l => pre_install a m c l s
@@ -34,8 +33,7 @@ match act with
    | verifyOldApp a => pre_verifyOldApp a s
 end.
 
-(* Indica si la postcondición de una acción se cumple en un sistema
- * resultante partiendo de uno origen *)
+(* Indicates whether the postcondition of an action holds *)
 Definition post (act:Action) (s s':System) : Prop :=
 match act with
    | install a m c l => post_install a m c l s s'
@@ -62,7 +60,7 @@ match act with
    | verifyOldApp a => post_verifyOldApp a s s'
 end.
 
-(* Esta proposición captura la semántica de la ejecución de una acción *)
+(* Semantic of executing an action *)
 Definition exec (s: System) (act:Action) (s':System) (r:Response) : Prop :=
     validstate s /\
    ((r = ok /\ pre act s /\ post act s s') \/
