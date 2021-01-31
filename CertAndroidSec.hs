@@ -631,7 +631,8 @@ type SACall = Prelude.String
 
 vulnerableSdk :: Nat
 vulnerableSdk =
-  Prelude.error "AXIOM TO BE REALIZED"
+  S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S (S
+    O)))))))))))))))))))))
 
 permLevel_eq :: PermLevel -> PermLevel -> Prelude.Bool
 permLevel_eq id1 id2 =

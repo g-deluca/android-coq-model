@@ -1,6 +1,6 @@
-(* En este archivo se prueban lemas auxiliares que son 
- * utilizados para demostrar la corrección de la implementación
- * y las propiedades postuladas *)
+(* In this file we prove some auxiliary lemmas that are used mainly to demonstrate that our
+ * implementation is correct. They are also used for some of the formulated properties. *)
+
 Require Import Implementacion.
 Require Import DefBasicas.
 Require Import EqTheorems.

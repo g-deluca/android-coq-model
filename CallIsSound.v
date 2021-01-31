@@ -1,4 +1,4 @@
-(* En este archivo se demuestra la corrección de la acción call *)
+(* In this file we demonstrate the soundness of the call operation *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

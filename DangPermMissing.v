@@ -1,6 +1,6 @@
-(* Es en este archivo en donde se demuestra la propiedad sobre el modelo
-* que postula que puede contarse con un permiso peligroso sin tenerlo
-* individualmente otorgado*)
+(* In this file we demonstrate that after the changes introduced in Android 6 -about the runtime
+ * permissions-, it is possible that an application doesn't have a dangerous permission even though it's
+ * declared in its manifest *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

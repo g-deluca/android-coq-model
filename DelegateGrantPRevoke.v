@@ -1,11 +1,7 @@
-(* En este archivo se demuestra la propiedad que postula que 
-*  en todo estado válido, si se le otorga correctamente un permiso p
-*  a una aplicación a que tiene uno de sus componentes ejecutándose 
-*  con identificador ic; quien luego delega un permiso de lectura 
-*  a una aplicación a' sobre un uri de un contentProvider de lectura 
-*  protegida por p, y más tarde se le quita el permiso p a a, 
-*  posteriormente si una instancia en ejecución de un componente de
-*  a' intenta leer dicho uri de cp, podrá hacerlo correctamente *)
+(* In this file we demonstrate that if an application A delegates a permission to read a content
+provider to another app A', and then, we revoke that permission from A; the application A' still is
+authorized to read that content provider   *)
+
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

@@ -1,7 +1,4 @@
-(* NOMBRE DEL ARCHIVO: eavesdropping.v							*
- * CORRESPONDENCIA EN EL INFORME: Capítulo 4. Sección 4.2.1.				*
- * DESCRIPCIÓN: Este archivo consiste en un único lema que demuestra que en un 		*	
- * escenario particular no se puede dar el ataque eavesdropping.				*)
+(* In this file we demonstrate that in a particular scenario, eavesdropping is not possible *)
 
 Require Export Exec.
 Require Export Estado.
@@ -25,11 +22,10 @@ Axiom onlyDangInPerms : forall (a:idApp)(p:Perm)(s:System), (exists l : list Per
     
 
 
-(*PROPIEDAD: Si un componente envía un intent de tipo broadcast protegido por un permiso de tipo Signature o
-SignatureOrSystem entonces ninguna a que no esté firmada con el mismo certificado
-podrá recibirlo*)
+(* If a component sends a broadcast intent protected with a Signature (or SignatureOrSystem)
+permission, then the only applications that will be able to receive it, will be those signed with the
+same certificate. *)
 Lemma eavesdropping : forall (ic:iCmp)(i:Intent)(cmp:Cmp)(a a':idApp)(c c':Cert)(s:System), 
-(*ic manda un intent de tipo broadcast protegido por un permiso de tipo Signature o SignatureOrSystem*)
 validstate s ->
 map_apply iCmp_eq (running (state s)) ic = Value iCmp cmp ->
 ~ isCProvider cmp ->
@@ -82,7 +78,7 @@ inversion H_brperm_p' as [H_p_p'].
 rewrite <- H_p_p' in *.
 elim H_rtperm.
 
-(*caso 1: exists l : list Perm,
+(*case 1: exists l : list Perm,
    map_apply idApp_eq (perms (state s)) a' = Value idApp l /\ In p l*)
 intro H_exists.
 elim H_pl_p;
@@ -100,7 +96,7 @@ destruct H_conj as [H_mfst H_or] .
 elim H_or;
 clear H_or.
 
-(*caso 2: exists lPerm : list Perm,
+(*case 2: exists lPerm : list Perm,
    map_apply idApp_eq (defPerms (environment s)) a' = Value idApp lPerm /\
    In p lPerm*)
 intro H_exists.
@@ -132,7 +128,7 @@ intro H_or.
 elim H_or;
 clear H_or.
 
-(*caso 3: pl p = normal*)
+(*case 3: pl p = normal*)
 intro H_pl.
 rewrite H_pl in H_pl_p.
 elim H_pl_p;
@@ -145,7 +141,7 @@ elim H_or;
 clear H_or.
 
 
-(*caso 4: (pl p = signature \/ pl p = signatureOrSys) /\ ...*)
+(*case 4: (pl p = signature \/ pl p = signatureOrSys) /\ ...*)
 intro H_conj.
 destruct H_conj as [H_or H_exists].
 destruct H_exists as [c'' H_conj].
@@ -154,13 +150,13 @@ replace c'' with c' in *.
 absurd (RuntimePermissions.certOfDefiner p c' s); assumption.
 elim H_certOf_a'_2; elim H_certOf_a'; intros.
 
-(*caso 4.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
+(*case 4.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
 map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
 rewrite H in H0.
 inversion_clear H0.
 reflexivity.
 
-(*caso 4.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+(*case 4.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
 	    idSI sysapp = a' /\ certSI sysapp = c' y
 	    map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
 elim H.
@@ -171,7 +167,7 @@ assert (idSI sysapp <> a') as H_not_sysapp_a'.
 apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
 
-(*caso 4.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
+(*case 4.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
 	    exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
 	    idSI sysapp = a' /\ certSI sysapp = c''*)
 elim H0.
@@ -182,7 +178,7 @@ assert (idSI sysapp <> a') as H_not_sysapp_a'.
 apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
 
-(*caso 4.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+(*case 4.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
             idSI sysapp = a' /\ certSI sysapp = c' y 
             exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
             idSI sysapp = a' /\ certSI sysapp = c*)
@@ -195,7 +191,7 @@ apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
 
 
-(*caso 5: pl p = signatureOrSys /\ ... *)
+(*case 5: pl p = signatureOrSys /\ ... *)
 intro H_conj.
 destruct H_conj as [H_pl_p_2 H_exists].
 destruct H_exists as [c'' H_conj].
@@ -204,13 +200,13 @@ replace c'' with c' in *.
 absurd (c' = RuntimePermissions.manufacturerCert); assumption.
 elim H_certOf_a'_2; elim H_certOf_a'; intros.
 
-(*caso 5.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
+(*case 5.1: map_apply idApp_eq (ce'rt (environment s)) a' = Value idApp c' y 
 map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
 rewrite H in H0.
 inversion_clear H0.
 reflexivity.
 
-(*caso 5.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+(*case 5.2: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
 	    idSI sysapp = a' /\ certSI sysapp = c' y
 	    map_apply idApp_eq (cert (environment s)) a' = Value idApp c''*)
 elim H.
@@ -221,7 +217,7 @@ assert (idSI sysapp <> a') as H_not_sysapp_a'.
 apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
 
-(*caso 5.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
+(*case 5.3: map_apply idApp_eq (cert (environment s)) a' = Value idApp c' y
 	    exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
 	    idSI sysapp = a' /\ certSI sysapp = c''*)
 elim H0.
@@ -232,7 +228,7 @@ assert (idSI sysapp <> a') as H_not_sysapp_a'.
 apply (H_forall sysapp H_sysapp_env).
 absurd (idSI sysapp = a'); assumption.
 
-(*caso 5.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
+(*case 5.4: exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
             idSI sysapp = a' /\ certSI sysapp = c' y 
             exists sysapp : SysImgApp, In sysapp (systemImage (environment s)) /\
             idSI sysapp = a' /\ certSI sysapp = c*)

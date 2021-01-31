@@ -1,5 +1,4 @@
-(* En este archivo se demuestra que pueden compararse los tipos básicos
-* cuyas igualdades son requeridas *)
+(* In this file we prove that some basic types are comparable *)
 Require Import DefBasicas.
 Require Import Maps.
 

@@ -1,28 +1,25 @@
-(* En este archivo se modelan los conceptos del
- * sistema operativo que formarán parte de la formalización *)
+(* In this file we model the concepts of the OS that will be the core of our formalization *)
 
 Require Import Maps.
 
 Section Permissions.
 
-(* Identificadores de permisos *)
+(* Permission identifier *)
 Parameter idPerm : Set.
-(* Los identificadores son comparables *)
 Axiom idPerm_eq : forall (id1 id2 : idPerm), {id1 = id2} + {id1 <> id2}.
 
-(* Identificadores de grupos de permisos *)
+(* Permission group identifier *)
 Parameter idGrp : Set.
-(* Los identificadores son comparables *)
 Axiom idGrp_eq : forall (id1 id2 : idGrp), {id1 = id2} + {id1 <> id2}.
 
-(* Niveles de permisos *)
+(* Permission levels *)
 Inductive permLevel : Set :=
     | dangerous
     | normal
     | signature
     | signatureOrSys.
 
-(* Permisos *)
+(* Permission definition *)
 Record Perm : Set := perm { idP: idPerm;
                             maybeGrp: option idGrp;
                             pl: permLevel }.
@@ -33,73 +30,64 @@ End Permissions.
 
 Section Components.
 
-(* Identificador de un componente *)
+(* Application's component identifier *)
 Parameter idCmp : Set.
-(* Los identificadores son comparables *)
 Axiom idCmp_eq : forall (id1 id2 : idCmp), {id1 = id2} + {id1 <> id2}.
 
-(* Representa el tipo de los identificadores de recursos *)
+(* This represents the type of the uris identifiers (from the context providers) *)
 Parameter uri : Set.
-(* Los identificadores son comparables *)
 Axiom uri_eq : forall (id1 id2 : uri), {id1 = id2} + {id1 <> id2}.
 
-(* Identificador de recursos de un CProvider *)
+(* A resource from a content provider *)
 Parameter res: Set.
-(* Los identificadores son comparables *)
 Axiom res_eq : forall (id1 id2 : res), {id1 = id2} + {id1 <> id2}.
 
-(* Tipo de archivo de cada componente para un Intent o Intent Filter *)
+(* Parameter that represents the available mime-types. Used by Intent and Intent Filter *)
 Parameter mimeType: Set.
-(* Deben ser comparables *)
 Axiom mimeType_eq : forall (id1 id2 : mimeType), {id1 = id2} + {id1 <> id2}.
 
-(* Tipo de datos al que refiere el Intent o Intent Filter *)
+(* Kind of data referred by an Intent *)
 Inductive dataType : Set :=
     | content
     | file
     | other.
 
-(* Campo data de un Intent o Intent Filter *)
+(* Data field of an Intent or an Intent Filter *)
 Record Data : Set := dt { path: option uri;
                           mime: option mimeType;
                           type: dataType }.
 
-(* Categoría de cada componente para un Intent o Intent Filter *)
+(* Category of a component. Used by Intent o Intent Filter *)
 Parameter Category : Set.
-(* Deben ser comparables *)
 Axiom Category_eq : forall (id1 id2 : Category), {id1 = id2} + {id1 <> id2}.
 
-(* Acciones de cada componente para un Intent o Intent Filter *)
+(* Kind of actions available *)
 Inductive intentAction : Set :=
     | activityAction
     | serviceAction
     | broadcastAction.
 
-(* Filtros de intent que puede recibir un componente *)
+(* Definition of an Intent Filter *)
 Record intentFilter : Set := iFilter { actFilter: list intentAction;
                                       dataFilter: list Data;
                                       catFilter: list Category}.
 
-(* Tipos de componentes *)
-(* Actividad *)
+(* Component's definition: Activities, Services, Broadcast Receivers and Content Providers *)
 Record Activity : Set := activity { idA: idCmp;
                                     expA: option bool;
                                     cmpEA: option Perm;
                                     intFilterA: list intentFilter }.
 
-(* Servicio *)
 Record Service : Set := service { idS: idCmp;
                                   expS: option bool;
                                   cmpES: option Perm;
                                   intFilterS: list intentFilter }.
 
-(* Broadcast Receiver *)
 Record BroadReceiver : Set := broadreceiver { idB: idCmp;
                                               expB: option bool;
                                               cmpEB: option Perm;
                                               intFilterB: list intentFilter}.
 
-(* Content Provider *)
 Record CProvider : Set := cprovider { idC: idCmp; 
                                       map_res : mapping uri res;
                                       expC: option bool;
@@ -109,7 +97,6 @@ Record CProvider : Set := cprovider { idC: idCmp;
                                       grantU: bool;
                                       uriP: list uri }.
 
-(* Componentes genéricos *)
 Inductive Cmp : Set :=
     | cmpAct : Activity -> Cmp
     | cmpSrv : Service -> Cmp
@@ -122,9 +109,8 @@ End Components.
 
 Section RunningComponents.
 
-(* Identificador de una instancia en ejecución de un componente *)
+(* Identifier of an instance of a component *)
 Parameter iCmp : Set.
-(* Los identificadores son comparables *)
 Axiom iCmp_eq : forall (ic1 ic2 : iCmp), {ic1 = ic2} + {ic1 <> ic2}.
 
 End RunningComponents.
@@ -132,17 +118,15 @@ End RunningComponents.
 
 Section Applications.
 
-(* Identificador de una aplicación *)
+(* Application's identifiers *)
 Parameter idApp : Set.
-(* Los identificadores son comparables *)
 Axiom idApp_eq : forall (id1 id2 : idApp), {id1 = id2} + {id1 <> id2}.
 
-(* Certificado de una aplicación *)
+(* Certificate of an app *)
 Parameter Cert: Set.
-(* Deben ser comparables *)
 Axiom Cert_eq : forall (id1 id2 : Cert), {id1 = id2} + {id1 <> id2}.
 
-(* Manifiesto de una aplicación *)
+(* Manifest of an app  *)
 Record Manifest : Set := mf {  cmp: list Cmp;
                                minSdk: option nat;
                                targetSdk: option nat;
@@ -162,28 +146,24 @@ End Applications.
 
 Section Intents.
 
-(* Identificador de un Intent. *)
+(* Intent identifier *)
 Parameter idInt : Set.
-(* Los identificadores son comparables *)
 Axiom idInt_eq : forall (id1 id2 : idInt), {id1 = id2} + {id1 <> id2}.
 
-(* Datos Extra para un Intent *)
+(* Intent's extra data *)
 Parameter Extra : Set.
-(* Deben ser comparables *)
 Axiom Extra_eq : forall (id1 id2 : Extra), {id1 = id2} + {id1 <> id2}.
 
-(* Datos Flag para un Intent *)
+(* Intent's flags *)
 Parameter Flag : Set.
-(* Deben ser comparables *)
 Axiom Flag_eq : forall (id1 id2 : Flag), {id1 = id2} + {id1 <> id2}.
 
-(* Tipos de Intents *)
+(* Kinds of Intents *)
 Inductive intentType : Set :=
     | intActivity
     | intService
     | intBroadcast.
 
-(* Intent *)
 Record Intent : Set := intent { idI: idInt;
                                 cmpName: option idCmp;
                                 intType: intentType;
@@ -200,21 +180,21 @@ End Intents.
 
 Section Misc.
 
-(* Tipo de operación que puede hacerse sobre un recurso *)
+(* Available operations over a resource *)
 Inductive PType :=
     | Read
     | Write
     | Both.
 
-(* Tipo genérico para los valores *)
+(* Generic value type *)
 Parameter Val : Set.
 
-(* Llamadas a APIs del sistema *)
+(* Calls to the system API *)
 Parameter SACall : Set.
 
-(* TODO: Preguntar cómo representar esto. Sabemos el número del sdk a partir del
-cual no podría correrse, pero no sé si conviene dejarlo como parámetro o no *)
-Parameter vulnerableSdk : nat.
+(* SDK's older than this one are considered old and Android 10 prompts user's to verify the permission
+this app obtained at installation time *)
+Definition vulnerableSdk : nat := 22.
 
 End Misc.
 
