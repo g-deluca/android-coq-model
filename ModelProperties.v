@@ -252,15 +252,14 @@ Qed.
  * no puede recibir intents. *)
 Theorem notVerifiedOldAppCantReceive :
   forall (s s' : System) (i: Intent) (ic: iCmp) (a: idApp),
-    validstate s ->
     isOldApp a s -> (* La aplicación es vieja *)
     ~ (In a (alreadyVerified (state s))) -> (* y no está verificada*)
     ~ exec s (receiveIntent i ic a) s' ok.
 Proof.
-  intros s s' i ic a vs oldApp notVerified.
+  intros s s' i ic a oldApp notVerified.
   unfold not; intro receiveIntent.
   unfold exec in receiveIntent.
-  destruct receiveIntent as [_ H].
+  destruct receiveIntent as [vs H].
   destruct H.
 - destruct H as [_ [pre _]].
   simpl in pre. unfold pre_receiveIntent in pre.
@@ -288,12 +287,11 @@ Qed.
  * grupo que han sido otorgados individualmente. *)
 Theorem revokeGroupRevokesIndividualPerms :
   forall (s s': System) (g: idGrp) (a: idApp),
-    validstate s ->
     exec s (Operaciones.revokePermGroup g a) s' ok ->
     ~ (exists (p: Perm) (permsA: list Perm),
         map_apply idApp_eq (perms (state s')) a = Value idApp permsA /\ In p permsA /\ maybeGrp p = Some g).
 Proof.
-  intros s s' g a vs revoke.
+  intros s s' g a revoke.
   unfold not; intro H.
   destruct H as [p [permsA [H1 [H2 H3]]]].
   unfold exec in revoke.
