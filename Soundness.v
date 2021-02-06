@@ -1,5 +1,3 @@
-(* En este archivo se utilizan los lemas de corrección por acción
-*  para demostrar que la función step respeta el modelo *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.
@@ -35,7 +33,6 @@ Require Import CallIsSound.
 Require Import VerifyOldAppIsSound.
 
 Section Soundness.
-(* La demostración de este teorma certifica la corrección de la función step *)
 Theorem stepIsSound : forall (s:System) (act:Action),
     validstate s -> exec s act (system (step s act)) (response (step s act)).
 Proof.

@@ -1,4 +1,3 @@
-(* En este archivo se demuestra la corrección de la acción install *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.
@@ -390,55 +389,6 @@ Proof.
     apply addPreservesCorrectness.
     mapcorrect H0.
     
-(*
-    simpl in H.
-    assert (statesConsistency s).
-    destruct H0.
-    destruct_conj H3.
-    auto.
-    destruct (H3 a).
-    destruct H5.
-    destruct H5.
-    destruct H6.
-    destruct H8.
-    destruct H9.
-    assert (~(exists l : list idGrp, map_apply idApp_eq (grantedPermGroups (state s)) a = Value idApp l)).
-    intro.
-    specialize (H10 H11).
-    destruct H10;contradiction.
-    intro.
-    apply H11.
-    rewrite H12.
-    exists lGrp.
-    auto.
-    
-    rewrite<- H2.
-    apply (overrideNotEq).
-    auto.
-    elim (classic (a=a'));intros.
-    right.
-    split.
-    auto.
-    unfold install_post in H2;simpl in H2.
-    rewrite H3 in H2.
-    assert (map_apply idApp_eq (map_add idApp_eq (grantedPermGroups (state s)) a' nil) a'= Value idApp nil).
-    symmetry.
-    apply (addAndApply).
-    rewrite H4 in H2.
-    inversion H2.
-    auto.
-    left.
-    simpl in H2.
-    rewrite overrideNotEq in H2.
-    auto.
-    auto.
-    rewrite<-(addAndApply).
-    auto.
-    apply addPreservesCorrectness.
-    mapcorrect H0.
-    apply addPreservesCorrectness.
-    mapcorrect H0.
-*)
     repeat (split; unfold install_post;simpl;auto).
     
 Qed.

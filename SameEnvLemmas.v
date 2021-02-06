@@ -1,6 +1,5 @@
-(* En este archivo se demuestran lemas que predican sobre sistemas con igual
-* entorno y son utilizados en las demostraciones de invarianza y de las
-* propiedades postuladas *)
+(* In this file we show auxiliary properties about system wieh the same environment. They are mostly
+used in the invariance properties demonstrations *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

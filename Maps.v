@@ -1,6 +1,5 @@
-(* En este archivo se formalizan las funciones parciales. El código del
- * mismo fue tomado del trabajo "Formally verifying isolation and availability in an
- * idealized model of virtualization" de Gilles Barthe et al.                        *)
+ (* In this file we formalize partial functions. This code was taken from "Formally verifying
+ isolation and availability in an idealized model of virutalization", Gilles Barthe et. al. *)
 
 Require Import List.
 Require Import Classical.

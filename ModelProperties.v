@@ -1,5 +1,4 @@
-(* En este archivo se postulan y demuestran propiedades sobre
-*  el modelo y sobre la implementación desarrollada de él *)
+(* In this file we have the main properties about the model and the implementaion *)
 Require Import Coq.Arith.Lt.
 Require Export Exec.
 Require Export Implementacion.
@@ -30,11 +29,12 @@ Require Import DangPermAutoGranted.
 
 Section ModelProperties.
 
-    (* Permission Groups *)
-    (*Internet access irrestricted*)
+ (*Internet access irrestricted*)
 
-(* En un estado válido, si una llamada al sistema requiere sólo permisos normales, entonces cualquier instancia en ejecución cuya aplicación liste los permisos
- * correspondientes como usados puede ejecutar la llamada *)
+ (* In a valid state, if a system call requires only a normal permission, then any instance in
+ execution of an app that lists that permission as used can execute the call. Particularly, this is
+ used to show that any app that lists the Internet permission (its protection level is Normal) as
+ used, can access it without explicit user consent. *)
     Theorem sacProtectedWithNormalPerms : forall
         (s:System)
         (access_internet:SACall)
@@ -84,7 +84,9 @@ Qed.
 
     (* Missing permissions *)
     
-    (* Existe un estado válido en el que una aplicación instalada no tiene un permiso peligroso existente a pesar de que lo lista como usado. *)
+    (* Exists a valids state where  an app doesn't have a permission  even though it is listed as
+    used. This was introduced to show the changes from Android 5 to Android 6, where dangerous
+    permissions were granted at runtime. *)
     Theorem dangerousPermMissing : exists 
     (s:System)
     (p:Perm)
@@ -96,10 +98,9 @@ Qed.
 
     (* Delegated permissions *)
 
-(* En todo estado válido, si se le otorga correctamente un permiso p a una aplicación a que tiene uno de sus componentes ejecutándose
- * con identificador ic; quien luego delega un permiso de lectura a una aplicación a' sobre un uri de un contentProvider de lectura protegida
- * por p, y más tarde se le quita el permiso p a a, posteriormente si una instancia en ejecución de un componente de a' intenta leer dicho uri
- * de cp, podrá hacerlo correctamente *)
+    (* In every valid state, if a permission p is granted to an app A that later delegates this
+    permission to an application B, B can still have access to that permission even when p is revoked
+    from A*)
 
     Theorem delegateGrantPRevoke : forall 
         (s:System)
@@ -127,8 +128,8 @@ Proof.
 Qed.
 
 
-(* Para todo estado inicial válido en el cual una aplicación A no tiene un permiso peligroso  P, si al final de una serie de operaciones en
- * la que A no es desinstalada, A pasa a contar con tal permiso; entonces en algún momento el permiso P le fue otorgado *)
+ (* For every initial state where an app A doesn't have a dangerous permission P, if after a bunch of
+ operations A has that permission; then it was granted by the system *)
     Theorem ifPermThenGranted : forall
         (initState lastState:System)
         (a:idApp)
@@ -148,8 +149,8 @@ Proof.
     apply (ifPermThenGrantedProof initState lastState);auto.
 Qed.
 
-(* Si en un estado inicial válido se le revoca correctamente un permiso p a una aplicación a, mientras la aplicación no sea desinstalada
- * ni el permiso reotorgado, la aplicación no contará con él *)
+ (* This property states that the only way for an app to obtain a dangerous permission after it was
+ revoked, is if the system grants it again *)
     Theorem revokeAndNotGrant : forall
         (initState sndState lastState:System)
         (a:idApp)
@@ -170,9 +171,8 @@ Proof.
     apply (revokeAndNotGrantProof initState sndState lastState H a p H0 H1 H2 H3 l);auto.
 Qed.
 
-(* En todo estado válido en donde un componente c1 tiene la potestad de iniciar a una actividad c2 de otra aplicación protegida por
- * un permiso peligroso no agrupado p que no es definido por la aplicación en donde se encuentra c1, existen ciertas acciones que hacen
- * que pierda la posibilidad de hacerlo a pesar de que ninguna de las dos aplicaciones haya sido desinstalada *)
+(* This property proves that the privilege of starting a component from another app that is protected
+by some permission, is revokable *)
     Theorem revokeCanStart : forall
         (initState:System)
         (l:list Action)
@@ -198,9 +198,7 @@ Proof.
 Qed.
 
 
-(* Para todo estado inicial válido en el que existe una aplicación 'a' vieja y no verificada, si luego de una serie de operaciones
- * 'a' en la que 'a' no se desinstala, 'a' está en condiciones de ser ejecutada; entonces alguna de esas operaciones fue la que la
- * verificó *)
+ (* This property states that if an old aplication is able to run, then it had been previously verified by the user *)
     Theorem ifOldAppRunThenVerified : forall 
         (initState lastState: System)
         (a: idApp)
@@ -217,10 +215,10 @@ Proof.
     apply ifOldAppRunThenWasVerifiedProof.
 Qed.
 
-(*
- * Este teorema establece que el sistema no puede otorgar automáticamente un permiso (peligroso) 
- * agrupado si el grupo del mismo no ha sido previamente otorgado a través de un grant de usuario.
- *)
+ (* This theorem states that the system cannot grant automatically a grouped permission if any other
+  * permission of the same group has been granted previously. The first permission should have been
+  * obtained via explicit user approval or due to a normal protection level (see property DangerousPermissionAutoGranted)
+  *)
 Theorem cannotAutoGrantWithoutGroup :
   forall (s s': System) (p: Perm) (g: idGrp) (a: idApp),
     pl p = dangerous ->
@@ -248,12 +246,12 @@ Proof.
 Qed.
 
 
-(* Este teorema postula que una aplicación vieja que no ha sido verificada por el usuario
- * no puede recibir intents. *)
+(* This theorm states that an old application that is not verified by the user yet, cannot receive
+intents *)
 Theorem notVerifiedOldAppCantReceive :
   forall (s s' : System) (i: Intent) (ic: iCmp) (a: idApp),
-    isOldApp a s -> (* La aplicación es vieja *)
-    ~ (In a (alreadyVerified (state s))) -> (* y no está verificada*)
+    isOldApp a s -> (* The app is old *)
+    ~ (In a (alreadyVerified (state s))) -> (* and it's not verified *)
     ~ exec s (receiveIntent i ic a) s' ok.
 Proof.
   intros s s' i ic a oldApp notVerified.
@@ -282,9 +280,8 @@ Proof.
   inversion H.
 Qed.
 
-(* Este teorema demuestra que la operación de borrar un grupo respeta la política
- * de granularidad de Android y elimina todos los permisos correspondientes a ese
- * grupo que han sido otorgados individualmente. *)
+ (* This property establishes that revoking a permission group implies revoking every individual
+ permission that belongs to that group *)
 Theorem revokeGroupRevokesIndividualPerms :
   forall (s s': System) (g: idGrp) (a: idApp),
     exec s (Operaciones.revokePermGroup g a) s' ok ->
@@ -310,8 +307,8 @@ Proof.
   inversion H.
 Qed.
 
-(* Este teorema demuestra que cuando un permiso normal y uno peligroso comparten grupo, luego de instalar una aplcicación que usa ambos,
- * el sistema queda en un estado en donde puede automáticamente otorgar el permiso peligroso, sin informar al usuario. *)
+ (* This property proves that if a dangerous and a normal permission shares a group, then the system
+ is able to automatically grant the dangerous permission without explicit user consent *)
 Theorem DangerousPermissionAutoGranted : forall
   (s s': System)
   (a: idApp)

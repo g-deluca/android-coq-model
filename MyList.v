@@ -1,6 +1,3 @@
-(* En este archivo se demuestran teoremas que forman parte
-* de la librería de Coq en versiones posteriores
-* a la utilizada en el presente trabajo *)
 Require Import Coq.Lists.List.
 Require Import Classical.
 Set Reversible Pattern Implicit. 

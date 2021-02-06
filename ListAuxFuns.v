@@ -1,6 +1,4 @@
-(* En este archivo se demuestran propiedades sobre listas que son utilizadas
-*  al demostrar la corrección de la función implementada
-*  y las propiedades postuladas *)
+(* In this file we show some auxiliary properties about lists *)
 Require Import Implementacion.
 Require Import DefBasicas.
 Require Import Estado.

@@ -1,4 +1,3 @@
-(* En este archivo se demuestra la corrección de la acción revokeGroup *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.
@@ -119,7 +118,6 @@ Proof.
     simpl in H4. apply removeSthElse in H4.
     destruct H4. apply IHl. auto.
 
-    (* Caso a <> a' *)
     exists lPerm'. destruct H1 as [lPerm H1].
     unfold revokeAllPermsOfGroup in H2. rewrite H1 in H2.
     split.

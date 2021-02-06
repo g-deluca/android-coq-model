@@ -1,4 +1,3 @@
-(* En este archivo se demuestra la corrección de la acción stop *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

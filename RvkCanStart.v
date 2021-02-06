@@ -1,9 +1,5 @@
-(* En este archivo se demuestra la propiedad que postula que 
-*  en todo estado válido en donde un componente c1 tiene la potestad 
-*  de iniciar a una actividad c2 de otra aplicación protegida por un permiso 
-*  peligroso no agrupado p que no es definido por la aplicación en donde se 
-*  encuentra c1, existen ciertas acciones que hacen que pierda la posibilidad
-*  de hacerlo a pesar de que ninguna de las dos aplicaciones haya sido desinstalada *)
+(* In this file we prove the property that states that the privilege of starting a component from
+another app that is protected by some permission, is revokable *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

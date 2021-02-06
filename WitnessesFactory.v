@@ -1,5 +1,4 @@
-(* Se definen componentes y lemas comunes para generar los testigos
-* que se dan en las demostraciones de las propiedades postuladas *)
+(* Here we define witnesses components used in some properties proofs. *)
 Require Import Estado.
 Require Import DefBasicas.
 Require Import Maps.

@@ -1,4 +1,3 @@
-(* En este archivo se demuestra la corrección de la acción startActivityForResult *)
 Require Export Exec.
 Require Import Implementacion.
 Require Export AuxFunsCorrect.

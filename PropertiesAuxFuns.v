@@ -1,5 +1,4 @@
-(* En este archivo se definen lemas auxiliares utilizados en
-* la demostración de las propiedades postuladas *)
+(* In this file we define auxiliary lemmas that will be used for proving the model properties *)
 Require Export Exec.
 Require Export Estado.
 Require Export Operaciones.

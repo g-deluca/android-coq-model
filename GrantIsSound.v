@@ -101,38 +101,35 @@ Proof.
 
     split.
     - intros.
-      (* Vamos a necesitar la información que está en la última conjunción de H1 *)
       destruct H1 as [_ [_ [_ H1]]].
       destruct H1.
-      (* En este caso tenemos un absurdo *)
+      (* This case is simply an absurd*)
       rewrite H1 in H2. inversion H2.
-      (* Caso interesante *)
+      (* Here things get a bit more interesting... *)
       destruct H1 as [g' [lGroup [H1 [H3 H4]]]].
       unfold grantPermGroup, grant_post.
       rewrite H2. simpl.
       unfold grantPermissionGroup.
       rewrite H3.
       split.
-      (* Acá empezamos a probar las conjunciones que forman grantPermGroup *)
-      (* Primer conjunción *)
+      (* We start proving each of the terms of grantPermGroup *)
       intros a' lGroup' H5. simpl.
       elim (classic (a = a')); intros.
-      (* Caso a=a' *)
+      (* Case a=a' *)
    -- rewrite H6.
       rewrite <- addAndApply. exists (g :: lGroup).
       split. auto.
       intros g'' H7. simpl.
       rewrite <- H6 in H5. rewrite H3 in H5.
       inversion H5. auto.
-      (* Caso a<>a' *)
+      (* Case a<>a' *)
    -- exists lGroup'.
       split. rewrite overrideNotEq; auto.
       intros. auto.
-      (* Segunda conjunción *)
    -- split.
   --- intros a' lGroup' H5.
       elim (classic (a = a')); intros.
-      (* Caso a=a' *)
+      (* Case a=a' *)
       exists lGroup.
       split. rewrite <- H6. auto.
       intros g'' H7 H8.
@@ -141,7 +138,7 @@ Proof.
       inversion H5.
       rewrite <- H10 in H7.
       destruct H7. auto. contradiction.
-      (* Caso a <> a' *)
+      (* Case a <> a' *)
       exists lGroup'.
       rewrite overrideNotEq in H5.
       split. auto.

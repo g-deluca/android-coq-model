@@ -1,4 +1,3 @@
-(* En este archivo se definen tácticas que facilitan las pruebas desarrolladas *)
 Require Import Classical.
 Require Import Coq.Bool.Bool.
 Require Import Estado.

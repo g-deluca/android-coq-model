@@ -1,5 +1,3 @@
-(* En este archivo se demuestra que la ejecución de
-*  la acción startService preserva los invariantes del sistema *)
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

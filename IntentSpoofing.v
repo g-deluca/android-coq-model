@@ -1,7 +1,4 @@
-(* NOMBRE DEL ARCHIVO: intentSpoofing.v							*
- * CORRESPONDENCIA EN EL INFORME: Capítulo 4. Sección 4.2.2.				*
- * DESCRIPCIÓN: Este archivo consiste en un único lema que demuestra que en un 		*	
- * escenario particular no se puede dar el ataque intent spoofing.				*)
+(* In this file we show that in a particular scenario, intent spoofing is not possible *)
 
 Require Export Exec.
 Require Export Estado.

@@ -1,7 +1,6 @@
-(* En este archivo se demuestra la propiedad que postula que 
-*  si en un estado inicial válido se le revoca correctamente un permiso p
-*  a una aplicación a, mientras la aplicación no sea desinstalada ni el permiso
-*  reotorgado, la aplicación no contará con él *)
+(* In this file we prove the property that states that if the system revokes a dangerous permission p
+ * from an app a, then if the permission is not re-granted, the app won't have it*)
+
 Require Export Exec.
 Require Export Implementacion.
 Require Export AuxFunsCorrect.

@@ -1,5 +1,4 @@
-(* En este archivo se definen lemas que cumplen
-*  los estados válidos y se utilizan en las pruebas *)
+(* In this file we define lemmas that are satisfied in every valid state *)
 Require Import Implementacion.
 Require Import DefBasicas.
 Require Import EqTheorems.
