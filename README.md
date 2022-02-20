@@ -30,7 +30,7 @@ system.
 - DefBasicas.v: contains basic definitions of the components of the Android ecosystem, such as
   intents, activities, services, content providers, etc.
 - Estado.v: defines the state of our Android representation. It also defines what a valid state is.
-- Acciones.v: defines the operations that can mutate the state of the system. In other words, all of
+- Operaciones.v: defines the operations that can mutate the state of the system. In other words, all of
   the allowed actions that our system can perform, are defined here.
 - Semantica.v: defines the semantics of the actions mentioned above. For each one of them, we define
   a precondition and a postcondition. The file is divided into sections that correspond with the
