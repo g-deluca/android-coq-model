@@ -1,65 +1,76 @@
-# Model of the Android permission system
+# Formalización del sistema de permisos de Android
 
-This project contains a formalization written in Coq of the Android permission system.
-Our objective is to formally prove safety and security properties of the model that may be of interest to anyone that is near
-the Android enviroment (i.e. both users and developers).
+_Read this in English [here](README.en.md)_
 
-#### Version of Coq used to compile this project
+Este proyecto contiene una formalización del sistema de permisos de Android escrita en Coq. El
+objetivo de la misma es desarrollar un framework de trabajo que permita probar formalmente
+propiededes de _safety_ y _security_ sobre Android que sean de interés tanto a usuarios como a
+desarrolladores.
+
+#### Versión de Coq usada en el proyecto
 
 ```
 The Coq Proof Assistant, version 8.11.0 (March 2020)
 compiled on Mar 5 2020 20:37:30 with OCaml 4.08.1
 ```
 
-## How to compile
+## Como compilar
 
-In the root folder of the project, simply run:
+En la carpeta raíz del proyecto, ejecutar:
 
 ```sh
 ./makeMakefile
 make
 ```
 
-## Organization of the files
+## Organización de los archivos
 
-### Basic definitions and model formalization
+### Definiciones básicas y formalización
 
-The following files are the ones that define the abstract representation of the Android permission
-system.
+Los siguientes archivos definen los componentes que conforman nuestra representación abstracta del
+sistema de permisos de Android.
 
-- DefBasicas.v: contains basic definitions of the components of the Android ecosystem, such as
-  intents, activities, services, content providers, etc.
-- Estado.v: defines the state of our Android representation. It also defines what a valid state is.
-- Operaciones.v: defines the operations that can mutate the state of the system. In other words, all of
-  the allowed actions that our system can perform, are defined here.
-- Semantica.v: defines the semantics of the actions mentioned above. For each one of them, we define
-  a precondition and a postcondition. The file is divided into sections that correspond with the
-  action's semantic we are defining.
-- Exec.v: defines what a system execution is.
-- ErrorManagement.v: defines the different error codes that can be obtained from an execution.
+- DefBasicas.v: contiene definiciones básicas de las distintas partes de Android que formalizamos,
+  como por ejemplo, los intents, las actividades, los servicioes y los content providers.
+- Estado.v: define la estructura que tendrá estado de nuestro modelo abstracto y cuándo uno de esos
+  estados será válido.
+- Operaciones.v: define las acciones permitidas que pueden ser modificar el estado de nuestro modelo.
+- Semantica.v: para cada una de las acciones listadas en el archivo anterior, aquí definimos su
+  semántica. El archivo está dividido en secciones, correspondiéndose cada una de ellas a una acción
+  en particular.
+- Exec.v: contiene la definición de una "ejecución" de nuestro modelo.
+- ErrorManagement.v: define los mensajes de error que pueden obtenerse en una ejecución errónea.
 
-### Proof of valid state preservation among executions
+Una propiedad importante que probamos con respecto a nuestro modelo es que sus ejecuciones conservan
+la validez del estado. Dicha prueba puede encontrarse en `ValidityInvariance.v`. Sin embargo, dicha
+prueba fue subdividida en pruebas más pequeñas al probar la propiedad para cada acción por separado.
+Estos sub-lemas pueden encontrarse en los archivos con el sufijo `IsInvariant`. Por ejemplo, para la
+acción `install`, debemos referirnos al archivo `InstallIsInvariant.v`.
 
-One important property we proved over the above model is that its executions preservs valid states.
+### Implementación funcional de nuestro modelo
 
-- ValidityInvariance.v: contains the proof that an execution in the system preserves the state
-  validity. Note that we divided this proof into smaller ones by proving each action in a separate
-  file. For example, for the `install` action, the file `InstallIsInvariant.v` can be found.
+- Implementacion.v: contiene una implementación funcional de nuestro modelo.
+- Soundess.v: contiene la prueba de que nuestra implementación cumple lo especificado en el modelo
+  abstracto. Nuevamente, la prueba se dividió en sub-lemas por cada acción posible, esta vez con el
+  sufijo `IsSound`. Por ejemplo, para la operación `grant`, el archivo correspondiente es
+  `GrantIsSound.v`.
 
-### Functional implementation of the model
+### Propiedades
 
-- Implementacion.v: contains a functional implementation of our idealized model.
-- Soundess.v: contains the proof that our functional implementation is sound with respect to the
-  formal specification. Again, we divided this proof into smaller one by splitting it into one
-  sub-proof for each action. For example, for the `grant` action (i.e. the action that grants a
-  permission), the file `GrantIsSound.v` can be found.
+- ModelProperties.v: Agrupa todas las propiedades que fueron probadas sobre el modelo o la
+  implementación en un único archivo. Notar que no todas las pruebas están desarrolladas dentro de
+  este módulo, habiéndose extraído las mismas para mantener archivos más chicos y separados.
+  Ejemplos de esto son los módulos: `RvkAndNotGrant.v`, `IfPermThenGranted.v` o
+  `IfOldAppRunThenVerified.v`.
 
-### Other properties
+Solo dos propiedades quedaron por fuera de `ModelProperties.v` y son las siguientes:
 
-- ModelProperties.v: groups all of the properties we proved about our model or out funcional
-  implementation with the exception of:
-  - Eavesdropping.v
-  - IntentSpoofing.v
-- The rest of the files, such as `RvkAndNotGrant.v`, `IfPermThenGranted.v` or
-  `IfOldAppRunThenVerified.v`, contains the proof of some of the properties grouped into
-  `ModelProperties.v` just for the sake of keeping each of the properties in its own file.
+- Eavesdropping.v
+- IntentSpoofing.v
+
+El resto de los archivos que no fueron mencionados aquí contienen lemas o métodos auxiliares, como
+por ejemplo:
+
+- PropertiesAuxFuns.v
+- SameEnvLemmas.v
+- TraceRelatedLemmas.v
