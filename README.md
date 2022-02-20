@@ -19,6 +19,7 @@ compiled on Mar 5 2020 20:37:30 with OCaml 4.08.1
 En la carpeta raíz del proyecto, ejecutar:
 
 ```sh
+cd src
 ./makeMakefile
 make
 ```

@@ -16,6 +16,7 @@ compiled on Mar 5 2020 20:37:30 with OCaml 4.08.1
 In the root folder of the project, simply run:
 
 ```sh
+cd src
 ./makeMakefile
 make
 ```
